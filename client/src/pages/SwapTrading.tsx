@@ -1,7 +1,5 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import Header from "@/components/Header";
-import Sidebar from "@/components/Sidebar";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -84,17 +82,13 @@ export default function SwapTrading() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900">
-      <Header />
-      <div className="flex">
-        <Sidebar />
-        <div className="flex-1 p-6">
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-white mb-2">외환스왑</h2>
-            <p className="text-slate-300">Near Leg와 Far Leg 두 개의 거래일에 BUY/SELL 방향으로 거래하는 스왑 상품입니다.</p>
-          </div>
+    <div>
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-white mb-2">외환스왑</h2>
+        <p className="text-slate-300">Near Leg와 Far Leg 두 개의 거래일에 BUY/SELL 방향으로 거래하는 스왑 상품입니다.</p>
+      </div>
 
-          <div className="max-w-md mx-auto">
+      <div className="max-w-md mx-auto">
             <Card className="p-6 bg-white dark:bg-white text-gray-900">
               {/* Step 1: 통화쌍 선택 */}
               <div className="flex items-center justify-between mb-4">
@@ -235,8 +229,6 @@ export default function SwapTrading() {
                 </Button>
               </div>
             </Card>
-          </div>
-        </div>
       </div>
     </div>
   );

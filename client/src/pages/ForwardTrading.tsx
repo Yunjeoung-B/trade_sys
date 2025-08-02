@@ -1,7 +1,5 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import Header from "@/components/Header";
-import Sidebar from "@/components/Sidebar";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -85,17 +83,13 @@ export default function ForwardTrading() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900">
-      <Header />
-      <div className="flex">
-        <Sidebar />
-        <div className="flex-1 p-6">
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-white mb-2">선물환</h2>
-            <p className="text-slate-300">미래 특정일에 거래하는 선물환 상품입니다.</p>
-          </div>
+    <div>
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-white mb-2">선물환</h2>
+        <p className="text-slate-300">미래 특정일에 거래하는 선물환 상품입니다.</p>
+      </div>
 
-          <div className="max-w-md mx-auto">
+      <div className="max-w-md mx-auto">
             <Card className="p-6 bg-white dark:bg-white text-gray-900">
               {/* Step 1: 통화쌍 선택 */}
               <div className="flex items-center justify-between mb-4">
@@ -238,8 +232,6 @@ export default function ForwardTrading() {
                 {mutation.isPending ? "처리중..." : "견적 요청"}
               </Button>
             </Card>
-          </div>
-        </div>
       </div>
     </div>
   );

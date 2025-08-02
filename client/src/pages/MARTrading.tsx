@@ -1,7 +1,5 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import Header from "@/components/Header";
-import Sidebar from "@/components/Sidebar";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -76,17 +74,13 @@ export default function MARTrading() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900">
-      <Header />
-      <div className="flex">
-        <Sidebar />
-        <div className="flex-1 p-6">
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-white mb-2">MAR</h2>
-            <p className="text-slate-300">Market Average Rate - 오전 9시 이전 주문 제한</p>
-          </div>
+    <div>
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-white mb-2">MAR</h2>
+        <p className="text-slate-300">Market Average Rate - 오전 9시 이전 주문 제한</p>
+      </div>
 
-          <div className="max-w-md mx-auto">
+      <div className="max-w-md mx-auto">
             <Card className="p-6 bg-white dark:bg-white text-gray-900">
               {/* Step 1: 통화쌍 선택 */}
               <div className="flex items-center justify-between mb-4">
@@ -171,8 +165,6 @@ export default function MARTrading() {
                 </div>
               </div>
             </Card>
-          </div>
-        </div>
       </div>
     </div>
   );
