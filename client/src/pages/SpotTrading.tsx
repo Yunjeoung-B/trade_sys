@@ -388,10 +388,10 @@ export default function SpotTrading() {
                   {orderType === "MARKET" ? "시장가" : "지정가"} {baseCurrency} {direction}/{quoteCurrency} {direction === "BUY" ? "SELL" : "BUY"} 주문
                 </div>
                 <div className="text-sm text-gray-600 mb-1">
-                  거래금액: {baseCurrency} {amountCurrency === "BASE" ? (amount || "0") : ((parseFloat(amount || "0") / (direction === "BUY" ? buyRate : sellRate)).toFixed(2))}
+                  {direction === "BUY" ? "BUY" : "SELL"}: {baseCurrency} {amountCurrency === "BASE" ? (amount || "0") : ((parseFloat(amount || "0") / (direction === "BUY" ? buyRate : sellRate)).toFixed(2))}
                 </div>
-                <div className="text-sm text-gray-600 mb-1 ml-12">
-                  {quoteCurrency} {amountCurrency === "QUOTE" ? (amount || "0") : ((parseFloat(amount || "0") * (direction === "BUY" ? buyRate : sellRate)).toFixed(2))}
+                <div className="text-sm text-gray-600 mb-1">
+                  {direction === "BUY" ? "SELL" : "BUY"}: {quoteCurrency} {amountCurrency === "QUOTE" ? (amount || "0") : ((parseFloat(amount || "0") * (direction === "BUY" ? buyRate : sellRate)).toFixed(2))}
                 </div>
                 {orderType === "LIMIT" && (
                   <div className="text-sm text-gray-600 mb-1">
@@ -405,7 +405,7 @@ export default function SpotTrading() {
                   }
                 </div>
                 <div className="text-sm text-gray-600 mb-1">
-                  결제일: {valueDate.toLocaleDateString('ko-KR')}
+                  결제일: {valueDate.toISOString().split('T')[0]}
                 </div>
                 {orderType === "LIMIT" && (
                   <div className="text-xs text-gray-500">
