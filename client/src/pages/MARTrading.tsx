@@ -84,10 +84,7 @@ export default function MARTrading() {
       <div className="flex">
         <Sidebar />
         <div className="flex-1 p-6">
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-white mb-2">MAR</h2>
-            <p className="text-slate-200">Market Average Rate - 오전 9시 이전 주문 제한</p>
-          </div>
+          
           <div className="max-w-md mx-auto">
             <Card className="p-8 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border-0 text-gray-900">
               {/* Step 1: 통화쌍 선택 */}
@@ -127,7 +124,7 @@ export default function MARTrading() {
                   </div>
                   <div className="text-center">
                     <div className="text-sm text-gray-600 mb-1">BUY USD</div>
-                    <div className="text-2xl font-bold text-[#b30c5e]">
+                    <div className="text-2xl font-bold text-[#f45da7]">
                       {buySpread.toFixed(2)}
                     </div>
                     <Button 
