@@ -396,47 +396,7 @@ export default function ForwardTrading() {
                 </div>
               </div>
 
-              {/* Step 5: Trade Direction */}
-              <div className="flex items-center mb-4">
-                <div className="flex-1 grid grid-cols-2 gap-2">
-                  <Button 
-                    variant="outline"
-                    className={cn(
-                      "rounded-xl transition-all duration-200",
-                      direction === "BUY" 
-                        ? "text-white shadow-inner" 
-                        : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
-                    )}
-                    style={direction === "BUY" ? {
-                      backgroundColor: '#FF6B6B',
-                      borderColor: '#FF6B6B',
-                      boxShadow: '0 0 15px rgba(255, 107, 107, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
-                    } : {}}
-                    onClick={() => setDirection("BUY")}
-                  >
-                    BUY
-                  </Button>
-                  <Button 
-                    variant="outline"
-                    className={cn(
-                      "rounded-xl transition-all duration-200",
-                      direction === "SELL" 
-                        ? "text-white shadow-inner" 
-                        : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
-                    )}
-                    style={direction === "SELL" ? {
-                      backgroundColor: '#4169E1',
-                      borderColor: '#4169E1',
-                      boxShadow: '0 0 15px rgba(65, 105, 225, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
-                    } : {}}
-                    onClick={() => setDirection("SELL")}
-                  >
-                    SELL
-                  </Button>
-                </div>
-              </div>
-
-              {/* Step 6: Amount Input */}
+              {/* Step 5: Amount Input */}
               <div className="flex items-center mb-6">
                 <div className="flex-1">
                   <div className="text-sm text-gray-700 font-medium mb-2">주문금액</div>
