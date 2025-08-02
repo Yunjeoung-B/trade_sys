@@ -211,8 +211,16 @@ export default function ForwardTrading() {
           ) : (
             <div className="flex items-center mb-6">
               <div className="flex-1 text-center">
-                <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-6 rounded-3xl shadow-xl text-white">
-                  <div className="text-sm font-medium mb-2 bg-blue-400/30 px-3 py-1 rounded-lg inline-block">
+                <div className={cn(
+                  "p-6 rounded-3xl shadow-xl text-white",
+                  direction === "BUY" 
+                    ? "bg-gradient-to-br from-red-500 to-red-600" 
+                    : "bg-gradient-to-br from-blue-500 to-blue-600"
+                )}>
+                  <div className={cn(
+                    "text-sm font-medium mb-2 px-3 py-1 rounded-lg inline-block",
+                    direction === "BUY" ? "bg-red-400/30" : "bg-blue-400/30"
+                  )}>
                     {direction === "BUY" ? "BUY" : "SELL"} {forwardBaseCurrency}
                   </div>
                   
