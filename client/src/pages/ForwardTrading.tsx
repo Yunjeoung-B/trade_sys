@@ -26,6 +26,13 @@ export default function ForwardTrading() {
   const [validityType, setValidityType] = useState<"DAY" | "TIME">("DAY");
   const [validUntilTime, setValidUntilTime] = useState("15:30");
   const [valueDate, setValueDate] = useState<Date>(addDays(new Date(), 7)); // 1주일 후로 기본 설정
+  
+  // Admin price simulation states
+  const [adminPriceProvided, setAdminPriceProvided] = useState(false);
+  const [fixedAmount, setFixedAmount] = useState("10,000");
+  const [fixedValueDate, setFixedValueDate] = useState<Date>(addDays(new Date(), 7));
+  const [approvedRate, setApprovedRate] = useState<number>(1385.75);
+  
   const { toast } = useToast();
 
   // Extract base and quote currencies from selected pair
@@ -421,50 +428,120 @@ export default function ForwardTrading() {
           {/* Step 7: Trade Summary */}
           <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 rounded-2xl mb-6 shadow-inner">
             <div className="text-sm text-gray-700 mb-2">
-              선물환 {forwardBaseCurrency} {direction}/{forwardBaseCurrency === "USD" ? "KRW" : "USD"} {direction === "BUY" ? "SELL" : "BUY"} 주문
+              선물환 {forwardBaseCurrency} {direction}/{forwardBaseCurrency === "USD" ? "KRW" : "USD"} {direction === "BUY" ? "SELL" : "BUY"} 거래
             </div>
-            <div className="text-sm text-gray-600 mb-1">
-              {direction === "BUY" ? "BUY" : "SELL"}: {forwardBaseCurrency} {amountCurrency === "BASE" ? 
-                (amount ? formatCurrencyAmount(parseFloat(removeThousandSeparator(amount)), forwardBaseCurrency) : "미입력") : "거래시 확정"}
-            </div>
-            <div className="text-sm text-gray-600 mb-1">
-              {direction === "BUY" ? "SELL" : "BUY"}: {forwardBaseCurrency === "USD" ? "KRW" : "USD"} {amountCurrency === "QUOTE" ? 
-                (amount ? formatCurrencyAmount(parseFloat(removeThousandSeparator(amount)), forwardBaseCurrency === "USD" ? "KRW" : "USD") : "미입력") : "거래시 확정"}
-            </div>
-            {orderType === "LIMIT" && (
-              <div className="text-sm text-gray-600 mb-1">
-                지정환율: {limitRate || "미지정"}
-              </div>
-            )}
-            <div className="text-sm text-gray-600 mb-1">
-              거래환율: 관리자 가격 제공 후 확정
-            </div>
-            <div className="text-sm text-gray-600 mb-1">
-              결제일: {valueDate ? valueDate.toISOString().split('T')[0] : "미선택"}
-            </div>
-            {orderType === "LIMIT" && (
-              <div className="text-xs text-gray-500">
-                유효기간: {validityType === "DAY" 
-                  ? "당일 마감까지" 
-                  : `당일 ${validUntilTime}까지`
-                }
-              </div>
+            
+            {adminPriceProvided ? (
+              <>
+                {/* 관리자 가격 제공 후 고정된 정보 표시 */}
+                <div className="text-sm text-gray-600 mb-1">
+                  {direction === "BUY" ? "BUY" : "SELL"}: {forwardBaseCurrency} {formatCurrencyAmount(parseFloat(removeThousandSeparator(fixedAmount)), forwardBaseCurrency)}
+                </div>
+                <div className="text-sm text-gray-600 mb-1">
+                  {direction === "BUY" ? "SELL" : "BUY"}: {forwardBaseCurrency === "USD" ? "KRW" : "USD"} {formatCurrencyAmount(parseFloat(removeThousandSeparator(fixedAmount)) * approvedRate, forwardBaseCurrency === "USD" ? "KRW" : "USD")}
+                </div>
+                <div className="text-sm text-gray-600 mb-1">
+                  거래환율: {approvedRate.toFixed(2)}
+                </div>
+                <div className="text-sm text-gray-600 mb-1">
+                  결제일: {format(fixedValueDate, "yyyy-MM-dd")}
+                </div>
+                <div className="text-sm text-blue-600 font-medium mt-2 pt-2 border-t border-gray-200">
+                  스프레드: {direction === "BUY" ? "2.80" : "11.60"} 포인트 적용 완료
+                </div>
+              </>
+            ) : (
+              <>
+                {/* 가격 요청 전 상태 */}
+                <div className="text-sm text-gray-600 mb-1">
+                  {direction === "BUY" ? "BUY" : "SELL"}: {forwardBaseCurrency} {amountCurrency === "BASE" ? 
+                    (amount ? formatCurrencyAmount(parseFloat(removeThousandSeparator(amount)), forwardBaseCurrency) : "미입력") : "거래시 확정"}
+                </div>
+                <div className="text-sm text-gray-600 mb-1">
+                  {direction === "BUY" ? "SELL" : "BUY"}: {forwardBaseCurrency === "USD" ? "KRW" : "USD"} {amountCurrency === "QUOTE" ? 
+                    (amount ? formatCurrencyAmount(parseFloat(removeThousandSeparator(amount)), forwardBaseCurrency === "USD" ? "KRW" : "USD") : "미입력") : "거래시 확정"}
+                </div>
+                {orderType === "LIMIT" && (
+                  <div className="text-sm text-gray-600 mb-1">
+                    지정환율: {limitRate || "미지정"}
+                  </div>
+                )}
+                <div className="text-sm text-gray-600 mb-1">
+                  거래환율: 관리자 가격 제공 후 확정
+                </div>
+                <div className="text-sm text-gray-600 mb-1">
+                  결제일: {valueDate ? format(valueDate, "yyyy-MM-dd") : "미선택"}
+                </div>
+                {orderType === "LIMIT" && (
+                  <div className="text-xs text-gray-500">
+                    유효기간: {validityType === "DAY" 
+                      ? "당일 마감까지" 
+                      : `당일 ${validUntilTime}까지`
+                    }
+                  </div>
+                )}
+              </>
             )}
           </div>
 
-          <Button
-            onClick={handleTrade}
-            disabled={mutation.isPending || !amount}
-            className="w-full py-4 text-lg font-semibold rounded-2xl text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
-            style={{ 
-              backgroundColor: direction === "BUY" ? '#FF6B6B' : '#4169E1',
-              boxShadow: direction === "BUY" 
-                ? '0 0 15px rgba(255, 107, 107, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)' 
-                : '0 0 15px rgba(65, 105, 225, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
-            }}
-          >
-            {mutation.isPending ? "처리중..." : "가격 요청"}
-          </Button>
+          {/* Step 8: Submit button */}
+          <div className="space-y-3">
+            {!adminPriceProvided ? (
+              <>
+                <Button
+                  onClick={handleTrade}
+                  disabled={mutation.isPending || !amount}
+                  className="w-full py-4 text-lg font-semibold rounded-2xl text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
+                  style={{ 
+                    backgroundColor: direction === "BUY" ? '#FF6B6B' : '#4169E1',
+                    boxShadow: direction === "BUY" 
+                      ? '0 0 15px rgba(255, 107, 107, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)' 
+                      : '0 0 15px rgba(65, 105, 225, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                  }}
+                >
+                  {mutation.isPending ? "처리중..." : "가격 요청"}
+                </Button>
+                <Button 
+                  onClick={() => {
+                    setAdminPriceProvided(true);
+                    if (amount) setFixedAmount(amount);
+                    setFixedValueDate(valueDate);
+                  }}
+                  variant="outline"
+                  className="w-full py-2 text-sm rounded-xl border-dashed border-gray-400 text-gray-600 hover:bg-gray-50"
+                >
+                  [데모] 관리자 가격 제공 시뮬레이션
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button 
+                  onClick={() => {
+                    toast({
+                      title: "선물환 거래 체결",
+                      description: "선물환 거래가 성공적으로 체결되었습니다.",
+                    });
+                  }}
+                  className="w-full py-4 text-lg font-semibold rounded-2xl text-white shadow-lg hover:shadow-xl transition-all duration-200"
+                  style={{ 
+                    backgroundColor: direction === "BUY" ? '#FF6B6B' : '#4169E1',
+                    boxShadow: direction === "BUY" 
+                      ? '0 0 15px rgba(255, 107, 107, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)' 
+                      : '0 0 15px rgba(65, 105, 225, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                  }}
+                >
+                  거래 체결
+                </Button>
+                <Button 
+                  onClick={() => setAdminPriceProvided(false)}
+                  variant="outline"
+                  className="w-full py-2 text-sm rounded-xl border-gray-300 text-gray-600 hover:bg-gray-50"
+                >
+                  가격 요청 상태로 돌아가기
+                </Button>
+              </>
+            )}
+          </div>
         </Card>
       </div>
     </div>
