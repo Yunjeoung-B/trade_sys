@@ -92,20 +92,27 @@ export default function ForwardTrading() {
       <div className="max-w-md mx-auto">
             <Card className="p-8 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border-0 text-gray-900">
               {/* Step 1: 통화쌍 선택 */}
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-sm text-gray-600">선물환</span>
-                <Select value={selectedPair} onValueChange={setSelectedPair}>
-                  <SelectTrigger className="w-32 bg-slate-100 border-slate-300">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
+              <div className="flex items-center mb-4">
+                <div className="flex-1">
+                  <div className="text-sm text-gray-600 mb-2">선물환</div>
+                  <div className="grid grid-cols-1 gap-2">
                     {currencyPairs.map((pair) => (
-                      <SelectItem key={pair.id} value={pair.symbol}>
+                      <Button 
+                        key={pair.id}
+                        variant="outline"
+                        className={cn(
+                          "rounded-xl transition-all duration-200",
+                          selectedPair === pair.symbol 
+                            ? "bg-teal-400 border-teal-500 text-white shadow-inner" 
+                            : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                        )}
+                        onClick={() => setSelectedPair(pair.symbol)}
+                      >
                         {pair.symbol}
-                      </SelectItem>
+                      </Button>
                     ))}
-                  </SelectContent>
-                </Select>
+                  </div>
+                </div>
               </div>
 
               {/* Step 2: Rate display */}
@@ -113,7 +120,7 @@ export default function ForwardTrading() {
                 <div className="flex-1 grid grid-cols-2 gap-4">
                   <div className="text-center">
                     <div className="text-sm text-gray-600 mb-1">SELL {baseCurrency}</div>
-                    <div className="text-2xl font-bold text-teal-600">
+                    <div className="text-2xl font-bold text-blue-600">
                       {sellRate.toFixed(2).split('.')[0]}.
                       <span className="text-lg">{sellRate.toFixed(2).split('.')[1]}</span>
                     </div>
@@ -133,7 +140,7 @@ export default function ForwardTrading() {
                   </div>
                   <div className="text-center">
                     <div className="text-sm text-gray-600 mb-1">BUY {baseCurrency}</div>
-                    <div className="text-2xl font-bold text-teal-600">
+                    <div className="text-2xl font-bold text-red-500">
                       {buyRate.toFixed(2).split('.')[0]}.
                       <span className="text-lg">{buyRate.toFixed(2).split('.')[1]}</span>
                     </div>

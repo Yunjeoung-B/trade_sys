@@ -101,7 +101,7 @@ export default function MARTrading() {
                 <div className="flex-1 grid grid-cols-2 gap-4">
                   <div className="text-center">
                     <div className="text-sm text-gray-600 mb-1">SELL USD</div>
-                    <div className="text-2xl font-bold text-teal-600">
+                    <div className="text-2xl font-bold text-blue-600">
                       {sellRate.toFixed(2).split('.')[0]}.
                       <span className="text-lg">{sellRate.toFixed(2).split('.')[1]}</span>
                     </div>
@@ -121,7 +121,7 @@ export default function MARTrading() {
                   </div>
                   <div className="text-center">
                     <div className="text-sm text-gray-600 mb-1">BUY USD</div>
-                    <div className="text-2xl font-bold text-teal-600">
+                    <div className="text-2xl font-bold text-red-500">
                       {buyRate.toFixed(2).split('.')[0]}.
                       <span className="text-lg">{buyRate.toFixed(2).split('.')[1]}</span>
                     </div>
