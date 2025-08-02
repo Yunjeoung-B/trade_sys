@@ -49,9 +49,14 @@ export default function Landing() {
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
           {/* Logo */}
-          <div className="mb-8">
-            <h1 className="text-teal-400 text-2xl font-bold mb-1">CHOIICE FX</h1>
-            <p className="text-slate-300 text-sm">The Smartest Choice in FX</p>
+          <div className="mb-8 flex items-center">
+            <div className="w-12 h-12 bg-teal-400 rounded-full flex items-center justify-center mr-4">
+              <div className="w-1.5 h-6 bg-slate-900 rounded-full"></div>
+            </div>
+            <div>
+              <h1 className="text-white text-2xl font-bold mb-1">CHOIICE FX</h1>
+              <p className="text-slate-300 text-sm">The Smartest Choice in FX</p>
+            </div>
           </div>
 
           {/* Login Form */}

@@ -7,6 +7,7 @@ This is a full-stack FX Trading Platform prototype built for foreign exchange tr
 Preferred communication style: Simple, everyday language.
 Design preferences: Login pages should use mint (teal) and dark navy color scheme instead of orange/amber colors.
 Brand slogan: "The Smartest Choice in FX" (approved by user).
+Logo assets: User provided dark/white mode compatible logo assets for dark/white modes, don't modify.
 
 # System Architecture
 

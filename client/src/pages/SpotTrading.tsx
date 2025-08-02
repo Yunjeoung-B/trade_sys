@@ -157,37 +157,43 @@ export default function SpotTrading() {
                 </div>
               </div>
 
-              {/* Step 4: Direction buttons */}
+              {/* Step 3: Direction buttons */}
               <div className="flex items-center mb-4">
                 <div className="flex-1 grid grid-cols-2 gap-2">
                   <Button 
-                    variant={direction === "SELL" ? "default" : "outline"}
+                    variant="outline"
+                    className={cn(
+                      "bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200",
+                      direction === "SELL" && "bg-blue-100 border-blue-300 text-blue-700"
+                    )}
                     onClick={() => setDirection("SELL")}
-                    className="bg-gray-600 hover:bg-gray-700 text-white"
                   >
                     시장가
                   </Button>
                   <Button 
-                    variant={direction === "BUY" ? "default" : "outline"}
+                    variant="outline"
+                    className={cn(
+                      "bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200",
+                      direction === "BUY" && "bg-red-100 border-red-300 text-red-700"
+                    )}
                     onClick={() => setDirection("BUY")}
-                    className="bg-gray-600 hover:bg-gray-700 text-white"
                   >
                     지정가
                   </Button>
                 </div>
               </div>
 
-              {/* Step 5: Value date */}
+              {/* Step 4: Value date */}
               <div className="flex items-center mb-4">
                 <div className="flex-1">
-                  <div className="text-sm text-gray-600 mb-2">만기일</div>
+                  <div className="text-sm text-gray-700 font-medium mb-2">만기일</div>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
                         className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !valueDate && "text-muted-foreground"
+                          "w-full justify-start text-left font-normal bg-gray-50 border-gray-300 text-gray-900",
+                          !valueDate && "text-gray-500"
                         )}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
@@ -206,37 +212,30 @@ export default function SpotTrading() {
                 </div>
               </div>
 
-              {/* Step 6: Amount input */}
+              {/* Step 5: Amount input */}
               <div className="flex items-center mb-6">
                 <div className="flex-1">
-                  <div className="text-sm text-gray-600 mb-2">주문완료</div>
-                  <div className="text-right text-gray-400 text-sm mb-1">{sellCurrency}</div>
-                  <div className="text-sm text-gray-600 mb-2">금액</div>
+                  <div className="text-sm text-gray-700 font-medium mb-2">주문금액</div>
+                  <div className="text-right text-gray-500 text-sm mb-1">{direction === "BUY" ? buyCurrency : sellCurrency}</div>
                   <Input
                     type="number"
                     placeholder="0"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    className="text-right text-lg"
+                    className="text-right text-lg bg-gray-50 border-gray-300 text-gray-900"
                   />
                 </div>
               </div>
 
-              {/* Step 7: Amount display */}
-              <div className="flex items-center mb-6">
-                <div className="flex-1">
-                  <div className="text-sm text-gray-600">{direction} {direction === "BUY" ? baseCurrency : quoteCurrency}</div>
-                  <div className="text-lg font-semibold">+1M</div>
-                  <div className="text-xs text-gray-500">원화전환</div>
-                  <div className="text-lg font-semibold">+0.1M</div>
-                  <div className="text-xs text-gray-500">USD KRW</div>
-                  <div className="text-sm">SELL {sellCurrency} ℹ️</div>
-                  <div className="text-lg">0 {sellCurrency}</div>
-                </div>
-              </div>
-
-              {/* Step 8: Submit button */}
-              <div className="flex justify-center">
+              {/* Step 6: Trade Summary */}
+              <div className="bg-gray-50 p-3 rounded-lg mb-6">
+                <div className="text-sm text-gray-700 mb-2">{direction} {direction === "BUY" ? baseCurrency : quoteCurrency}</div>
+                <div className="text-lg font-semibold text-gray-900">+1M</div>
+                <div className="text-xs text-gray-500 mt-1">원화전환</div>
+                <div className="text-lg font-semibold text-gray-900">+0.1M</div>
+                <div className="text-xs text-gray-500">USD KRW</div>
+                <div className="text-sm text-gray-700 mt-2">SELL {sellCurrency} ℹ️</div>
+                <div className="text-lg text-gray-900">0 {sellCurrency}</div>
               </div>
 
               <Button

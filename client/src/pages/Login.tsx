@@ -45,10 +45,8 @@ export default function Login() {
     <div className="min-h-screen bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 flex items-center justify-center">
       <Card className="w-full max-w-md mx-4 bg-slate-800/90 border-teal-500/30">
         <CardHeader className="text-center pb-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-teal-400 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-            <div className="w-6 h-6 bg-slate-900 rounded-sm flex items-center justify-center">
-              <div className="w-1.5 h-4 bg-teal-400 rounded-full"></div>
-            </div>
+          <div className="w-16 h-16 bg-teal-400 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+            <div className="w-2 h-8 bg-slate-900 rounded-full"></div>
           </div>
           <h1 className="text-2xl font-bold text-white mb-2">CHOIICE FX</h1>
           <p className="text-teal-300 text-sm">The Smartest Choice in FX</p>
