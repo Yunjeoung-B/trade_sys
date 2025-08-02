@@ -124,7 +124,7 @@ export default function SpotTrading() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-800 to-purple-800">
+    <div className="min-h-screen bg-gradient-to-br from-[#163959] via-[#1d3362] to-[#47398f]">
       <Header />
       <div className="flex">
         <Sidebar />
