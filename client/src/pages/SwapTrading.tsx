@@ -122,7 +122,7 @@ export default function SwapTrading() {
                       className={cn(
                         "mt-2 w-full rounded-xl transition-all duration-200",
                         direction === "SELL" 
-                          ? "bg-teal-400 border-teal-500 text-white shadow-inner" 
+                          ? "bg-teal-400 border-2 border-teal-600 text-white shadow-inner ring-2 ring-teal-300" 
                           : "bg-transparent border-gray-200 text-gray-400 hover:bg-gray-50"
                       )}
                       onClick={() => setDirection("SELL")}
@@ -142,7 +142,7 @@ export default function SwapTrading() {
                       className={cn(
                         "mt-2 w-full rounded-xl transition-all duration-200",
                         direction === "BUY" 
-                          ? "bg-teal-400 border-teal-500 text-white shadow-inner" 
+                          ? "bg-teal-400 border-2 border-teal-600 text-white shadow-inner ring-2 ring-teal-300" 
                           : "bg-transparent border-gray-200 text-gray-400 hover:bg-gray-50"
                       )}
                       onClick={() => setDirection("BUY")}
