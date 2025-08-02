@@ -22,6 +22,8 @@ export default function SwapTrading() {
   const [farDate, setFarDate] = useState<Date>(new Date());
   const [nearAmount, setNearAmount] = useState("");
   const [farAmount, setFarAmount] = useState("");
+  const [nearAmountCurrency, setNearAmountCurrency] = useState<"USD" | "KRW">("USD");
+  const [farAmountCurrency, setFarAmountCurrency] = useState<"USD" | "KRW">("USD");
   const { toast } = useToast();
 
   // Extract base and quote currencies from selected pair
@@ -167,8 +169,8 @@ export default function SwapTrading() {
                           <Button
                             variant="outline"
                             className={cn(
-                              "w-full justify-start text-left font-normal text-xs",
-                              !nearDate && "text-muted-foreground"
+                              "w-full justify-start text-left font-normal text-xs bg-white border-gray-300 text-gray-900",
+                              !nearDate && "text-gray-500"
                             )}
                           >
                             <CalendarIcon className="mr-1 h-3 w-3" />
@@ -192,8 +194,8 @@ export default function SwapTrading() {
                           <Button
                             variant="outline"
                             className={cn(
-                              "w-full justify-start text-left font-normal text-xs",
-                              !farDate && "text-muted-foreground"
+                              "w-full justify-start text-left font-normal text-xs bg-white border-gray-300 text-gray-900",
+                              !farDate && "text-gray-500"
                             )}
                           >
                             <CalendarIcon className="mr-1 h-3 w-3" />
@@ -218,17 +220,45 @@ export default function SwapTrading() {
               <div className="flex items-center mb-6">
                 <div className="flex-1">
                   <div className="text-sm text-gray-700 font-medium mb-2">스왑포인트/환율</div>
-                  <div className="text-xs text-gray-500 mb-3">관리자 승인 후 제소회</div>
+                  <div className="text-xs text-gray-500 mb-3">관리자 승인 후 재조회</div>
                   
                   <div className="grid grid-cols-2 gap-4 mb-4">
                     <div>
                       <div className="text-sm text-gray-600 mb-2">NEAR</div>
+                      <div className="grid grid-cols-2 gap-1 mb-2">
+                        <Button 
+                          variant="outline"
+                          size="sm"
+                          className={cn(
+                            "rounded-xl transition-all duration-200 text-xs",
+                            nearAmountCurrency === "USD" 
+                              ? "bg-teal-400 border-2 border-teal-600 text-white shadow-inner ring-2 ring-teal-300" 
+                              : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                          )}
+                          onClick={() => setNearAmountCurrency("USD")}
+                        >
+                          USD
+                        </Button>
+                        <Button 
+                          variant="outline"
+                          size="sm"
+                          className={cn(
+                            "rounded-xl transition-all duration-200 text-xs",
+                            nearAmountCurrency === "KRW" 
+                              ? "bg-teal-400 border-2 border-teal-600 text-white shadow-inner ring-2 ring-teal-300" 
+                              : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                          )}
+                          onClick={() => setNearAmountCurrency("KRW")}
+                        >
+                          KRW
+                        </Button>
+                      </div>
                       <Input
                         type="text"
                         placeholder="NEAR 금액 입력"
                         value={nearAmount}
                         onChange={(e) => {
-                          const formattedValue = formatInputValue(e.target.value, baseCurrency);
+                          const formattedValue = formatInputValue(e.target.value, nearAmountCurrency);
                           setNearAmount(formattedValue);
                         }}
                         className="text-right text-lg bg-gray-50/50 border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-200"
@@ -243,12 +273,40 @@ export default function SwapTrading() {
                     
                     <div>
                       <div className="text-sm text-gray-600 mb-2">FAR</div>
+                      <div className="grid grid-cols-2 gap-1 mb-2">
+                        <Button 
+                          variant="outline"
+                          size="sm"
+                          className={cn(
+                            "rounded-xl transition-all duration-200 text-xs",
+                            farAmountCurrency === "USD" 
+                              ? "bg-teal-400 border-2 border-teal-600 text-white shadow-inner ring-2 ring-teal-300" 
+                              : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                          )}
+                          onClick={() => setFarAmountCurrency("USD")}
+                        >
+                          USD
+                        </Button>
+                        <Button 
+                          variant="outline"
+                          size="sm"
+                          className={cn(
+                            "rounded-xl transition-all duration-200 text-xs",
+                            farAmountCurrency === "KRW" 
+                              ? "bg-teal-400 border-2 border-teal-600 text-white shadow-inner ring-2 ring-teal-300" 
+                              : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                          )}
+                          onClick={() => setFarAmountCurrency("KRW")}
+                        >
+                          KRW
+                        </Button>
+                      </div>
                       <Input
                         type="text"
                         placeholder="FAR 금액 입력"
                         value={farAmount}
                         onChange={(e) => {
-                          const formattedValue = formatInputValue(e.target.value, baseCurrency);
+                          const formattedValue = formatInputValue(e.target.value, farAmountCurrency);
                           setFarAmount(formattedValue);
                         }}
                         className="text-right text-lg bg-gray-50/50 border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-200"
@@ -267,26 +325,37 @@ export default function SwapTrading() {
               {/* Summary Card */}
               <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 rounded-2xl mb-6 shadow-inner">
                 <div className="text-sm text-gray-700 mb-2">외환스왑 {direction === "BUY_SELL_USD" ? "BUY&SELL USD" : "SELL&BUY USD"} 거래</div>
+                
+                {/* NEAR 정보 */}
                 <div className="text-sm text-gray-600 mb-1">
-                  NEAR 금액: {nearAmount ? formatCurrencyAmount(parseFloat(removeThousandSeparator(nearAmount)), baseCurrency) : "미입력"} {baseCurrency}
+                  NEAR SELL: USD {nearAmountCurrency === "USD" && nearAmount ? 
+                    formatCurrencyAmount(parseFloat(removeThousandSeparator(nearAmount)), "USD") : "미입력"}
                 </div>
                 <div className="text-sm text-gray-600 mb-1">
-                  FAR 금액: {farAmount ? formatCurrencyAmount(parseFloat(removeThousandSeparator(farAmount)), baseCurrency) : "미입력"} {baseCurrency}
+                  NEAR BUY: KRW {nearAmountCurrency === "KRW" && nearAmount ? 
+                    formatCurrencyAmount(parseFloat(removeThousandSeparator(nearAmount)), "KRW") : "미입력"}
                 </div>
                 <div className="text-sm text-gray-600 mb-1">
-                  스왑포인트: 관리자 가격 제공 후 확정
+                  NEAR 거래환율: 관리자 가격 제공 후 확정
                 </div>
                 <div className="text-sm text-gray-600 mb-1">
-                  환율-NEAR: 관리자 가격 제공 후 확정
+                  NEAR 결제일: {nearDate ? format(nearDate, "yyyy-MM-dd") : "미선택"}
+                </div>
+                
+                {/* FAR 정보 */}
+                <div className="text-sm text-gray-600 mb-1">
+                  FAR BUY: USD {farAmountCurrency === "USD" && farAmount ? 
+                    formatCurrencyAmount(parseFloat(removeThousandSeparator(farAmount)), "USD") : "미입력"}
                 </div>
                 <div className="text-sm text-gray-600 mb-1">
-                  환율-FAR: 관리자 가격 제공 후 확정
+                  FAR SELL: KRW {farAmountCurrency === "KRW" && farAmount ? 
+                    formatCurrencyAmount(parseFloat(removeThousandSeparator(farAmount)), "KRW") : "미입력"}
+                </div>
+                <div className="text-sm text-gray-600 mb-1">
+                  FAR 거래환율: 관리자 가격 제공 후 확정
                 </div>
                 <div className="text-sm text-gray-600">
-                  Near Leg: {nearDate ? format(nearDate, "yyyy-MM-dd") : "미선택"}
-                </div>
-                <div className="text-sm text-gray-600">
-                  Far Leg: {farDate ? format(farDate, "yyyy-MM-dd") : "미선택"}
+                  FAR 결제일: {farDate ? format(farDate, "yyyy-MM-dd") : "미선택"}
                 </div>
               </div>
 
