@@ -86,22 +86,23 @@ export default function SpotTrading() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-slate-900">
       <Header />
       <div className="flex">
         <Sidebar />
         <div className="flex-1 p-6">
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-foreground mb-2">현물환</h2>
-            <p className="text-muted-foreground">실시간 환율로 즉시 거래가 가능합니다.</p>
+            <h2 className="text-2xl font-bold text-white mb-2">현물환</h2>
+            <p className="text-slate-300">실시간 환율로 즉시 거래가 가능합니다.</p>
           </div>
 
           <div className="max-w-md mx-auto">
             <Card className="p-6 bg-white dark:bg-white text-gray-900">
-              {/* Step 1: 현물환 */}
-              <div className="flex items-center mb-4">
+              {/* Step 1: 통화쌍 선택 */}
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-sm text-gray-600">현물환</span>
                 <Select value={selectedPair} onValueChange={setSelectedPair}>
-                  <SelectTrigger className="w-32">
+                  <SelectTrigger className="w-32 bg-slate-100 border-slate-300">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -114,11 +115,7 @@ export default function SpotTrading() {
                 </Select>
               </div>
 
-              {/* Step 2: Currency pair display */}
-              <div className="flex items-center justify-end mb-4">
-              </div>
-
-              {/* Step 3: Rate display */}
+              {/* Step 2: Rate display */}
               <div className="flex items-center mb-6">
                 <div className="flex-1 grid grid-cols-2 gap-4">
                   <div className="text-center">

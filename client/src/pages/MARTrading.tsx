@@ -5,6 +5,7 @@ import Sidebar from "@/components/Sidebar";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -75,41 +76,54 @@ export default function MARTrading() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-slate-900">
       <Header />
       <div className="flex">
         <Sidebar />
         <div className="flex-1 p-6">
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-foreground mb-2">MAR</h2>
-            <p className="text-muted-foreground">Market Average Rate - 오전 9시 이전 주문 제한</p>
+            <h2 className="text-2xl font-bold text-white mb-2">MAR</h2>
+            <p className="text-slate-300">Market Average Rate - 오전 9시 이전 주문 제한</p>
           </div>
 
           <div className="max-w-md mx-auto">
             <Card className="p-6 bg-white dark:bg-white text-gray-900">
-              {/* Step 1: MAR */}
-              <div className="flex items-center mb-4">
+              {/* Step 1: 통화쌍 선택 */}
+              <div className="flex items-center justify-between mb-4">
                 <span className="text-sm text-gray-600">MAR</span>
-                <div className="ml-auto flex items-center">
-                  <span className="text-sm font-medium">🇺🇸 USD/KRW</span>
-
-                </div>
+                <Select value="USD/KRW" disabled>
+                  <SelectTrigger className="w-32 bg-slate-100 border-slate-300">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="USD/KRW">USD/KRW</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
-              {/* Step 3: Rate display - MAR 환율 */}
+              {/* Step 2: Rate display - MAR 환율 */}
               <div className="flex items-center mb-6">
                 <div className="flex-1 grid grid-cols-2 gap-4">
                   <div className="text-center">
                     <div className="text-sm text-gray-600 mb-1">SELL USD</div>
                     <div className="text-2xl font-bold text-blue-600">
-                      -2.50
+                      {sellRate.toFixed(2).split('.')[0]}.
+                      <span className="text-lg">{sellRate.toFixed(2).split('.')[1]}</span>
                     </div>
-                    <div className="text-sm text-gray-500 mt-1">SELL선택</div>
+                    <Button 
+                      variant="outline"
+                      size="sm" 
+                      className="mt-2 w-full"
+                      onClick={() => setDirection("SELL")}
+                    >
+                      SELL선택
+                    </Button>
                   </div>
                   <div className="text-center">
                     <div className="text-sm text-gray-600 mb-1">BUY USD</div>
                     <div className="text-2xl font-bold text-red-500">
-                      +2.50
+                      {buyRate.toFixed(2).split('.')[0]}.
+                      <span className="text-lg">{buyRate.toFixed(2).split('.')[1]}</span>
                     </div>
                     <Button 
                       size="sm" 
@@ -123,26 +137,10 @@ export default function MARTrading() {
                 </div>
               </div>
 
-              {/* MAR 거래 정보 */}
-              <div className="mb-6 p-4 bg-blue-50 rounded-lg">
-                <div className="text-sm text-gray-600 mb-2">만기일</div>
-                <div className="text-lg font-medium">2024 06 28</div>
-                <div className="text-sm text-gray-600 mt-2">환율</div>
-                <div className="text-lg font-medium">MAR ↓ 2.50</div>
-              </div>
-
-              {/* Step 5: Amount input */}
+              {/* Step 3: Amount input */}
               <div className="flex items-center mb-6">
                 <div className="flex-1">
                   <div className="text-sm text-gray-600 mb-2">금액</div>
-                  <div className="text-sm text-gray-600 mb-1">BUY USD</div>
-                  <div className="flex items-center mb-2">
-                    <span className="text-lg font-semibold text-green-600">+1M</span>
-                    <span className="ml-auto text-lg font-semibold text-green-600">+0.1M</span>
-                  </div>
-                  <div className="text-sm">SELL KRW</div>
-                  <div className="text-gray-400 text-sm mb-2">상대감슈 간신원 MAR간융</div>
-                  
                   <Input
                     type="number"
                     placeholder="거래금액을 입력하세요"
@@ -153,10 +151,7 @@ export default function MARTrading() {
                 </div>
               </div>
 
-              {/* Step 4: Final step indicator */}
-              <div className="flex justify-center mb-4">
-              </div>
-
+              {/* Step 4: Submit button */}
               <Button
                 onClick={handleTrade}
                 disabled={mutation.isPending || !amount}

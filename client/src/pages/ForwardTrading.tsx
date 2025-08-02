@@ -85,54 +85,48 @@ export default function ForwardTrading() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-slate-900">
       <Header />
       <div className="flex">
         <Sidebar />
         <div className="flex-1 p-6">
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-foreground mb-2">선물환</h2>
-            <p className="text-muted-foreground">미래 날짜의 환율을 미리 확정하는 거래입니다.</p>
+            <h2 className="text-2xl font-bold text-white mb-2">선물환</h2>
+            <p className="text-slate-300">미래 특정일에 거래하는 선물환 상품입니다.</p>
           </div>
 
           <div className="max-w-md mx-auto">
             <Card className="p-6 bg-white dark:bg-white text-gray-900">
-              {/* Step 1: 선물환 */}
-              <div className="flex items-center mb-4">
+              {/* Step 1: 통화쌍 선택 */}
+              <div className="flex items-center justify-between mb-4">
                 <span className="text-sm text-gray-600">선물환</span>
-                <div className="ml-auto">
-                  <Select value={selectedPair} onValueChange={setSelectedPair}>
-                    <SelectTrigger className="w-32">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {currencyPairs.map((pair) => (
-                        <SelectItem key={pair.id} value={pair.symbol}>
-                          🇺🇸 {pair.symbol}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
+                <Select value={selectedPair} onValueChange={setSelectedPair}>
+                  <SelectTrigger className="w-32 bg-slate-100 border-slate-300">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {currencyPairs.map((pair) => (
+                      <SelectItem key={pair.id} value={pair.symbol}>
+                        {pair.symbol}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
-              {/* Step 3: Rate display */}
+              {/* Step 2: Rate display */}
               <div className="flex items-center mb-6">
                 <div className="flex-1 grid grid-cols-2 gap-4">
                   <div className="text-center">
                     <div className="text-sm text-gray-600 mb-1">SELL {baseCurrency}</div>
                     <div className="text-2xl font-bold text-blue-600">
-                      {sellRate.toFixed(0)}.
-                      <span className="text-lg">{sellRate.toFixed(2).split('.')[1] || '95'}</span>
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {(sellRate - 2).toFixed(2)} / {(sellRate + 2).toFixed(2)}
+                      {sellRate.toFixed(2).split('.')[0]}.
+                      <span className="text-lg">{sellRate.toFixed(2).split('.')[1]}</span>
                     </div>
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className={cn("mt-2 w-full", direction === "SELL" && "border-blue-500 bg-blue-50")}
+                      className="mt-2 w-full"
                       onClick={() => setDirection("SELL")}
                     >
                       SELL선택
@@ -141,11 +135,8 @@ export default function ForwardTrading() {
                   <div className="text-center">
                     <div className="text-sm text-gray-600 mb-1">BUY {baseCurrency}</div>
                     <div className="text-2xl font-bold text-red-500">
-                      {buyRate.toFixed(0)}.
-                      <span className="text-lg">{buyRate.toFixed(2).split('.')[1] || '55'}</span>
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {(buyRate - 2).toFixed(2)} / {(buyRate + 2).toFixed(2)}
+                      {buyRate.toFixed(2).split('.')[0]}.
+                      <span className="text-lg">{buyRate.toFixed(2).split('.')[1]}</span>
                     </div>
                     <Button 
                       size="sm" 
