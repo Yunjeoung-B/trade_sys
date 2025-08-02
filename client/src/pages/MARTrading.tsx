@@ -226,7 +226,8 @@ export default function MARTrading() {
             {/* MAR 안내문구 - 주문창 바로 아래 */}
             <div className="mt-4 text-center">
               <div className="text-white text-sm opacity-80">
-                MAR는 당일 장마감후 결정되는 환율로서, 익영업일 서울외국환중개에 고시됩니다.
+                MAR는 당일 장마감후 결정되는 환율로서,<br />
+                익영업일 서울외국환중개에 고시됩니다.
               </div>
             </div>
           </div>
