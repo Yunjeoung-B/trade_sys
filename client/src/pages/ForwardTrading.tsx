@@ -11,6 +11,7 @@ import { format, addDays } from "date-fns";
 import { cn } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { formatCurrencyAmount } from "@/lib/currencyUtils";
 import type { CurrencyPair } from "@shared/schema";
 
 
@@ -368,10 +369,12 @@ export default function ForwardTrading() {
               선물환 {baseCurrency} {direction}/{quoteCurrency} {direction === "BUY" ? "SELL" : "BUY"} 주문
             </div>
             <div className="text-sm text-gray-600 mb-1">
-              {direction === "BUY" ? "BUY" : "SELL"}: {baseCurrency} {amountCurrency === "BASE" ? (amount || "미입력") : "거래시 확정"}
+              {direction === "BUY" ? "BUY" : "SELL"}: {baseCurrency} {amountCurrency === "BASE" ? 
+                (amount ? formatCurrencyAmount(parseFloat(amount), baseCurrency) : "미입력") : "거래시 확정"}
             </div>
             <div className="text-sm text-gray-600 mb-1">
-              {direction === "BUY" ? "SELL" : "BUY"}: {quoteCurrency} {amountCurrency === "QUOTE" ? (amount || "미입력") : "거래시 확정"}
+              {direction === "BUY" ? "SELL" : "BUY"}: {quoteCurrency} {amountCurrency === "QUOTE" ? 
+                (amount ? formatCurrencyAmount(parseFloat(amount), quoteCurrency) : "미입력") : "거래시 확정"}
             </div>
             {orderType === "LIMIT" && (
               <div className="text-sm text-gray-600 mb-1">

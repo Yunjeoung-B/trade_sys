@@ -11,6 +11,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { formatCurrencyAmount, calculateCurrencyAmount } from "@/lib/currencyUtils";
 import type { CurrencyPair } from "@shared/schema";
 
 
@@ -383,10 +384,16 @@ export default function SpotTrading() {
                   현물환 {baseCurrency} {direction}/{quoteCurrency} {direction === "BUY" ? "SELL" : "BUY"} 주문
                 </div>
                 <div className="text-sm text-gray-600 mb-1">
-                  {direction === "BUY" ? "BUY" : "SELL"}: {baseCurrency} {amountCurrency === "BASE" ? (amount || "0") : ((parseFloat(amount || "0") / (direction === "BUY" ? buyRate : sellRate)).toFixed(2))}
+                  {direction === "BUY" ? "BUY" : "SELL"}: {baseCurrency} {amountCurrency === "BASE" ? 
+                    formatCurrencyAmount(parseFloat(amount || "0"), baseCurrency) : 
+                    formatCurrencyAmount(calculateCurrencyAmount(parseFloat(amount || "0") / (direction === "BUY" ? buyRate : sellRate), baseCurrency), baseCurrency)
+                  }
                 </div>
                 <div className="text-sm text-gray-600 mb-1">
-                  {direction === "BUY" ? "SELL" : "BUY"}: {quoteCurrency} {amountCurrency === "QUOTE" ? (amount || "0") : ((parseFloat(amount || "0") * (direction === "BUY" ? buyRate : sellRate)).toFixed(2))}
+                  {direction === "BUY" ? "SELL" : "BUY"}: {quoteCurrency} {amountCurrency === "QUOTE" ? 
+                    formatCurrencyAmount(parseFloat(amount || "0"), quoteCurrency) : 
+                    formatCurrencyAmount(calculateCurrencyAmount(parseFloat(amount || "0") * (direction === "BUY" ? buyRate : sellRate), quoteCurrency), quoteCurrency)
+                  }
                 </div>
                 {orderType === "LIMIT" && (
                   <div className="text-sm text-gray-600 mb-1">

@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { formatCurrencyAmount, calculateCurrencyAmount } from "@/lib/currencyUtils";
 
 
 export default function MARTrading() {
@@ -191,7 +192,7 @@ export default function MARTrading() {
               <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 rounded-2xl mb-6 shadow-inner">
                 <div className="text-sm text-gray-700 mb-2">MAR {direction} 거래</div>
                 <div className="text-sm text-gray-600 mb-1">
-                  거래금액: {amountCurrency === "BASE" ? "USD" : "KRW"} {amount || "미입력"}
+                  거래금액: {amountCurrency === "BASE" ? "USD" : "KRW"} {amount ? formatCurrencyAmount(parseFloat(amount), amountCurrency === "BASE" ? "USD" : "KRW") : "미입력"}
                 </div>
                 <div className="text-sm text-gray-600">
                   적용환율: MAR {direction === "BUY" ? `+${buySpread.toFixed(2)}` : `${sellSpread.toFixed(2)}`}

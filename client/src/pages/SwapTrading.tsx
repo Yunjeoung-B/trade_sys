@@ -11,6 +11,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { formatCurrencyAmount } from "@/lib/currencyUtils";
 import type { CurrencyPair } from "@shared/schema";
 
 
@@ -248,7 +249,7 @@ export default function SwapTrading() {
               <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 rounded-2xl mb-6 shadow-inner">
                 <div className="text-sm text-gray-700 mb-2">Swap {direction} 거래</div>
                 <div className="text-sm text-gray-600 mb-1">
-                  거래금액: {amount || "0"} {baseCurrency}
+                  거래금액: {amount ? formatCurrencyAmount(parseFloat(amount), baseCurrency) : "미입력"} {baseCurrency}
                 </div>
                 <div className="text-sm text-gray-600 mb-1">
                   거래환율: 관리자 가격 제공 후 확정
