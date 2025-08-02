@@ -374,12 +374,35 @@ export default function SpotTrading() {
               <div className="flex items-center mb-6">
                 <div className="flex-1">
                   <div className="text-sm text-gray-700 font-medium mb-2">주문금액</div>
-                  <div className="text-right text-gray-500 text-sm mb-1">
-                    {amountCurrency === "BASE" ? baseCurrency : quoteCurrency}
+                  <div className="flex-1 grid grid-cols-2 gap-2 mb-2">
+                    <Button 
+                      variant="outline"
+                      className={cn(
+                        "rounded-xl transition-all duration-200",
+                        amountCurrency === "BASE" 
+                          ? "bg-teal-400 border-2 border-teal-600 text-white shadow-inner ring-2 ring-teal-300" 
+                          : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                      )}
+                      onClick={() => setAmountCurrency("BASE")}
+                    >
+                      {baseCurrency} {direction === "BUY" ? "매수" : "매도"}
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      className={cn(
+                        "rounded-xl transition-all duration-200",
+                        amountCurrency === "QUOTE" 
+                          ? "bg-teal-400 border-2 border-teal-600 text-white shadow-inner ring-2 ring-teal-300" 
+                          : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                      )}
+                      onClick={() => setAmountCurrency("QUOTE")}
+                    >
+                      {quoteCurrency} {direction === "BUY" ? "매도" : "매수"}
+                    </Button>
                   </div>
                   <Input
                     type="number"
-                    placeholder="0"
+                    placeholder="여기에 주문금액을 입력하세요"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     className="text-right text-lg bg-gray-50/50 border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-200"

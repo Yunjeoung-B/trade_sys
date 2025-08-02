@@ -49,6 +49,7 @@ UI Style: Gradient backgrounds (slate-800 → blue-900 → purple-900), rounded-
 - **Spread Management**: Multi-dimensional spread settings by product type, currency pair, settlement date, and user group level
 - **Time Restrictions**: Business logic for MAR trading cutoff (9:00 AM) with real-time validation
 - **UI Enhancement**: Consistent gradient-based design across all trading pages with modern button styling and rounded input fields
+- **Standardized Order Input**: All trading pages now use consistent layout with currency selection buttons above order amount input field, matching MAR trading design
 
 ## Business Logic Architecture
 - **Quote Calculation**: Layered pricing model combining source rates with group-specific spreads, product spreads, currency spreads, and tenor spreads
