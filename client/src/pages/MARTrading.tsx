@@ -199,7 +199,7 @@ export default function MARTrading() {
               <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 rounded-2xl mb-6 shadow-inner">
                 <div className="text-sm text-gray-700 mb-2">MAR {direction} 거래</div>
                 <div className="text-sm text-gray-600 mb-1">
-                  거래금액: {amount || "미입력"} {amountCurrency === "BASE" ? "USD" : "KRW"}
+                  거래금액: {amountCurrency === "BASE" ? "USD" : "KRW"} {amount || "미입력"}
                 </div>
                 <div className="text-sm text-gray-600 mb-1">
                   기준환율: MAR {marRate.toFixed(2)}
