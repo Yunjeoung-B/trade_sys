@@ -16,7 +16,11 @@ import type { CurrencyPair } from "@shared/schema";
 export default function SpotTrading() {
   const [selectedPair, setSelectedPair] = useState("USD/KRW");
   const [direction, setDirection] = useState<"BUY" | "SELL">("BUY");
+  const [orderType, setOrderType] = useState<"MARKET" | "LIMIT">("MARKET");
   const [amount, setAmount] = useState("");
+  const [amountCurrency, setAmountCurrency] = useState<"BASE" | "QUOTE">("BASE"); // BASE = USD, QUOTE = KRW
+  const [limitRate, setLimitRate] = useState("");
+  const [validUntil, setValidUntil] = useState<Date>(new Date());
   const [valueDate, setValueDate] = useState<Date>(new Date());
   const { toast } = useToast();
 
@@ -73,13 +77,29 @@ export default function SpotTrading() {
       return;
     }
 
+    if (orderType === "LIMIT" && !limitRate) {
+      toast({
+        title: "입력 오류", 
+        description: "지정가 주문의 경우 지정환율을 입력해주세요.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const tradeRate = orderType === "MARKET" 
+      ? (direction === "BUY" ? buyRate : sellRate)
+      : parseFloat(limitRate);
+
     mutation.mutate({
       productType: "Spot",
       currencyPairId: selectedPairData.id,
       direction,
+      orderType,
       amount: parseFloat(amount),
-      rate: direction === "BUY" ? buyRate : sellRate,
+      amountCurrency,
+      rate: tradeRate,
       settlementDate: valueDate,
+      validUntil: orderType === "LIMIT" ? validUntil : undefined,
     });
   };
 
@@ -151,16 +171,16 @@ export default function SpotTrading() {
                 </div>
               </div>
 
-              {/* Step 3: Direction buttons */}
+              {/* Step 3: Order Type buttons */}
               <div className="flex items-center mb-4">
                 <div className="flex-1 grid grid-cols-2 gap-2">
                   <Button 
                     variant="outline"
                     className={cn(
                       "bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200",
-                      direction === "SELL" && "bg-blue-100 border-blue-300 text-blue-700"
+                      orderType === "MARKET" && "bg-blue-100 border-blue-300 text-blue-700"
                     )}
-                    onClick={() => setDirection("SELL")}
+                    onClick={() => setOrderType("MARKET")}
                   >
                     시장가
                   </Button>
@@ -168,14 +188,62 @@ export default function SpotTrading() {
                     variant="outline"
                     className={cn(
                       "bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200",
-                      direction === "BUY" && "bg-red-100 border-red-300 text-red-700"
+                      orderType === "LIMIT" && "bg-red-100 border-red-300 text-red-700"
                     )}
-                    onClick={() => setDirection("BUY")}
+                    onClick={() => setOrderType("LIMIT")}
                   >
                     지정가
                   </Button>
                 </div>
               </div>
+
+              {/* Step 3.5: Limit Rate Input (only show for LIMIT orders) */}
+              {orderType === "LIMIT" && (
+                <div className="flex items-center mb-4">
+                  <div className="flex-1">
+                    <div className="text-sm text-gray-700 font-medium mb-2">지정환율</div>
+                    <Input
+                      type="number"
+                      placeholder="원하는 환율을 입력하세요"
+                      value={limitRate}
+                      onChange={(e) => setLimitRate(e.target.value)}
+                      className="text-right text-lg bg-gray-50 border-gray-300 text-gray-900"
+                      step="0.01"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Step 3.6: Valid Until Date (only show for LIMIT orders) */}
+              {orderType === "LIMIT" && (
+                <div className="flex items-center mb-4">
+                  <div className="flex-1">
+                    <div className="text-sm text-gray-700 font-medium mb-2">주문유효기간</div>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal bg-gray-50 border-gray-300 text-gray-900",
+                            !validUntil && "text-gray-500"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {validUntil ? format(validUntil, "yyyy MM dd") : "유효기간 선택"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={validUntil}
+                          onSelect={(date) => date && setValidUntil(date)}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
+              )}
 
               {/* Step 4: Value date */}
               <div className="flex items-center mb-4">
@@ -206,11 +274,39 @@ export default function SpotTrading() {
                 </div>
               </div>
 
-              {/* Step 5: Amount input */}
+              {/* Step 5: Amount Currency Selection */}
+              <div className="flex items-center mb-4">
+                <div className="flex-1 grid grid-cols-2 gap-2">
+                  <Button 
+                    variant="outline"
+                    className={cn(
+                      "bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200",
+                      amountCurrency === "BASE" && "bg-green-100 border-green-300 text-green-700"
+                    )}
+                    onClick={() => setAmountCurrency("BASE")}
+                  >
+                    {baseCurrency} 금액
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    className={cn(
+                      "bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200",
+                      amountCurrency === "QUOTE" && "bg-orange-100 border-orange-300 text-orange-700"
+                    )}
+                    onClick={() => setAmountCurrency("QUOTE")}
+                  >
+                    {quoteCurrency} 금액
+                  </Button>
+                </div>
+              </div>
+
+              {/* Step 6: Amount input */}
               <div className="flex items-center mb-6">
                 <div className="flex-1">
                   <div className="text-sm text-gray-700 font-medium mb-2">주문금액</div>
-                  <div className="text-right text-gray-500 text-sm mb-1">{direction === "BUY" ? buyCurrency : sellCurrency}</div>
+                  <div className="text-right text-gray-500 text-sm mb-1">
+                    {amountCurrency === "BASE" ? baseCurrency : quoteCurrency}
+                  </div>
                   <Input
                     type="number"
                     placeholder="0"
@@ -221,15 +317,30 @@ export default function SpotTrading() {
                 </div>
               </div>
 
-              {/* Step 6: Trade Summary */}
+              {/* Step 7: Trade Summary */}
               <div className="bg-gray-50 p-3 rounded-lg mb-6">
-                <div className="text-sm text-gray-700 mb-2">{direction} {direction === "BUY" ? baseCurrency : quoteCurrency}</div>
-                <div className="text-lg font-semibold text-gray-900">+1M</div>
-                <div className="text-xs text-gray-500 mt-1">원화전환</div>
-                <div className="text-lg font-semibold text-gray-900">+0.1M</div>
-                <div className="text-xs text-gray-500">USD KRW</div>
-                <div className="text-sm text-gray-700 mt-2">SELL {sellCurrency} ℹ️</div>
-                <div className="text-lg text-gray-900">0 {sellCurrency}</div>
+                <div className="text-sm text-gray-700 mb-2">
+                  {orderType === "MARKET" ? "시장가" : "지정가"} {direction} 주문
+                </div>
+                <div className="text-sm text-gray-600 mb-1">
+                  거래금액: {amount || "0"} {amountCurrency === "BASE" ? baseCurrency : quoteCurrency}
+                </div>
+                {orderType === "LIMIT" && (
+                  <div className="text-sm text-gray-600 mb-1">
+                    지정환율: {limitRate || "미지정"}
+                  </div>
+                )}
+                <div className="text-sm text-gray-600 mb-1">
+                  적용환율: {orderType === "MARKET" 
+                    ? (direction === "BUY" ? buyRate.toFixed(2) : sellRate.toFixed(2))
+                    : (limitRate || "미지정")
+                  }
+                </div>
+                {orderType === "LIMIT" && (
+                  <div className="text-xs text-gray-500">
+                    유효기간: {validUntil ? format(validUntil, "yyyy-MM-dd") : "미지정"}
+                  </div>
+                )}
               </div>
 
               <Button
