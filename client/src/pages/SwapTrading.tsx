@@ -205,17 +205,18 @@ export default function SwapTrading() {
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 gap-2">
-                      {/* Show selected direction - BUY&SELL on left, SELL&BUY on right */}
-                      {direction === "BUY_SELL_USD" ? (
+                      {/* Show selected direction based on base currency and direction */}
+                      {((swapBaseCurrency === "USD" && direction === "BUY_SELL_USD") || 
+                        (swapBaseCurrency === "KRW" && direction === "SELL_BUY_USD")) ? (
                         <>
-                          <div className="bg-teal-400 text-white p-4 rounded-2xl">
+                          <div className="bg-blue-500 text-white p-4 rounded-2xl">
                             <div className="border-2 border-white rounded-lg px-3 py-1 mb-3 text-center">
-                              <div className="text-lg font-bold">BUY&SELL USD</div>
+                              <div className="text-lg font-bold">BUY&SELL {swapBaseCurrency}</div>
                             </div>
                             <div className="text-2xl font-bold">1,390.40</div>
                             <div className="text-4xl font-bold my-2">14</div>
                             <div className="text-lg">1,382.95</div>
-                            <div className="bg-teal-600 px-3 py-1 rounded-lg text-sm mt-2">매수 1.0%</div>
+                            <div className="bg-blue-600 px-3 py-1 rounded-lg text-sm mt-2">매수 1.0%</div>
                           </div>
                           <div></div> {/* Empty space for the second column */}
                         </>
@@ -224,7 +225,7 @@ export default function SwapTrading() {
                           <div></div> {/* Empty space for the first column */}
                           <div className="bg-red-400 text-white p-4 rounded-2xl">
                             <div className="border-2 border-white rounded-lg px-3 py-1 mb-3 text-center">
-                              <div className="text-lg font-bold">SELL&BUY USD</div>
+                              <div className="text-lg font-bold">SELL&BUY {swapBaseCurrency}</div>
                             </div>
                             <div className="text-2xl font-bold">1,392.00</div>
                             <div className="text-4xl font-bold my-2">14</div>
@@ -428,7 +429,7 @@ export default function SwapTrading() {
 
               {/* Summary Card */}
               <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 rounded-2xl mb-6 shadow-inner">
-                <div className="text-sm text-gray-700 mb-2">외환스왑 {direction === "BUY_SELL_USD" ? "BUY&SELL USD" : "SELL&BUY USD"} 거래</div>
+                <div className="text-sm text-gray-700 mb-2">외환스왑 {direction === "BUY_SELL_USD" ? `BUY&SELL ${swapBaseCurrency}` : `SELL&BUY ${swapBaseCurrency}`} 거래</div>
                 
                 {adminPriceProvided ? (
                   <>
