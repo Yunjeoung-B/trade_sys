@@ -153,8 +153,25 @@ export default function MARTrading() {
                 <span className="text-lg font-semibold text-gray-800">MAR {marRate.toFixed(2)}</span>
               </div>
 
-              {/* Step 3: Amount Currency Selection */}
+              {/* Step 3: Amount input */}
               <div className="flex items-center mb-4">
+                <div className="flex-1">
+                  <div className="text-sm text-gray-700 font-medium mb-2">주문금액</div>
+                  <div className="text-right text-gray-500 text-sm mb-1">
+                    {amountCurrency === "BASE" ? "USD" : "KRW"}
+                  </div>
+                  <Input
+                    type="number"
+                    placeholder="0"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    className="text-right text-lg bg-gray-50/50 border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-200"
+                  />
+                </div>
+              </div>
+
+              {/* Step 4: Amount Currency Selection */}
+              <div className="flex items-center mb-6">
                 <div className="flex-1 grid grid-cols-2 gap-2">
                   <Button 
                     variant="outline"
@@ -180,23 +197,6 @@ export default function MARTrading() {
                   >
                     KRW 금액
                   </Button>
-                </div>
-              </div>
-
-              {/* Step 4: Amount input */}
-              <div className="flex items-center mb-6">
-                <div className="flex-1">
-                  <div className="text-sm text-gray-700 font-medium mb-2">주문금액</div>
-                  <div className="text-right text-gray-500 text-sm mb-1">
-                    {amountCurrency === "BASE" ? "USD" : "KRW"}
-                  </div>
-                  <Input
-                    type="number"
-                    placeholder="0"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    className="text-right text-lg bg-gray-50/50 border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-200"
-                  />
                 </div>
               </div>
 
