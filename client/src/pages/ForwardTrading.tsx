@@ -143,6 +143,19 @@ export default function ForwardTrading() {
                   선물환 거래를 위해서는 CHOIICE FX에 가격을 요청해야 합니다.
                 </div>
                 
+                {/* Currency Selection */}
+                <div className="flex justify-center mb-4">
+                  <Select value={forwardBaseCurrency} onValueChange={(value: "USD" | "KRW") => setForwardBaseCurrency(value)}>
+                    <SelectTrigger className="w-32 bg-white border-gray-200 rounded-xl shadow-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="USD">USD/KRW</SelectItem>
+                      <SelectItem value="KRW">KRW/USD</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
                 {/* Direction Selection */}
                 {forwardBaseCurrency === "USD" ? (
                   <div className="grid grid-cols-2 gap-2 mb-4">
