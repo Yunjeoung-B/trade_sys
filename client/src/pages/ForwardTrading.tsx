@@ -179,7 +179,7 @@ export default function ForwardTrading() {
                 
                 {/* SPOT Rate */}
                 <div className="text-xs text-gray-500 mb-1">SPOT</div>
-                <div className="text-lg font-bold text-red-500 mb-1">
+                <div className="text-lg font-bold mb-1 text-[#454e5e]">
                   {spotBuyRate.toFixed(2)}
                 </div>
                 
