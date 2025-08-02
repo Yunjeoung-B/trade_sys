@@ -187,7 +187,7 @@ export default function MARTrading() {
                   </div>
                   <Input
                     type="number"
-                    placeholder="0"
+                    placeholder="여기에 주문금액을 입력하세요"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     className="text-right text-lg bg-gray-50/50 border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-200"
@@ -199,7 +199,7 @@ export default function MARTrading() {
               <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 rounded-2xl mb-6 shadow-inner">
                 <div className="text-sm text-gray-700 mb-2">MAR {direction} 거래</div>
                 <div className="text-sm text-gray-600 mb-1">
-                  거래금액: {amount || "0"} {amountCurrency === "BASE" ? "USD" : "KRW"}
+                  거래금액: {amount || "미입력"} {amountCurrency === "BASE" ? "USD" : "KRW"}
                 </div>
                 <div className="text-sm text-gray-600 mb-1">
                   기준환율: MAR {marRate.toFixed(2)}
