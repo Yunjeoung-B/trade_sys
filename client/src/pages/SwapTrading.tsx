@@ -497,7 +497,7 @@ export default function SwapTrading() {
                         });
                       }}
                       className="w-full py-4 text-lg font-semibold rounded-2xl text-white shadow-lg hover:shadow-xl transition-all duration-200"
-                      style={{ backgroundColor: '#5239cc' }}
+                      style={{ backgroundColor: '#0d9488' }}
                     >
                       거래 체결
                     </Button>
