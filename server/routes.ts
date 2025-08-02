@@ -299,7 +299,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // User management (admin only)
+  // Users (admin only)
   app.get("/api/users", isAdmin, async (req, res) => {
     try {
       const users = await storage.getAllUsers();

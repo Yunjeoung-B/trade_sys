@@ -19,12 +19,12 @@ export default function ExchangeRates() {
 
   const { data: currencyPairs } = useQuery<CurrencyPair[]>({
     queryKey: ["/api/currency-pairs"],
-    onSuccess: (data) => {
-      if (data && data.length > 0 && !selectedPairId) {
-        setSelectedPairId(data[0].id);
-      }
-    },
   });
+
+  // Set default selected pair when data loads
+  if (currencyPairs && currencyPairs.length > 0 && !selectedPairId) {
+    setSelectedPairId(currencyPairs[0].id);
+  }
 
   const selectedPair = currencyPairs?.find(pair => pair.id === selectedPairId);
 

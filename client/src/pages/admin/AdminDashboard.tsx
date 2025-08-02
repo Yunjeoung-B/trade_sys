@@ -3,30 +3,31 @@ import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, TrendingUp, Clock, AlertTriangle } from "lucide-react";
+import type { User, Trade, QuoteRequest } from "@shared/schema";
 
 export default function AdminDashboard() {
-  const { data: users } = useQuery({
+  const { data: users = [] } = useQuery<User[]>({
     queryKey: ["/api/users"],
   });
 
-  const { data: trades } = useQuery({
+  const { data: trades = [] } = useQuery<Trade[]>({
     queryKey: ["/api/trades"],
   });
 
-  const { data: quoteRequests } = useQuery({
+  const { data: quoteRequests = [] } = useQuery<QuoteRequest[]>({
     queryKey: ["/api/quote-requests"],
   });
 
-  const activeUsers = users?.filter((user: any) => user.isActive).length || 0;
-  const totalTrades = trades?.length || 0;
-  const pendingQuotes = quoteRequests?.filter((req: any) => req.status === "pending").length || 0;
+  const activeUsers = users.filter((user) => user.isActive).length;
+  const totalTrades = trades.length;
+  const pendingQuotes = quoteRequests.filter((req) => req.status === "pending").length;
 
-  // Calculate daily trading volume (mock calculation)
-  const dailyVolume = trades?.reduce((sum: number, trade: any) => {
+  // Calculate daily trading volume
+  const dailyVolume = trades.reduce((sum: number, trade) => {
     const today = new Date().toDateString();
-    const tradeDate = new Date(trade.createdAt).toDateString();
+    const tradeDate = trade.createdAt ? new Date(trade.createdAt).toDateString() : '';
     return today === tradeDate ? sum + Number(trade.amount) : sum;
-  }, 0) || 0;
+  }, 0);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -107,7 +108,7 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {quoteRequests?.slice(0, 5).map((request: any) => (
+                {quoteRequests.slice(0, 5).map((request) => (
                   <div key={request.id} className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
                     <div className={`w-2 h-2 rounded-full ${
                       request.status === "approved" ? "bg-green-500" :
@@ -122,7 +123,7 @@ export default function AdminDashboard() {
                       </p>
                     </div>
                     <span className="text-sm text-gray-400">
-                      {new Date(request.createdAt).toLocaleString('ko-KR')}
+                      {request.createdAt ? new Date(request.createdAt).toLocaleString('ko-KR') : '날짜 없음'}
                     </span>
                   </div>
                 )) || (
