@@ -48,20 +48,7 @@ export default function Sidebar() {
             const isActive = location === item.path;
             
             return (
-              <Button
-                key={item.path}
-                variant="ghost"
-                className={cn(
-                  "w-full justify-start text-left px-4 py-3 rounded-xl transition-all duration-200",
-                  isActive
-                    ? "bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-white border border-blue-400/30 shadow-lg"
-                    : "text-slate-300 hover:text-white hover:bg-white/10"
-                )}
-                onClick={() => setLocation(item.path)}
-              >
-                <Icon className="mr-3 h-4 w-4" />
-                {item.label}
-              </Button>
+              
             );
           })}
         </div>
