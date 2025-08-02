@@ -201,12 +201,8 @@ export default function MARTrading() {
                 <div className="text-sm text-gray-600 mb-1">
                   거래금액: {amountCurrency === "BASE" ? "USD" : "KRW"} {amount || "미입력"}
                 </div>
-                
                 <div className="text-sm text-gray-600">
-                  스프레드: {direction === "BUY" ? buySpread.toFixed(2) : sellSpread.toFixed(2)}
-                </div>
-                <div className="text-sm text-gray-600">
-                  적용환율: {(marRate + (direction === "BUY" ? buySpread : sellSpread)).toFixed(2)}
+                  적용환율: MAR {direction === "BUY" ? `+${buySpread.toFixed(2)}` : `${sellSpread.toFixed(2)}`}
                 </div>
               </div>
 
