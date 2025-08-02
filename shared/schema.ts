@@ -85,7 +85,7 @@ export const quoteRequests = pgTable("quote_requests", {
   nearDate: timestamp("near_date"), // for swaps
   farDate: timestamp("far_date"), // for swaps
   nearRate: decimal("near_rate", { precision: 12, scale: 4 }), // for swaps
-  status: varchar("status").default("pending"), // pending, approved, rejected, executed
+  status: varchar("status").default("REQUESTED"), // REQUESTED, QUOTE_READY, CONFIRMED, EXPIRED
   approvedBy: varchar("approved_by").references(() => users.id),
   approvedAt: timestamp("approved_at"),
   quotedRate: decimal("quoted_rate", { precision: 12, scale: 4 }),

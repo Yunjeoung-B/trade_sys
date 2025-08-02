@@ -14,6 +14,7 @@ import SwapTrading from "@/pages/SwapTrading";
 import MARTrading from "@/pages/MARTrading";
 import ExchangeRates from "@/pages/ExchangeRates";
 import TradingStatus from "@/pages/TradingStatus";
+import TradeStatus from "@/pages/TradeStatus";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import SpreadSettings from "@/pages/admin/SpreadSettings";
 import QuoteApprovals from "@/pages/admin/QuoteApprovals";
@@ -45,7 +46,7 @@ function Router() {
           <Route path="/swap" component={Dashboard} />
           <Route path="/mar" component={Dashboard} />
           <Route path="/rates" component={Dashboard} />
-          <Route path="/trades" component={Dashboard} />
+          <Route path="/trades" component={TradeStatus} />
           
           {user?.role === "admin" && (
             <>
