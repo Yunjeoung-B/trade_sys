@@ -122,19 +122,19 @@ export default function SpotTrading() {
   };
 
   return (
-    <div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-800 via-blue-900 to-purple-900 p-6 -m-6">
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-white mb-2">현물환</h2>
-        <p className="text-slate-300">실시간 환율로 즉시 거래가 가능합니다.</p>
+        <p className="text-slate-200">실시간 환율로 즉시 거래가 가능합니다.</p>
       </div>
 
       <div className="max-w-md mx-auto">
-            <Card className="p-6 bg-white dark:bg-white text-gray-900">
+            <Card className="p-8 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border-0 text-gray-900">
               {/* Step 1: 통화쌍 선택 */}
               <div className="flex items-center justify-between mb-4">
                 <span className="text-sm text-gray-600">현물환</span>
                 <Select value={selectedPair} onValueChange={setSelectedPair}>
-                  <SelectTrigger className="w-32 bg-slate-100 border-slate-300">
+                  <SelectTrigger className="w-32 bg-gray-50 border-gray-200 rounded-xl shadow-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -162,10 +162,15 @@ export default function SpotTrading() {
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="mt-2 w-full bg-gray-100 border-gray-300 text-gray-800 hover:bg-gray-200"
+                      className={cn(
+                        "mt-3 w-full rounded-xl transition-all duration-200",
+                        direction === "SELL" 
+                          ? "bg-gradient-to-r from-pink-200 to-pink-300 border-pink-300 text-pink-800 shadow-md" 
+                          : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                      )}
                       onClick={() => setDirection("SELL")}
                     >
-                      SELL선택
+                      SELL
                     </Button>
                   </div>
                   <div className="text-center">
@@ -178,12 +183,17 @@ export default function SpotTrading() {
                       {(buyRate - 2).toFixed(2)} / {(buyRate + 2).toFixed(2)}
                     </div>
                     <Button 
+                      variant="outline" 
                       size="sm" 
-                      className="mt-2 w-full"
-                      style={{ backgroundColor: 'hsl(330, 100%, 71%)', color: 'white' }}
+                      className={cn(
+                        "mt-3 w-full rounded-xl transition-all duration-200",
+                        direction === "BUY" 
+                          ? "bg-gradient-to-r from-pink-200 to-pink-300 border-pink-300 text-pink-800 shadow-md" 
+                          : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                      )}
                       onClick={() => setDirection("BUY")}
                     >
-                      BUY선택
+                      BUY
                     </Button>
                   </div>
                 </div>
@@ -195,8 +205,10 @@ export default function SpotTrading() {
                   <Button 
                     variant="outline"
                     className={cn(
-                      "bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200",
-                      orderType === "MARKET" && "bg-blue-100 border-blue-300 text-blue-700"
+                      "rounded-xl transition-all duration-200",
+                      orderType === "MARKET" 
+                        ? "bg-gradient-to-r from-blue-100 to-blue-200 border-blue-300 text-blue-800 shadow-md" 
+                        : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                     )}
                     onClick={() => setOrderType("MARKET")}
                   >
@@ -205,8 +217,10 @@ export default function SpotTrading() {
                   <Button 
                     variant="outline"
                     className={cn(
-                      "bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200",
-                      orderType === "LIMIT" && "bg-red-100 border-red-300 text-red-700"
+                      "rounded-xl transition-all duration-200",
+                      orderType === "LIMIT" 
+                        ? "bg-gradient-to-r from-orange-100 to-orange-200 border-orange-300 text-orange-800 shadow-md" 
+                        : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                     )}
                     onClick={() => setOrderType("LIMIT")}
                   >
@@ -225,7 +239,7 @@ export default function SpotTrading() {
                       placeholder="원하는 환율을 입력하세요"
                       value={limitRate}
                       onChange={(e) => setLimitRate(e.target.value)}
-                      className="text-right text-lg bg-gray-50 border-gray-300 text-gray-900"
+                      className="text-right text-lg bg-gray-50/50 border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-200"
                       step="0.01"
                     />
                   </div>
@@ -243,8 +257,10 @@ export default function SpotTrading() {
                       <Button 
                         variant="outline"
                         className={cn(
-                          "bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200",
-                          validityType === "DAY" && "bg-blue-100 border-blue-300 text-blue-700"
+                          "rounded-xl transition-all duration-200",
+                          validityType === "DAY" 
+                            ? "bg-gradient-to-r from-blue-100 to-blue-200 border-blue-300 text-blue-800 shadow-md" 
+                            : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                         )}
                         onClick={() => setValidityType("DAY")}
                       >
@@ -253,8 +269,10 @@ export default function SpotTrading() {
                       <Button 
                         variant="outline"
                         className={cn(
-                          "bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200",
-                          validityType === "TIME" && "bg-orange-100 border-orange-300 text-orange-700"
+                          "rounded-xl transition-all duration-200",
+                          validityType === "TIME" 
+                            ? "bg-gradient-to-r from-orange-100 to-orange-200 border-orange-300 text-orange-800 shadow-md" 
+                            : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                         )}
                         onClick={() => setValidityType("TIME")}
                       >
@@ -265,7 +283,7 @@ export default function SpotTrading() {
                     {/* Time Selection (only show when TIME is selected) */}
                     {validityType === "TIME" && (
                       <Select value={validUntilTime} onValueChange={setValidUntilTime}>
-                        <SelectTrigger className="w-full bg-gray-50 border-gray-300 text-gray-900">
+                        <SelectTrigger className="w-full bg-gray-50/50 border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-200">
                           <SelectValue placeholder="마감시간 선택" />
                         </SelectTrigger>
                         <SelectContent>
@@ -327,8 +345,10 @@ export default function SpotTrading() {
                   <Button 
                     variant="outline"
                     className={cn(
-                      "bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200",
-                      amountCurrency === "BASE" && "bg-green-100 border-green-300 text-green-700"
+                      "rounded-xl transition-all duration-200",
+                      amountCurrency === "BASE" 
+                        ? "bg-gradient-to-r from-green-100 to-green-200 border-green-300 text-green-800 shadow-md" 
+                        : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                     )}
                     onClick={() => setAmountCurrency("BASE")}
                   >
@@ -337,8 +357,10 @@ export default function SpotTrading() {
                   <Button 
                     variant="outline"
                     className={cn(
-                      "bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200",
-                      amountCurrency === "QUOTE" && "bg-orange-100 border-orange-300 text-orange-700"
+                      "rounded-xl transition-all duration-200",
+                      amountCurrency === "QUOTE" 
+                        ? "bg-gradient-to-r from-purple-100 to-purple-200 border-purple-300 text-purple-800 shadow-md" 
+                        : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                     )}
                     onClick={() => setAmountCurrency("QUOTE")}
                   >
@@ -359,13 +381,13 @@ export default function SpotTrading() {
                     placeholder="0"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    className="text-right text-lg bg-gray-50 border-gray-300 text-gray-900"
+                    className="text-right text-lg bg-gray-50/50 border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-200"
                   />
                 </div>
               </div>
 
               {/* Step 7: Trade Summary */}
-              <div className="bg-gray-50 p-3 rounded-lg mb-6">
+              <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 rounded-2xl mb-6 shadow-inner">
                 <div className="text-sm text-gray-700 mb-2">
                   {orderType === "MARKET" ? "시장가" : "지정가"} {direction} 주문
                 </div>
@@ -396,8 +418,7 @@ export default function SpotTrading() {
               <Button
                 onClick={handleTrade}
                 disabled={mutation.isPending || !amount}
-                className="w-full mt-4 text-white py-3 text-lg font-semibold"
-                style={{ backgroundColor: 'hsl(330, 100%, 71%)' }}
+                className="w-full py-4 text-lg font-semibold rounded-2xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
               >
                 {mutation.isPending ? "처리중..." : "거래 실행"}
               </Button>
