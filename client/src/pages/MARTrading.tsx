@@ -223,6 +223,9 @@ export default function MARTrading() {
                 <div className="text-xs text-yellow-600 mt-1">
                   현재 시간: {new Date().toLocaleTimeString('ko-KR')}
                 </div>
+                <div className="text-xs text-yellow-600 mt-2 leading-relaxed">
+                  MAR는 당일 장마감후 결정되는 환율로서, 익영업일 서울외국환중개에 고시됩니다.
+                </div>
               </div>
             </Card>
           </div>
