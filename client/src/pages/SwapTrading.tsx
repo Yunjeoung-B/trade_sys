@@ -23,6 +23,13 @@ export default function SwapTrading() {
   const [nearAmount, setNearAmount] = useState("");
   const [farAmount, setFarAmount] = useState("");
   const { toast } = useToast();
+
+  // Extract base and quote currencies from selected pair
+  const [baseCurrency, quoteCurrency] = selectedPair.split('/');
+  
+  // Determine display currencies based on direction
+  const sellCurrency = quoteCurrency;
+  const buyCurrency = baseCurrency;
   const queryClient = useQueryClient();
 
   const { data: currencyPairs = [] } = useQuery<CurrencyPair[]>({
@@ -96,7 +103,7 @@ export default function SwapTrading() {
           </div>
 
           <div className="max-w-md mx-auto">
-            <Card className="p-6">
+            <Card className="p-6 bg-white dark:bg-white text-gray-900">
               {/* Step 1: 외환스왑 */}
               <div className="flex items-center mb-4">
                 <div className="text-xs text-muted-foreground mr-3">1</div>

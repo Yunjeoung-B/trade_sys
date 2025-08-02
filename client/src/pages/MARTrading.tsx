@@ -86,22 +86,18 @@ export default function MARTrading() {
           </div>
 
           <div className="max-w-md mx-auto">
-            <Card className="p-6">
+            <Card className="p-6 bg-white dark:bg-white text-gray-900">
               {/* Step 1: MAR */}
               <div className="flex items-center mb-4">
-                <div className="text-xs text-muted-foreground mr-3">1</div>
                 <span className="text-sm text-gray-600">MAR</span>
                 <div className="ml-auto flex items-center">
                   <span className="text-sm font-medium">🇺🇸 USD/KRW</span>
-                  <div className="text-xs text-muted-foreground ml-4">
-                    2
-                  </div>
+
                 </div>
               </div>
 
               {/* Step 3: Rate display - MAR 환율 */}
               <div className="flex items-center mb-6">
-                <div className="text-xs text-muted-foreground mr-4">3</div>
                 <div className="flex-1 grid grid-cols-2 gap-4">
                   <div className="text-center">
                     <div className="text-sm text-gray-600 mb-1">SELL USD</div>
@@ -137,9 +133,6 @@ export default function MARTrading() {
 
               {/* Step 5: Amount input */}
               <div className="flex items-center mb-6">
-                <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white font-bold text-sm mr-4">
-                  5
-                </div>
                 <div className="flex-1">
                   <div className="text-sm text-gray-600 mb-2">금액</div>
                   <div className="text-sm text-gray-600 mb-1">BUY USD</div>
@@ -162,15 +155,13 @@ export default function MARTrading() {
 
               {/* Step 4: Final step indicator */}
               <div className="flex justify-center mb-4">
-                <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                  4
-                </div>
               </div>
 
               <Button
                 onClick={handleTrade}
                 disabled={mutation.isPending || !amount}
-                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-3 text-lg font-semibold"
+                className="w-full text-white py-3 text-lg font-semibold"
+                style={{ backgroundColor: 'hsl(330, 100%, 71%)' }}
               >
                 {mutation.isPending ? "처리중..." : "MAR 거래"}
               </Button>

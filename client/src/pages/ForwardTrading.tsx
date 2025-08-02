@@ -21,6 +21,13 @@ export default function ForwardTrading() {
   const [amount, setAmount] = useState("");
   const [valueDate, setValueDate] = useState<Date>(new Date());
   const { toast } = useToast();
+
+  // Extract base and quote currencies from selected pair
+  const [baseCurrency, quoteCurrency] = selectedPair.split('/');
+  
+  // Determine display currencies based on direction
+  const sellCurrency = direction === "BUY" ? quoteCurrency : baseCurrency;
+  const buyCurrency = direction === "BUY" ? baseCurrency : quoteCurrency;
   const queryClient = useQueryClient();
 
   const { data: currencyPairs = [] } = useQuery<CurrencyPair[]>({
@@ -89,10 +96,9 @@ export default function ForwardTrading() {
           </div>
 
           <div className="max-w-md mx-auto">
-            <Card className="p-6">
+            <Card className="p-6 bg-white dark:bg-white text-gray-900">
               {/* Step 1: 선물환 */}
               <div className="flex items-center mb-4">
-                <div className="text-xs text-muted-foreground mr-3">1</div>
                 <span className="text-sm text-gray-600">선물환</span>
                 <div className="ml-auto">
                   <Select value={selectedPair} onValueChange={setSelectedPair}>
@@ -108,17 +114,14 @@ export default function ForwardTrading() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="text-xs text-muted-foreground ml-4">
-                  2
-                </div>
+
               </div>
 
               {/* Step 3: Rate display */}
               <div className="flex items-center mb-6">
-                <div className="text-xs text-muted-foreground mr-4">3</div>
                 <div className="flex-1 grid grid-cols-2 gap-4">
                   <div className="text-center">
-                    <div className="text-sm text-gray-600 mb-1">SELL USD</div>
+                    <div className="text-sm text-gray-600 mb-1">SELL {baseCurrency}</div>
                     <div className="text-2xl font-bold text-blue-600">
                       {sellRate.toFixed(0)}.
                       <span className="text-lg">{sellRate.toFixed(2).split('.')[1] || '95'}</span>
@@ -136,7 +139,7 @@ export default function ForwardTrading() {
                     </Button>
                   </div>
                   <div className="text-center">
-                    <div className="text-sm text-gray-600 mb-1">BUY USD</div>
+                    <div className="text-sm text-gray-600 mb-1">BUY {baseCurrency}</div>
                     <div className="text-2xl font-bold text-red-500">
                       {buyRate.toFixed(0)}.
                       <span className="text-lg">{buyRate.toFixed(2).split('.')[1] || '55'}</span>
@@ -163,9 +166,6 @@ export default function ForwardTrading() {
 
               {/* Step 4: Order type buttons */}
               <div className="flex items-center mb-4">
-                <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white font-bold text-sm mr-4">
-                  4
-                </div>
                 <div className="flex-1 grid grid-cols-2 gap-2">
                   <Button 
                     variant="default"
@@ -179,9 +179,6 @@ export default function ForwardTrading() {
 
               {/* Step 5: Value date */}
               <div className="flex items-center mb-4">
-                <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white font-bold text-sm mr-4">
-                  5
-                </div>
                 <div className="flex-1">
                   <div className="text-sm text-gray-600 mb-2">만기일</div>
                   <Popover>
@@ -211,14 +208,11 @@ export default function ForwardTrading() {
 
               {/* Step 6: Amount section */}
               <div className="flex items-start mb-6">
-                <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white font-bold text-sm mr-4">
-                  6
-                </div>
                 <div className="flex-1">
                   <div className="text-sm text-gray-600 mb-2">주문완료</div>
-                  <div className="text-right text-gray-400 text-sm mb-1">KRW</div>
+                  <div className="text-right text-gray-400 text-sm mb-1">{sellCurrency}</div>
                   <div className="text-sm text-gray-600 mb-2">금액</div>
-                  <div className="text-sm text-gray-600 mb-1">BUY USD</div>
+                  <div className="text-sm text-gray-600 mb-1">{direction} {buyCurrency}</div>
                   <div className="flex items-center mb-2">
                     <span className="text-lg font-semibold text-green-600">+1M</span>
                     <span className="ml-auto text-lg font-semibold text-green-600">+0.1M</span>
@@ -226,8 +220,8 @@ export default function ForwardTrading() {
                   <div className="text-xs text-gray-500 mb-1">원화전환</div>
                   <div className="text-xs text-gray-500 mb-2">USD KRW</div>
                   <div className="flex items-center">
-                    <span className="text-sm">SELL KRW ℹ️</span>
-                    <span className="ml-auto text-lg">0원</span>
+                    <span className="text-sm">SELL {sellCurrency} ℹ️</span>
+                    <span className="ml-auto text-lg">0 {sellCurrency}</span>
                   </div>
                   
                   <Input
@@ -242,15 +236,13 @@ export default function ForwardTrading() {
 
               {/* Step 7: Final step indicator */}
               <div className="flex justify-center mb-4">
-                <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                  7
-                </div>
               </div>
 
               <Button
                 onClick={handleQuoteRequest}
                 disabled={mutation.isPending || !amount}
-                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-3 text-lg font-semibold"
+                className="w-full text-white py-3 text-lg font-semibold"
+                style={{ backgroundColor: 'hsl(330, 100%, 71%)' }}
               >
                 {mutation.isPending ? "처리중..." : "견적 요청"}
               </Button>
