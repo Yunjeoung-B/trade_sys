@@ -207,31 +207,65 @@ export default function SwapTrading() {
                     <div className="grid grid-cols-2 gap-2">
                       {/* Show selected direction based on base currency and direction */}
                       {((swapBaseCurrency === "USD" && direction === "BUY_SELL_USD") || 
-                        (swapBaseCurrency === "KRW" && direction === "SELL_BUY_USD")) ? (
+                        (swapBaseCurrency === "KRW" && direction === "BUY_SELL_USD")) ? (
                         <>
-                          <div className="bg-blue-500 text-white p-4 rounded-2xl">
-                            <div className="border-2 border-white rounded-lg px-3 py-1 mb-3 text-center">
-                              <div className="text-lg font-bold">BUY&SELL {swapBaseCurrency}</div>
-                            </div>
-                            <div className="text-2xl font-bold">1,390.40</div>
-                            <div className="text-4xl font-bold my-2">14</div>
-                            <div className="text-lg">1,382.95</div>
-                            <div className="bg-blue-600 px-3 py-1 rounded-lg text-sm mt-2">매수 1.0%</div>
-                          </div>
-                          <div></div> {/* Empty space for the second column */}
+                          {swapBaseCurrency === "USD" ? (
+                            <>
+                              <div className="bg-blue-500 text-white p-4 rounded-2xl">
+                                <div className="border-2 border-white rounded-lg px-3 py-1 mb-3 text-center">
+                                  <div className="text-lg font-bold">BUY&SELL {swapBaseCurrency}</div>
+                                </div>
+                                <div className="text-2xl font-bold">1,390.40</div>
+                                <div className="text-4xl font-bold my-2">14</div>
+                                <div className="text-lg">1,382.95</div>
+                                <div className="bg-blue-600 px-3 py-1 rounded-lg text-sm mt-2">매수 1.0%</div>
+                              </div>
+                              <div></div> {/* Empty space for the second column */}
+                            </>
+                          ) : (
+                            <>
+                              <div></div> {/* Empty space for the first column */}
+                              <div className="bg-blue-500 text-white p-4 rounded-2xl">
+                                <div className="border-2 border-white rounded-lg px-3 py-1 mb-3 text-center">
+                                  <div className="text-lg font-bold">BUY&SELL {swapBaseCurrency}</div>
+                                </div>
+                                <div className="text-2xl font-bold">1,390.40</div>
+                                <div className="text-4xl font-bold my-2">14</div>
+                                <div className="text-lg">1,382.95</div>
+                                <div className="bg-blue-600 px-3 py-1 rounded-lg text-sm mt-2">매수 1.0%</div>
+                              </div>
+                            </>
+                          )}
                         </>
                       ) : (
                         <>
-                          <div></div> {/* Empty space for the first column */}
-                          <div className="bg-red-400 text-white p-4 rounded-2xl">
-                            <div className="border-2 border-white rounded-lg px-3 py-1 mb-3 text-center">
-                              <div className="text-lg font-bold">SELL&BUY {swapBaseCurrency}</div>
-                            </div>
-                            <div className="text-2xl font-bold">1,392.00</div>
-                            <div className="text-4xl font-bold my-2">14</div>
-                            <div className="text-lg">1,394.55</div>
-                            <div className="bg-red-600 px-3 py-1 rounded-lg text-sm mt-2">매도 1.0%</div>
-                          </div>
+                          {swapBaseCurrency === "USD" ? (
+                            <>
+                              <div></div> {/* Empty space for the first column */}
+                              <div className="bg-red-400 text-white p-4 rounded-2xl">
+                                <div className="border-2 border-white rounded-lg px-3 py-1 mb-3 text-center">
+                                  <div className="text-lg font-bold">SELL&BUY {swapBaseCurrency}</div>
+                                </div>
+                                <div className="text-2xl font-bold">1,392.00</div>
+                                <div className="text-4xl font-bold my-2">14</div>
+                                <div className="text-lg">1,394.55</div>
+                                <div className="bg-red-600 px-3 py-1 rounded-lg text-sm mt-2">매도 1.0%</div>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <div className="bg-red-400 text-white p-4 rounded-2xl">
+                                <div className="border-2 border-white rounded-lg px-3 py-1 mb-3 text-center">
+                                  <div className="text-lg font-bold">SELL&BUY {swapBaseCurrency}</div>
+                                </div>
+                                <div className="text-2xl font-bold">1,392.00</div>
+                                <div className="text-4xl font-bold my-2">14</div>
+                                <div className="text-lg">1,394.55</div>
+                                <div className="bg-red-600 px-3 py-1 rounded-lg text-sm mt-2">매도 1.0%</div>
+                              </div>
+                              <div></div> {/* Empty space for the second column */}
+                            </>
+                          )}
                         </>
                       )}
                     </div>
