@@ -204,7 +204,7 @@ export default function MARTrading() {
                 disabled={mutation.isPending || !amount}
                 className="w-full py-4 text-lg font-semibold rounded-2xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
               >
-                {mutation.isPending ? "처리중..." : "MAR 거래"}
+                {mutation.isPending ? "처리중..." : "즉시 거래 실행"}
               </Button>
 
               {/* 시간 안내 */}
