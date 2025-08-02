@@ -232,7 +232,7 @@ export default function MARTrading() {
 
           {/* 시간 안내 */}
           <div className="mt-4 p-3 rounded-2xl text-center shadow-inner bg-[#2dd4bf]">
-            <div className="text-sm text-gray-700">
+            <div className="text-sm text-[#f9fafb]">
               MAR 거래는 오전 9:00 이전에만 가능합니다
             </div>
             <div className="text-xs mt-1 text-[#f9fafb]">
