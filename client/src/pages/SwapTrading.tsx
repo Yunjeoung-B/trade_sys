@@ -281,9 +281,14 @@ export default function SwapTrading() {
                             className={cn(
                               "rounded-xl transition-all duration-200 text-xs",
                               nearAmountCurrency === "USD" 
-                                ? "bg-teal-400 border-2 border-teal-600 text-white shadow-inner ring-2 ring-teal-300" 
+                                ? "text-white shadow-inner" 
                                 : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                             )}
+                            style={nearAmountCurrency === "USD" ? {
+                              backgroundColor: '#2dd4bf',
+                              borderColor: '#2dd4bf',
+                              boxShadow: '0 0 15px rgba(45, 212, 191, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                            } : {}}
                             onClick={() => setNearAmountCurrency("USD")}
                           >
                             USD
@@ -294,9 +299,14 @@ export default function SwapTrading() {
                             className={cn(
                               "rounded-xl transition-all duration-200 text-xs",
                               nearAmountCurrency === "KRW" 
-                                ? "bg-teal-400 border-2 border-teal-600 text-white shadow-inner ring-2 ring-teal-300" 
+                                ? "text-white shadow-inner" 
                                 : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                             )}
+                            style={nearAmountCurrency === "KRW" ? {
+                              backgroundColor: '#2dd4bf',
+                              borderColor: '#2dd4bf',
+                              boxShadow: '0 0 15px rgba(45, 212, 191, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                            } : {}}
                             onClick={() => setNearAmountCurrency("KRW")}
                           >
                             KRW
@@ -329,9 +339,14 @@ export default function SwapTrading() {
                             className={cn(
                               "rounded-xl transition-all duration-200 text-xs",
                               farAmountCurrency === "USD" 
-                                ? "bg-teal-400 border-2 border-teal-600 text-white shadow-inner ring-2 ring-teal-300" 
+                                ? "text-white shadow-inner" 
                                 : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                             )}
+                            style={farAmountCurrency === "USD" ? {
+                              backgroundColor: '#2dd4bf',
+                              borderColor: '#2dd4bf',
+                              boxShadow: '0 0 15px rgba(45, 212, 191, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                            } : {}}
                             onClick={() => setFarAmountCurrency("USD")}
                           >
                             USD
@@ -342,9 +357,14 @@ export default function SwapTrading() {
                             className={cn(
                               "rounded-xl transition-all duration-200 text-xs",
                               farAmountCurrency === "KRW" 
-                                ? "bg-teal-400 border-2 border-teal-600 text-white shadow-inner ring-2 ring-teal-300" 
+                                ? "text-white shadow-inner" 
                                 : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                             )}
+                            style={farAmountCurrency === "KRW" ? {
+                              backgroundColor: '#2dd4bf',
+                              borderColor: '#2dd4bf',
+                              boxShadow: '0 0 15px rgba(45, 212, 191, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                            } : {}}
                             onClick={() => setFarAmountCurrency("KRW")}
                           >
                             KRW

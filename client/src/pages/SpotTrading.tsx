@@ -214,9 +214,14 @@ export default function SpotTrading() {
                     className={cn(
                       "rounded-xl transition-all duration-200",
                       orderType === "MARKET" 
-                        ? "bg-teal-400 border-teal-500 text-white shadow-inner" 
+                        ? "text-white shadow-inner" 
                         : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                     )}
+                    style={orderType === "MARKET" ? {
+                      backgroundColor: '#2dd4bf',
+                      borderColor: '#2dd4bf',
+                      boxShadow: '0 0 15px rgba(45, 212, 191, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                    } : {}}
                     onClick={() => setOrderType("MARKET")}
                   >
                     시장가
@@ -226,9 +231,14 @@ export default function SpotTrading() {
                     className={cn(
                       "rounded-xl transition-all duration-200",
                       orderType === "LIMIT" 
-                        ? "bg-teal-400 border-teal-500 text-white shadow-inner" 
+                        ? "text-white shadow-inner" 
                         : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                     )}
+                    style={orderType === "LIMIT" ? {
+                      backgroundColor: '#2dd4bf',
+                      borderColor: '#2dd4bf',
+                      boxShadow: '0 0 15px rgba(45, 212, 191, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                    } : {}}
                     onClick={() => setOrderType("LIMIT")}
                   >
                     지정가
@@ -266,9 +276,14 @@ export default function SpotTrading() {
                         className={cn(
                           "rounded-xl transition-all duration-200",
                           validityType === "DAY" 
-                            ? "bg-teal-400 border-teal-500 text-white shadow-inner" 
+                            ? "text-white shadow-inner" 
                             : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                         )}
+                        style={validityType === "DAY" ? {
+                          backgroundColor: '#2dd4bf',
+                          borderColor: '#2dd4bf',
+                          boxShadow: '0 0 15px rgba(45, 212, 191, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                        } : {}}
                         onClick={() => setValidityType("DAY")}
                       >
                         당일
@@ -278,9 +293,14 @@ export default function SpotTrading() {
                         className={cn(
                           "rounded-xl transition-all duration-200",
                           validityType === "TIME" 
-                            ? "bg-teal-400 border-teal-500 text-white shadow-inner" 
+                            ? "text-white shadow-inner" 
                             : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                         )}
+                        style={validityType === "TIME" ? {
+                          backgroundColor: '#2dd4bf',
+                          borderColor: '#2dd4bf',
+                          boxShadow: '0 0 15px rgba(45, 212, 191, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                        } : {}}
                         onClick={() => setValidityType("TIME")}
                       >
                         시간 지정
@@ -358,9 +378,14 @@ export default function SpotTrading() {
                       className={cn(
                         "rounded-xl transition-all duration-200",
                         amountCurrency === "BASE" 
-                          ? "bg-teal-400 border-2 border-teal-600 text-white shadow-inner ring-2 ring-teal-300" 
+                          ? "text-white shadow-inner" 
                           : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                       )}
+                      style={amountCurrency === "BASE" ? {
+                        backgroundColor: '#2dd4bf',
+                        borderColor: '#2dd4bf',
+                        boxShadow: '0 0 15px rgba(45, 212, 191, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                      } : {}}
                       onClick={() => setAmountCurrency("BASE")}
                     >
                       {baseCurrency} {direction === "BUY" ? "매수" : "매도"}
@@ -370,9 +395,14 @@ export default function SpotTrading() {
                       className={cn(
                         "rounded-xl transition-all duration-200",
                         amountCurrency === "QUOTE" 
-                          ? "bg-teal-400 border-2 border-teal-600 text-white shadow-inner ring-2 ring-teal-300" 
+                          ? "text-white shadow-inner" 
                           : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                       )}
+                      style={amountCurrency === "QUOTE" ? {
+                        backgroundColor: '#2dd4bf',
+                        borderColor: '#2dd4bf',
+                        boxShadow: '0 0 15px rgba(45, 212, 191, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                      } : {}}
                       onClick={() => setAmountCurrency("QUOTE")}
                     >
                       {quoteCurrency} {direction === "BUY" ? "매도" : "매수"}
