@@ -91,27 +91,20 @@ export default function SwapTrading() {
       <div className="max-w-md mx-auto">
             <Card className="p-8 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border-0 text-gray-900">
               {/* Step 1: 통화쌍 선택 */}
-              <div className="flex items-center mb-4">
-                <div className="flex-1">
-                  <div className="text-sm text-gray-600 mb-2">외환스왑</div>
-                  <div className="grid grid-cols-1 gap-2">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-sm text-gray-600">외환스왑</span>
+                <Select value={selectedPair} onValueChange={setSelectedPair}>
+                  <SelectTrigger className="w-32 bg-slate-100 border-slate-300">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
                     {currencyPairs.map((pair) => (
-                      <Button 
-                        key={pair.id}
-                        variant="outline"
-                        className={cn(
-                          "rounded-xl transition-all duration-200",
-                          selectedPair === pair.symbol 
-                            ? "bg-teal-400 border-teal-500 text-white shadow-inner" 
-                            : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
-                        )}
-                        onClick={() => setSelectedPair(pair.symbol)}
-                      >
+                      <SelectItem key={pair.id} value={pair.symbol}>
                         {pair.symbol}
-                      </Button>
+                      </SelectItem>
                     ))}
-                  </div>
-                </div>
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Step 2: Rate display */}
