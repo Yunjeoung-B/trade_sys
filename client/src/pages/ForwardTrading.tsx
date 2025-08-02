@@ -219,11 +219,269 @@ export default function ForwardTrading() {
                   <div className="text-3xl font-bold mb-2">
                     {approvedRate.toFixed(2)}
                   </div>
-                  
-
                 </div>
               </div>
             </div>
+          )}
+
+          {/* Order inputs - only show when admin price is NOT provided */}
+          {!adminPriceProvided && (
+            <>
+              {/* Step 3: Order Type buttons */}
+              <div className="flex items-center mb-4">
+                <div className="flex-1 grid grid-cols-2 gap-2">
+                  <Button 
+                    variant="outline"
+                    className={cn(
+                      "rounded-xl transition-all duration-200",
+                      orderType === "MARKET" 
+                        ? "text-white shadow-inner" 
+                        : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                    )}
+                    style={orderType === "MARKET" ? {
+                      backgroundColor: '#2dd4bf',
+                      borderColor: '#2dd4bf',
+                      boxShadow: '0 0 15px rgba(45, 212, 191, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                    } : {}}
+                    onClick={() => setOrderType("MARKET")}
+                  >
+                    시장가
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    className={cn(
+                      "rounded-xl transition-all duration-200",
+                      orderType === "LIMIT" 
+                        ? "text-white shadow-inner" 
+                        : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                    )}
+                    style={orderType === "LIMIT" ? {
+                      backgroundColor: '#2dd4bf',
+                      borderColor: '#2dd4bf',
+                      boxShadow: '0 0 15px rgba(45, 212, 191, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                    } : {}}
+                    onClick={() => setOrderType("LIMIT")}
+                  >
+                    지정가
+                  </Button>
+                </div>
+              </div>
+
+              {/* Step 3.5: Limit Rate Input (only show for LIMIT orders) */}
+              {orderType === "LIMIT" && (
+                <div className="flex items-center mb-4">
+                  <div className="flex-1">
+                    <div className="text-sm text-gray-700 font-medium mb-2">지정환율</div>
+                    <Input
+                      type="number"
+                      placeholder="원하는 환율을 입력하세요"
+                      value={limitRate}
+                      onChange={(e) => setLimitRate(e.target.value)}
+                      className="text-right text-lg bg-gray-50/50 border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-200"
+                      step="0.01"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Step 3.6: Valid Until (only show for LIMIT orders) */}
+              {orderType === "LIMIT" && (
+                <div className="flex items-center mb-4">
+                  <div className="flex-1">
+                    <div className="text-sm text-gray-700 font-medium mb-2">주문유효기간</div>
+                    
+                    {/* Validity Type Selection */}
+                    <div className="grid grid-cols-2 gap-2 mb-3">
+                      <Button 
+                        variant="outline"
+                        className={cn(
+                          "rounded-xl transition-all duration-200",
+                          validityType === "DAY" 
+                            ? "text-white shadow-inner" 
+                            : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                        )}
+                        style={validityType === "DAY" ? {
+                          backgroundColor: '#2dd4bf',
+                          borderColor: '#2dd4bf',
+                          boxShadow: '0 0 15px rgba(45, 212, 191, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                        } : {}}
+                        onClick={() => setValidityType("DAY")}
+                      >
+                        당일
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        className={cn(
+                          "rounded-xl transition-all duration-200",
+                          validityType === "TIME" 
+                            ? "text-white shadow-inner" 
+                            : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                        )}
+                        style={validityType === "TIME" ? {
+                          backgroundColor: '#2dd4bf',
+                          borderColor: '#2dd4bf',
+                          boxShadow: '0 0 15px rgba(45, 212, 191, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                        } : {}}
+                        onClick={() => setValidityType("TIME")}
+                      >
+                        시간 지정
+                      </Button>
+                    </div>
+
+                    {/* Time Selection (only show when TIME is selected) */}
+                    {validityType === "TIME" && (
+                      <Select value={validUntilTime} onValueChange={setValidUntilTime}>
+                        <SelectTrigger className="w-full bg-gray-50/50 border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-200">
+                          <SelectValue placeholder="마감시간 선택" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="09:00">09:00 (오전 9시)</SelectItem>
+                          <SelectItem value="10:00">10:00 (오전 10시)</SelectItem>
+                          <SelectItem value="11:00">11:00 (오전 11시)</SelectItem>
+                          <SelectItem value="12:00">12:00 (정오)</SelectItem>
+                          <SelectItem value="13:00">13:00 (오후 1시)</SelectItem>
+                          <SelectItem value="14:00">14:00 (오후 2시)</SelectItem>
+                          <SelectItem value="15:00">15:00 (오후 3시)</SelectItem>
+                          <SelectItem value="15:30">15:30 (오후 3시 30분)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+
+                    {/* Display current selection */}
+                    <div className="text-xs text-gray-500 mt-2">
+                      {validityType === "DAY" 
+                        ? "당일 마감까지 유효" 
+                        : `당일 ${validUntilTime}까지 유효`
+                      }
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 4: Value date */}
+              <div className="flex items-center mb-4">
+                <div className="flex-1">
+                  <div className="text-sm text-gray-700 font-medium mb-2">만기일</div>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal bg-gray-50 border-gray-300 text-gray-900",
+                          !valueDate && "text-gray-500"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {valueDate ? format(valueDate, "yyyy MM dd") : "날짜 선택"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={valueDate}
+                        onSelect={(date) => date && setValueDate(date)}
+                        disabled={(date) => date <= addDays(new Date(), 2)} // 3일 후부터 선택 가능
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+
+              {/* Step 5: Trade Direction */}
+              <div className="flex items-center mb-4">
+                <div className="flex-1 grid grid-cols-2 gap-2">
+                  <Button 
+                    variant="outline"
+                    className={cn(
+                      "rounded-xl transition-all duration-200",
+                      direction === "BUY" 
+                        ? "text-white shadow-inner" 
+                        : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                    )}
+                    style={direction === "BUY" ? {
+                      backgroundColor: '#FF6B6B',
+                      borderColor: '#FF6B6B',
+                      boxShadow: '0 0 15px rgba(255, 107, 107, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                    } : {}}
+                    onClick={() => setDirection("BUY")}
+                  >
+                    BUY
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    className={cn(
+                      "rounded-xl transition-all duration-200",
+                      direction === "SELL" 
+                        ? "text-white shadow-inner" 
+                        : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                    )}
+                    style={direction === "SELL" ? {
+                      backgroundColor: '#4169E1',
+                      borderColor: '#4169E1',
+                      boxShadow: '0 0 15px rgba(65, 105, 225, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                    } : {}}
+                    onClick={() => setDirection("SELL")}
+                  >
+                    SELL
+                  </Button>
+                </div>
+              </div>
+
+              {/* Step 6: Amount Input */}
+              <div className="flex items-center mb-6">
+                <div className="flex-1">
+                  <div className="text-sm text-gray-700 font-medium mb-2">주문금액</div>
+                  <div className="flex-1 grid grid-cols-2 gap-2 mb-2">
+                    <Button 
+                      variant="outline"
+                      className={cn(
+                        "rounded-xl transition-all duration-200",
+                        amountCurrency === "BASE" 
+                          ? "text-white shadow-inner" 
+                          : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                      )}
+                      style={amountCurrency === "BASE" ? {
+                        backgroundColor: '#2dd4bf',
+                        borderColor: '#2dd4bf',
+                        boxShadow: '0 0 15px rgba(45, 212, 191, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                      } : {}}
+                      onClick={() => setAmountCurrency("BASE")}
+                    >
+                      {forwardBaseCurrency} {direction === "BUY" ? "매수" : "매도"}
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      className={cn(
+                        "rounded-xl transition-all duration-200",
+                        amountCurrency === "QUOTE" 
+                          ? "text-white shadow-inner" 
+                          : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                      )}
+                      style={amountCurrency === "QUOTE" ? {
+                        backgroundColor: '#2dd4bf',
+                        borderColor: '#2dd4bf',
+                        boxShadow: '0 0 15px rgba(45, 212, 191, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                      } : {}}
+                      onClick={() => setAmountCurrency("QUOTE")}
+                    >
+                      {forwardBaseCurrency === "USD" ? "KRW" : "USD"} {direction === "BUY" ? "매도" : "매수"}
+                    </Button>
+                  </div>
+                  <Input
+                    type="text"
+                    placeholder="여기에 주문금액을 입력하세요"
+                    value={amount}
+                    onChange={(e) => {
+                      const inputCurrency = amountCurrency === "BASE" ? forwardBaseCurrency : (forwardBaseCurrency === "USD" ? "KRW" : "USD");
+                      const formattedValue = formatInputValue(e.target.value, inputCurrency);
+                      setAmount(formattedValue);
+                    }}
+                    className="text-right text-lg bg-gray-50/50 border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-200"
+                  />
+                </div>
+              </div>
+            </>
           )}
 
           {/* Trade Summary */}
