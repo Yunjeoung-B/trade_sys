@@ -75,7 +75,7 @@ export default function SwapTrading() {
   const sellRate = currentRate ? Number(currentRate.sellRate) : 1390.40;
   
   // 관리자 제공 가격 (시뮬레이션)
-  const swapPoints = adminPriceProvided ? 12.50 : null;
+  const swapPoints = adminPriceProvided ? 14 : null;
   const nearRate = adminPriceProvided ? 1390.85 : null;
   const farRate = adminPriceProvided ? (nearRate ? nearRate + swapPoints : null) : null;
 
@@ -173,17 +173,21 @@ export default function SwapTrading() {
                       {/* Only show selected direction */}
                       {direction === "BUY_SELL_USD" ? (
                         <div className="bg-teal-400 text-white p-4 rounded-2xl">
-                          <div className="text-lg font-bold">BUY&SELL USD</div>
+                          <div className="border-2 border-white rounded-lg px-3 py-1 mb-3 text-center">
+                            <div className="text-lg font-bold">BUY&SELL USD</div>
+                          </div>
                           <div className="text-2xl font-bold">1,390.40</div>
-                          <div className="text-sm">-7.45</div>
+                          <div className="text-4xl font-bold my-2">14</div>
                           <div className="text-lg">1,382.95</div>
                           <div className="bg-teal-600 px-3 py-1 rounded-lg text-sm mt-2">매수 1.0%</div>
                         </div>
                       ) : (
                         <div className="bg-red-400 text-white p-4 rounded-2xl">
-                          <div className="text-lg font-bold">SELL&BUY USD</div>
+                          <div className="border-2 border-white rounded-lg px-3 py-1 mb-3 text-center">
+                            <div className="text-lg font-bold">SELL&BUY USD</div>
+                          </div>
                           <div className="text-2xl font-bold">1,392.00</div>
-                          <div className="text-sm">2.55</div>
+                          <div className="text-4xl font-bold my-2">14</div>
                           <div className="text-lg">1,394.55</div>
                           <div className="bg-red-600 px-3 py-1 rounded-lg text-sm mt-2">매도 1.0%</div>
                         </div>
