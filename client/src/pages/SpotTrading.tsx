@@ -130,7 +130,7 @@ export default function SpotTrading() {
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="mt-2 w-full"
+                      className="mt-2 w-full bg-gray-100 border-gray-300 text-gray-800 hover:bg-gray-200"
                       onClick={() => setDirection("SELL")}
                     >
                       SELL선택
