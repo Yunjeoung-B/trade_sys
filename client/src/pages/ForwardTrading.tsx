@@ -143,7 +143,7 @@ export default function ForwardTrading() {
                       className={cn(
                         "mt-2 w-full rounded-xl transition-all duration-200",
                         direction === "BUY" 
-                          ? "bg-pink-400 border-pink-500 text-white shadow-inner" 
+                          ? "bg-teal-400 border-teal-500 text-white shadow-inner" 
                           : "bg-transparent border-gray-200 text-gray-400 hover:bg-gray-50"
                       )}
                       onClick={() => setDirection("BUY")}
