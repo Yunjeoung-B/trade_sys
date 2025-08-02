@@ -4,17 +4,17 @@ import { Card, CardContent } from "@/components/ui/card";
 
 export default function Landing() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-12">
-          <div className="w-20 h-20 bg-gradient-to-br from-teal-400 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+          <div className="w-20 h-20 bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
             <div className="w-8 h-8 bg-white rounded-sm flex items-center justify-center">
-              <div className="w-2 h-6 bg-teal-600 rounded-full"></div>
+              <div className="w-2 h-6 bg-primary rounded-full"></div>
             </div>
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Choice FX</h1>
-          <p className="text-xl text-gray-600 mb-8">The Smartest Choice in FX</p>
-          <p className="text-gray-600 max-w-2xl mx-auto">
+          <h1 className="text-4xl font-bold text-white mb-4">CHOIICE FX</h1>
+          <p className="text-xl text-slate-300 mb-8">The Smartest Choice in FX</p>
+          <p className="text-slate-400 max-w-2xl mx-auto">
             전문적인 외환 거래 플랫폼에 오신 것을 환영합니다. 
             실시간 환율 정보와 다양한 FX 상품으로 스마트한 거래를 시작하세요.
           </p>
@@ -63,11 +63,11 @@ export default function Landing() {
         </div>
 
         <div className="text-center">
-          <Link href="/login">
-            <Button size="lg" className="gradient-bg hover:opacity-90 text-white px-8 py-3">
+          <a href="/api/login">
+            <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3">
               로그인하여 시작하기
             </Button>
-          </Link>
+          </a>
         </div>
       </div>
     </div>

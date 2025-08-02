@@ -85,23 +85,21 @@ export default function SwapTrading() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <Header />
       <div className="flex">
         <Sidebar />
         <div className="flex-1 p-6">
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">외환스왑</h2>
-            <p className="text-gray-600">두 개의 거래일에 서로 다른 방향으로 거래하는 스왑 상품입니다.</p>
+            <h2 className="text-2xl font-bold text-foreground mb-2">외환스왑</h2>
+            <p className="text-muted-foreground">두 개의 거래일에 서로 다른 방향으로 거래하는 스왑 상품입니다.</p>
           </div>
 
           <div className="max-w-md mx-auto">
             <Card className="p-6">
               {/* Step 1: 외환스왑 */}
               <div className="flex items-center mb-4">
-                <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white font-bold text-sm mr-3">
-                  1
-                </div>
+                <div className="text-xs text-muted-foreground mr-3">1</div>
                 <Select value={swapType} onValueChange={setSwapType}>
                   <SelectTrigger className="w-32">
                     <SelectValue />
@@ -124,16 +122,14 @@ export default function SwapTrading() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white font-bold text-sm ml-4">
+                <div className="text-xs text-muted-foreground ml-4">
                   2
                 </div>
               </div>
 
               {/* Step 3: Rate display - 스왑 포인트 */}
               <div className="flex items-center mb-6">
-                <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white font-bold text-sm mr-4">
-                  3
-                </div>
+                <div className="text-xs text-muted-foreground mr-4">3</div>
                 <div className="flex-1 grid grid-cols-2 gap-4">
                   <div className="text-center">
                     <div className="text-sm text-gray-600 mb-1">BUY&SELL USD</div>
@@ -161,7 +157,8 @@ export default function SwapTrading() {
                     </div>
                     <Button 
                       size="sm" 
-                      className="mt-2 w-full bg-red-500 hover:bg-red-600 text-white"
+                      className="mt-2 w-full text-white"
+                      style={{ backgroundColor: 'hsl(330, 100%, 71%)' }}
                     >
                       S&B선택
                     </Button>
@@ -306,7 +303,7 @@ export default function SwapTrading() {
               <Button
                 onClick={handleSwapRequest}
                 disabled={mutation.isPending || !nearAmount}
-                className="w-full bg-teal-600 hover:bg-teal-700 text-white py-3 text-lg font-semibold"
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-3 text-lg font-semibold"
               >
                 {mutation.isPending ? "처리중..." : "스왑 견적 요청"}
               </Button>

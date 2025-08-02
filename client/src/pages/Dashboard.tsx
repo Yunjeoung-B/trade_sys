@@ -15,7 +15,7 @@ export default function Dashboard() {
   const shouldShowDefaultContent = location === "/";
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <Header />
       <div className="flex">
         <Sidebar />

@@ -79,23 +79,21 @@ export default function SpotTrading() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <Header />
       <div className="flex">
         <Sidebar />
         <div className="flex-1 p-6">
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">현물환</h2>
-            <p className="text-gray-600">실시간 환율로 즉시 거래가 가능합니다.</p>
+            <h2 className="text-2xl font-bold text-foreground mb-2">현물환</h2>
+            <p className="text-muted-foreground">실시간 환율로 즉시 거래가 가능합니다.</p>
           </div>
 
           <div className="max-w-md mx-auto">
             <Card className="p-6">
-              {/* Step 1: 선물환 */}
+              {/* Step 1: 현물환 */}
               <div className="flex items-center mb-4">
-                <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white font-bold text-sm mr-3">
-                  1
-                </div>
+                <div className="text-xs text-muted-foreground mr-3">1</div>
                 <Select value={selectedPair} onValueChange={setSelectedPair}>
                   <SelectTrigger className="w-32">
                     <SelectValue />
@@ -112,16 +110,12 @@ export default function SpotTrading() {
 
               {/* Step 2: Currency pair display */}
               <div className="flex items-center justify-end mb-4">
-                <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                  2
-                </div>
+                <div className="text-xs text-muted-foreground">2</div>
               </div>
 
               {/* Step 3: Rate display */}
               <div className="flex items-center mb-6">
-                <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white font-bold text-sm mr-4">
-                  3
-                </div>
+                <div className="text-xs text-muted-foreground mr-4">3</div>
                 <div className="flex-1 grid grid-cols-2 gap-4">
                   <div className="text-center">
                     <div className="text-sm text-gray-600 mb-1">SELL USD</div>
@@ -152,7 +146,8 @@ export default function SpotTrading() {
                     </div>
                     <Button 
                       size="sm" 
-                      className="mt-2 w-full bg-red-500 hover:bg-red-600 text-white"
+                      className="mt-2 w-full"
+                      style={{ backgroundColor: 'hsl(330, 100%, 71%)', color: 'white' }}
                       onClick={() => setDirection("BUY")}
                     >
                       BUY선택
@@ -163,9 +158,7 @@ export default function SpotTrading() {
 
               {/* Step 4: Direction buttons */}
               <div className="flex items-center mb-4">
-                <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white font-bold text-sm mr-4">
-                  4
-                </div>
+                <div className="text-xs text-muted-foreground mr-4">4</div>
                 <div className="flex-1 grid grid-cols-2 gap-2">
                   <Button 
                     variant={direction === "SELL" ? "default" : "outline"}
@@ -186,9 +179,7 @@ export default function SpotTrading() {
 
               {/* Step 5: Value date */}
               <div className="flex items-center mb-4">
-                <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white font-bold text-sm mr-4">
-                  5
-                </div>
+                <div className="text-xs text-muted-foreground mr-4">5</div>
                 <div className="flex-1">
                   <div className="text-sm text-gray-600 mb-2">만기일</div>
                   <Popover>
@@ -218,9 +209,7 @@ export default function SpotTrading() {
 
               {/* Step 6: Amount input */}
               <div className="flex items-center mb-6">
-                <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white font-bold text-sm mr-4">
-                  6
-                </div>
+                <div className="text-xs text-muted-foreground mr-4">6</div>
                 <div className="flex-1">
                   <div className="text-sm text-gray-600 mb-2">주문완료</div>
                   <div className="text-right text-gray-400 text-sm mb-1">KRW</div>
@@ -237,9 +226,7 @@ export default function SpotTrading() {
 
               {/* Step 7: Amount display */}
               <div className="flex items-center mb-6">
-                <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white font-bold text-sm mr-4">
-                  7
-                </div>
+                <div className="text-xs text-muted-foreground mr-4">7</div>
                 <div className="flex-1">
                   <div className="text-sm text-gray-600">BUY USD</div>
                   <div className="text-lg font-semibold">+1M</div>
@@ -253,15 +240,13 @@ export default function SpotTrading() {
 
               {/* Step 8: Submit button */}
               <div className="flex justify-center">
-                <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                  8
-                </div>
+                <div className="text-xs text-muted-foreground">8</div>
               </div>
 
               <Button
                 onClick={handleTrade}
                 disabled={mutation.isPending || !amount}
-                className="w-full mt-4 bg-teal-600 hover:bg-teal-700 text-white py-3 text-lg font-semibold"
+                className="w-full mt-4 bg-primary hover:bg-primary/90 text-primary-foreground py-3 text-lg font-semibold"
               >
                 {mutation.isPending ? "처리중..." : "거래 실행"}
               </Button>

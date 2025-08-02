@@ -75,27 +75,25 @@ export default function MARTrading() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <Header />
       <div className="flex">
         <Sidebar />
         <div className="flex-1 p-6">
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">MAR</h2>
-            <p className="text-gray-600">Market Average Rate - 오전 9시 이전 주문 제한</p>
+            <h2 className="text-2xl font-bold text-foreground mb-2">MAR</h2>
+            <p className="text-muted-foreground">Market Average Rate - 오전 9시 이전 주문 제한</p>
           </div>
 
           <div className="max-w-md mx-auto">
             <Card className="p-6">
               {/* Step 1: MAR */}
               <div className="flex items-center mb-4">
-                <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white font-bold text-sm mr-3">
-                  1
-                </div>
+                <div className="text-xs text-muted-foreground mr-3">1</div>
                 <span className="text-sm text-gray-600">MAR</span>
                 <div className="ml-auto flex items-center">
                   <span className="text-sm font-medium">🇺🇸 USD/KRW</span>
-                  <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white font-bold text-sm ml-4">
+                  <div className="text-xs text-muted-foreground ml-4">
                     2
                   </div>
                 </div>
@@ -103,9 +101,7 @@ export default function MARTrading() {
 
               {/* Step 3: Rate display - MAR 환율 */}
               <div className="flex items-center mb-6">
-                <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white font-bold text-sm mr-4">
-                  3
-                </div>
+                <div className="text-xs text-muted-foreground mr-4">3</div>
                 <div className="flex-1 grid grid-cols-2 gap-4">
                   <div className="text-center">
                     <div className="text-sm text-gray-600 mb-1">SELL USD</div>
@@ -121,7 +117,8 @@ export default function MARTrading() {
                     </div>
                     <Button 
                       size="sm" 
-                      className="mt-2 w-full bg-red-500 hover:bg-red-600 text-white"
+                      className="mt-2 w-full text-white"
+                      style={{ backgroundColor: 'hsl(330, 100%, 71%)' }}
                       onClick={() => setDirection("BUY")}
                     >
                       BUY선택
@@ -173,7 +170,7 @@ export default function MARTrading() {
               <Button
                 onClick={handleTrade}
                 disabled={mutation.isPending || !amount}
-                className="w-full bg-teal-600 hover:bg-teal-700 text-white py-3 text-lg font-semibold"
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-3 text-lg font-semibold"
               >
                 {mutation.isPending ? "처리중..." : "MAR 거래"}
               </Button>

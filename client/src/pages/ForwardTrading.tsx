@@ -78,23 +78,21 @@ export default function ForwardTrading() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <Header />
       <div className="flex">
         <Sidebar />
         <div className="flex-1 p-6">
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">선물환</h2>
-            <p className="text-gray-600">미래 날짜의 환율을 미리 확정하는 거래입니다.</p>
+            <h2 className="text-2xl font-bold text-foreground mb-2">선물환</h2>
+            <p className="text-muted-foreground">미래 날짜의 환율을 미리 확정하는 거래입니다.</p>
           </div>
 
           <div className="max-w-md mx-auto">
             <Card className="p-6">
               {/* Step 1: 선물환 */}
               <div className="flex items-center mb-4">
-                <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white font-bold text-sm mr-3">
-                  1
-                </div>
+                <div className="text-xs text-muted-foreground mr-3">1</div>
                 <span className="text-sm text-gray-600">선물환</span>
                 <div className="ml-auto">
                   <Select value={selectedPair} onValueChange={setSelectedPair}>
@@ -110,16 +108,14 @@ export default function ForwardTrading() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white font-bold text-sm ml-4">
+                <div className="text-xs text-muted-foreground ml-4">
                   2
                 </div>
               </div>
 
               {/* Step 3: Rate display */}
               <div className="flex items-center mb-6">
-                <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white font-bold text-sm mr-4">
-                  3
-                </div>
+                <div className="text-xs text-muted-foreground mr-4">3</div>
                 <div className="flex-1 grid grid-cols-2 gap-4">
                   <div className="text-center">
                     <div className="text-sm text-gray-600 mb-1">SELL USD</div>
@@ -153,9 +149,10 @@ export default function ForwardTrading() {
                       className={cn(
                         "mt-2 w-full",
                         direction === "BUY" 
-                          ? "bg-red-500 hover:bg-red-600 text-white" 
-                          : "bg-red-400 hover:bg-red-500 text-white"
+                          ? "text-white" 
+                          : "text-white"
                       )}
+                      style={{ backgroundColor: 'hsl(330, 100%, 71%)' }}
                       onClick={() => setDirection("BUY")}
                     >
                       BUY선택
@@ -253,7 +250,7 @@ export default function ForwardTrading() {
               <Button
                 onClick={handleQuoteRequest}
                 disabled={mutation.isPending || !amount}
-                className="w-full bg-teal-600 hover:bg-teal-700 text-white py-3 text-lg font-semibold"
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-3 text-lg font-semibold"
               >
                 {mutation.isPending ? "처리중..." : "견적 요청"}
               </Button>

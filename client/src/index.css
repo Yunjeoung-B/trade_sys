@@ -33,25 +33,29 @@
 }
 
 .dark {
-  --background: hsl(210, 30%, 11%);
+  --background: hsl(217, 33%, 17%);
   --foreground: hsl(0, 0%, 98%);
-  --muted: hsl(210, 16%, 22%);
-  --muted-foreground: hsl(210, 8%, 65%);
-  --popover: hsl(210, 30%, 11%);
+  --muted: hsl(220, 13%, 18%);
+  --muted-foreground: hsl(215, 20%, 65%);
+  --popover: hsl(220, 13%, 18%);
   --popover-foreground: hsl(0, 0%, 98%);
-  --card: hsl(210, 30%, 11%);
+  --card: hsl(220, 13%, 18%);
   --card-foreground: hsl(0, 0%, 98%);
-  --border: hsl(210, 16%, 22%);
-  --input: hsl(210, 16%, 22%);
-  --primary: hsl(174, 72%, 56%);
-  --primary-foreground: hsl(210, 30%, 11%);
-  --secondary: hsl(210, 16%, 22%);
+  --border: hsl(217, 19%, 27%);
+  --input: hsl(217, 19%, 27%);
+  --primary: hsl(186, 100%, 45%);
+  --primary-foreground: hsl(220, 13%, 18%);
+  --secondary: hsl(217, 19%, 27%);
   --secondary-foreground: hsl(0, 0%, 98%);
-  --accent: hsl(210, 16%, 22%);
-  --accent-foreground: hsl(0, 0%, 98%);
+  --accent: hsl(186, 100%, 45%);
+  --accent-foreground: hsl(220, 13%, 18%);
   --destructive: hsl(0, 62%, 47%);
   --destructive-foreground: hsl(0, 0%, 98%);
-  --ring: hsl(174, 72%, 56%);
+  --ring: hsl(186, 100%, 45%);
+  
+  /* Hot Pink Accent */
+  --hotpink: hsl(330, 100%, 71%);
+  --hotpink-foreground: hsl(220, 13%, 18%);
 }
 
 @layer base {
@@ -105,9 +109,11 @@
   }
 }
 
-/* Custom fonts */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+/* Custom dark mode override */
+html {
+  color-scheme: dark;
+}
 
 body {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
 }

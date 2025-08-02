@@ -33,7 +33,7 @@ export default function Header() {
   };
 
   return (
-    <nav className="bg-white shadow-sm border-b border-gray-200">
+    <nav className="bg-card shadow-sm border-b border-border">
       <div className="max-w-full px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
@@ -43,13 +43,13 @@ export default function Header() {
               </div>
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">CHOIICE FX</h1>
-              <p className="text-xs text-gray-500">The Smartest Choice in FX</p>
+              <h1 className="text-xl font-bold text-foreground">CHOIICE FX</h1>
+              <p className="text-xs text-muted-foreground">The Smartest Choice in FX</p>
             </div>
           </div>
           
           <div className="flex items-center space-x-6">
-            <div className="flex items-center text-sm text-gray-600">
+            <div className="flex items-center text-sm text-muted-foreground">
               <Clock className="w-4 h-4 mr-2" />
               <span className="font-mono">
                 {currentTime.toLocaleString('ko-KR')}
