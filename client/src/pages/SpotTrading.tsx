@@ -394,7 +394,7 @@ export default function SpotTrading() {
                   </div>
                 )}
                 <div className="text-sm text-gray-600 mb-1">
-                  적용환율: {orderType === "MARKET" 
+                  거래환율: {orderType === "MARKET" 
                     ? (direction === "BUY" ? buyRate.toFixed(2) : sellRate.toFixed(2))
                     : (limitRate || "미지정")
                   }
