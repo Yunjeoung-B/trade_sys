@@ -143,98 +143,43 @@ export default function ForwardTrading() {
                   선물환 거래를 위해서는 CHOIICE FX에 가격을 요청해야 합니다.
                 </div>
                 
-                {/* Currency Selection */}
-                <div className="flex justify-center mb-4">
-                  <Select value={forwardBaseCurrency} onValueChange={(value: "USD" | "KRW") => setForwardBaseCurrency(value)}>
-                    <SelectTrigger className="w-32 bg-white border-gray-200 rounded-xl shadow-sm">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="USD">USD/KRW</SelectItem>
-                      <SelectItem value="KRW">KRW/USD</SelectItem>
-                    </SelectContent>
-                  </Select>
+                {/* Direction Selection - Fixed Layout */}
+                <div className="grid grid-cols-2 gap-2 mb-4">
+                  <Button 
+                    variant="outline"
+                    className={cn(
+                      "rounded-xl transition-all duration-200",
+                      direction === "SELL" 
+                        ? "text-white shadow-inner" 
+                        : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                    )}
+                    style={direction === "SELL" ? { 
+                      backgroundColor: '#4169E1', 
+                      borderColor: '#4169E1',
+                      boxShadow: '0 0 15px rgba(65, 105, 225, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                    } : {}}
+                    onClick={() => setDirection("SELL")}
+                  >
+                    SELL
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    className={cn(
+                      "rounded-xl transition-all duration-200",
+                      direction === "BUY" 
+                        ? "text-white shadow-inner" 
+                        : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                    )}
+                    style={direction === "BUY" ? { 
+                      backgroundColor: '#FF6B6B', 
+                      borderColor: '#FF6B6B',
+                      boxShadow: '0 0 15px rgba(255, 107, 107, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                    } : {}}
+                    onClick={() => setDirection("BUY")}
+                  >
+                    BUY
+                  </Button>
                 </div>
-                
-                {/* Direction Selection */}
-                {forwardBaseCurrency === "USD" ? (
-                  <div className="grid grid-cols-2 gap-2 mb-4">
-                    <Button 
-                      variant="outline"
-                      className={cn(
-                        "rounded-xl transition-all duration-200",
-                        direction === "SELL" 
-                          ? "text-white shadow-inner" 
-                          : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
-                      )}
-                      style={direction === "SELL" ? { 
-                        backgroundColor: '#4169E1', 
-                        borderColor: '#4169E1',
-                        boxShadow: '0 0 15px rgba(65, 105, 225, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
-                      } : {}}
-                      onClick={() => setDirection("SELL")}
-                    >
-                      SELL
-                    </Button>
-                    <Button 
-                      variant="outline"
-                      className={cn(
-                        "rounded-xl transition-all duration-200",
-                        direction === "BUY" 
-                          ? "text-white shadow-inner" 
-                          : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
-                      )}
-                      style={direction === "BUY" ? { 
-                        backgroundColor: '#FF6B6B', 
-                        borderColor: '#FF6B6B',
-                        boxShadow: '0 0 15px rgba(255, 107, 107, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
-                      } : {}}
-                      onClick={() => setDirection("BUY")}
-                    >
-                      BUY
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 gap-2 mb-4">
-                    <div></div>
-                    <div className="grid grid-cols-2 gap-1">
-                      <Button 
-                        variant="outline"
-                        className={cn(
-                          "rounded-xl transition-all duration-200 text-xs px-2 py-3",
-                          direction === "SELL" 
-                            ? "text-white shadow-inner" 
-                            : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
-                        )}
-                        style={direction === "SELL" ? { 
-                          backgroundColor: '#4169E1', 
-                          borderColor: '#4169E1',
-                          boxShadow: '0 0 15px rgba(65, 105, 225, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
-                        } : {}}
-                        onClick={() => setDirection("SELL")}
-                      >
-                        SELL
-                      </Button>
-                      <Button 
-                        variant="outline"
-                        className={cn(
-                          "rounded-xl transition-all duration-200 text-xs px-2 py-3",
-                          direction === "BUY" 
-                            ? "text-white shadow-inner" 
-                            : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
-                        )}
-                        style={direction === "BUY" ? { 
-                          backgroundColor: '#FF6B6B', 
-                          borderColor: '#FF6B6B',
-                          boxShadow: '0 0 15px rgba(255, 107, 107, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
-                        } : {}}
-                        onClick={() => setDirection("BUY")}
-                      >
-                        BUY
-                      </Button>
-                    </div>
-                  </div>
-                )}
                 
                 <div className="text-xs text-gray-500">
                   관리자 승인 후 거래 가능한 환율이 제공됩니다.
@@ -410,49 +355,25 @@ export default function ForwardTrading() {
           <div className="flex items-center mb-6">
             <div className="flex-1">
               <div className="text-sm text-gray-700 font-medium mb-2">주문금액</div>
-              <div className="flex-1 grid grid-cols-2 gap-2 mb-2">
-                <Button 
-                  variant="outline"
-                  className={cn(
-                    "rounded-xl transition-all duration-200",
-                    amountCurrency === "BASE" 
-                      ? "text-white shadow-inner" 
-                      : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
-                  )}
-                  style={amountCurrency === "BASE" ? {
-                    backgroundColor: '#2dd4bf',
-                    borderColor: '#2dd4bf',
-                    boxShadow: '0 0 15px rgba(45, 212, 191, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
-                  } : {}}
-                  onClick={() => setAmountCurrency("BASE")}
-                >
-                  {forwardBaseCurrency} {direction === "BUY" ? "매수" : "매도"}
-                </Button>
-                <Button 
-                  variant="outline"
-                  className={cn(
-                    "rounded-xl transition-all duration-200",
-                    amountCurrency === "QUOTE" 
-                      ? "text-white shadow-inner" 
-                      : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
-                  )}
-                  style={amountCurrency === "QUOTE" ? {
-                    backgroundColor: '#2dd4bf',
-                    borderColor: '#2dd4bf',
-                    boxShadow: '0 0 15px rgba(45, 212, 191, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
-                  } : {}}
-                  onClick={() => setAmountCurrency("QUOTE")}
-                >
-                  {forwardBaseCurrency === "USD" ? "KRW" : "USD"} {direction === "BUY" ? "매도" : "매수"}
-                </Button>
+              
+              {/* Currency Selection for Amount */}
+              <div className="flex justify-center mb-2">
+                <Select value={forwardBaseCurrency} onValueChange={(value: "USD" | "KRW") => setForwardBaseCurrency(value)}>
+                  <SelectTrigger className="w-32 bg-white border-gray-200 rounded-xl shadow-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="USD">USD</SelectItem>
+                    <SelectItem value="KRW">KRW</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <Input
                 type="text"
                 placeholder="여기에 주문금액을 입력하세요"
                 value={amount}
                 onChange={(e) => {
-                  const inputCurrency = amountCurrency === "BASE" ? forwardBaseCurrency : (forwardBaseCurrency === "USD" ? "KRW" : "USD");
-                  const formattedValue = formatInputValue(e.target.value, inputCurrency);
+                  const formattedValue = formatInputValue(e.target.value, forwardBaseCurrency);
                   setAmount(formattedValue);
                 }}
                 className="text-right text-lg bg-gray-50/50 border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-200"
@@ -466,12 +387,7 @@ export default function ForwardTrading() {
               선물환 {forwardBaseCurrency} {direction}/{forwardBaseCurrency === "USD" ? "KRW" : "USD"} {direction === "BUY" ? "SELL" : "BUY"} 주문
             </div>
             <div className="text-sm text-gray-600 mb-1">
-              {direction === "BUY" ? "BUY" : "SELL"}: {forwardBaseCurrency} {amountCurrency === "BASE" ? 
-                (amount ? formatCurrencyAmount(parseFloat(removeThousandSeparator(amount)), forwardBaseCurrency) : "미입력") : "거래시 확정"}
-            </div>
-            <div className="text-sm text-gray-600 mb-1">
-              {direction === "BUY" ? "SELL" : "BUY"}: {forwardBaseCurrency === "USD" ? "KRW" : "USD"} {amountCurrency === "QUOTE" ? 
-                (amount ? formatCurrencyAmount(parseFloat(removeThousandSeparator(amount)), forwardBaseCurrency === "USD" ? "KRW" : "USD") : "미입력") : "거래시 확정"}
+              거래금액: {forwardBaseCurrency} {amount ? formatCurrencyAmount(parseFloat(removeThousandSeparator(amount)), forwardBaseCurrency) : "미입력"}
             </div>
             {orderType === "LIMIT" && (
               <div className="text-sm text-gray-600 mb-1">
