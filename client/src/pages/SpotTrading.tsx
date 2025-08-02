@@ -405,7 +405,7 @@ export default function SpotTrading() {
                   }
                 </div>
                 <div className="text-sm text-gray-600 mb-1">
-                  결제일: {valueDate}
+                  결제일: {valueDate.toLocaleDateString('ko-KR')}
                 </div>
                 {orderType === "LIMIT" && (
                   <div className="text-xs text-gray-500">
