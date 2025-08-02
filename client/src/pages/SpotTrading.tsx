@@ -314,7 +314,7 @@ export default function SpotTrading() {
               {/* Step 4: Value date */}
               <div className="flex items-center mb-4">
                 <div className="flex-1">
-                  <div className="text-sm text-gray-700 font-medium mb-2">만기일</div>
+                  <div className="text-sm text-gray-700 font-medium mb-2">결제일</div>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
