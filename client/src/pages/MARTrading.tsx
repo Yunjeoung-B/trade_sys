@@ -170,7 +170,7 @@ export default function MARTrading() {
                       )}
                       onClick={() => setAmountCurrency("BASE")}
                     >
-                      USD 금액
+                      USD {direction === "BUY" ? "매수" : "매도"}
                     </Button>
                     <Button 
                       variant="outline"
@@ -182,7 +182,7 @@ export default function MARTrading() {
                       )}
                       onClick={() => setAmountCurrency("QUOTE")}
                     >
-                      KRW 금액
+                      KRW {direction === "BUY" ? "지불" : "수취"}
                     </Button>
                   </div>
                   <Input
