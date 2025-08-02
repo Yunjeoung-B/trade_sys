@@ -30,41 +30,41 @@ export default function AdminDashboard() {
   }, 0);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-900">
       <Header />
       <div className="flex">
         <Sidebar />
         <div className="flex-1 p-6">
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">관리자 대시보드</h2>
-            <p className="text-gray-600">시스템 전체 현황을 모니터링할 수 있습니다.</p>
+            <h2 className="text-2xl font-bold text-white mb-2">관리자 대시보드</h2>
+            <p className="text-slate-300">시스템 전체 현황을 모니터링할 수 있습니다.</p>
           </div>
           
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-            <Card>
+            <Card className="bg-slate-800 border-slate-700">
               <CardContent className="p-6">
                 <div className="flex items-center">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <Users className="h-6 w-6 text-blue-600" />
+                  <div className="w-12 h-12 bg-blue-900/20 rounded-lg flex items-center justify-center border border-blue-800">
+                    <Users className="h-6 w-6 text-blue-400" />
                   </div>
                   <div className="ml-4">
-                    <p className="text-sm text-gray-500">활성 사용자</p>
-                    <p className="text-2xl font-bold text-gray-900">{activeUsers}</p>
+                    <p className="text-sm text-slate-400">활성 사용자</p>
+                    <p className="text-2xl font-bold text-white">{activeUsers}</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
             
-            <Card>
+            <Card className="bg-slate-800 border-slate-700">
               <CardContent className="p-6">
                 <div className="flex items-center">
-                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                    <TrendingUp className="h-6 w-6 text-green-600" />
+                  <div className="w-12 h-12 bg-green-900/20 rounded-lg flex items-center justify-center border border-green-800">
+                    <TrendingUp className="h-6 w-6 text-green-400" />
                   </div>
                   <div className="ml-4">
-                    <p className="text-sm text-gray-500">일일 거래량</p>
-                    <p className="text-2xl font-bold text-gray-900">
+                    <p className="text-sm text-slate-400">일일 거래량</p>
+                    <p className="text-2xl font-bold text-white">
                       ${(dailyVolume / 1000000).toFixed(1)}M
                     </p>
                   </div>
@@ -72,29 +72,29 @@ export default function AdminDashboard() {
               </CardContent>
             </Card>
             
-            <Card>
+            <Card className="bg-slate-800 border-slate-700">
               <CardContent className="p-6">
                 <div className="flex items-center">
-                  <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                    <Clock className="h-6 w-6 text-yellow-600" />
+                  <div className="w-12 h-12 bg-yellow-900/20 rounded-lg flex items-center justify-center border border-yellow-800">
+                    <Clock className="h-6 w-6 text-yellow-400" />
                   </div>
                   <div className="ml-4">
-                    <p className="text-sm text-gray-500">승인 대기</p>
-                    <p className="text-2xl font-bold text-gray-900">{pendingQuotes}</p>
+                    <p className="text-sm text-slate-400">승인 대기</p>
+                    <p className="text-2xl font-bold text-white">{pendingQuotes}</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
             
-            <Card>
+            <Card className="bg-slate-800 border-slate-700">
               <CardContent className="p-6">
                 <div className="flex items-center">
-                  <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-                    <AlertTriangle className="h-6 w-6 text-red-600" />
+                  <div className="w-12 h-12 bg-red-900/20 rounded-lg flex items-center justify-center border border-red-800">
+                    <AlertTriangle className="h-6 w-6 text-red-400" />
                   </div>
                   <div className="ml-4">
-                    <p className="text-sm text-gray-500">총 거래</p>
-                    <p className="text-2xl font-bold text-gray-900">{totalTrades}</p>
+                    <p className="text-sm text-slate-400">총 거래</p>
+                    <p className="text-2xl font-bold text-white">{totalTrades}</p>
                   </div>
                 </div>
               </CardContent>

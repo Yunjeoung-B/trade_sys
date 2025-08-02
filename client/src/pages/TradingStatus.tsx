@@ -66,25 +66,25 @@ export default function TradingStatus() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-900">
       <Header />
       <div className="flex">
         <Sidebar />
         <div className="flex-1 p-6">
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">거래현황</h2>
-            <p className="text-gray-600">현재 유효한 거래 내역을 확인할 수 있습니다.</p>
+            <h2 className="text-2xl font-bold text-white mb-2">거래현황</h2>
+            <p className="text-slate-300">현재 유효한 거래 내역을 확인할 수 있습니다.</p>
           </div>
           
-          <Card>
+          <Card className="bg-slate-800 border-slate-700">
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle>활성 거래</CardTitle>
+                <CardTitle className="text-white">활성 거래</CardTitle>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => refetch()}
-                  className="text-teal-600 border-teal-600 hover:bg-teal-50"
+                  className="text-teal-400 border-teal-600 hover:bg-teal-900/20"
                 >
                   <RefreshCw className="w-4 h-4 mr-2" />
                   새로고침
@@ -95,7 +95,7 @@ export default function TradingStatus() {
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="text-sm text-gray-500 border-b">
+                    <tr className="text-sm text-slate-400 border-b border-slate-700">
                       <th className="text-left py-3">거래번호</th>
                       <th className="text-left py-3">상품</th>
                       <th className="text-left py-3">통화쌍</th>
@@ -107,17 +107,17 @@ export default function TradingStatus() {
                   </thead>
                   <tbody>
                     {trades?.map((trade) => (
-                      <tr key={trade.id} className="border-b hover:bg-gray-50">
-                        <td className="py-3 font-mono text-sm">{trade.tradeNumber}</td>
-                        <td className="py-3">{trade.productType}</td>
-                        <td className="py-3 font-medium">{getPairSymbol(trade.currencyPairId)}</td>
-                        <td className="py-3 text-right">
+                      <tr key={trade.id} className="border-b border-slate-700 hover:bg-slate-700/50">
+                        <td className="py-3 font-mono text-sm text-white">{trade.tradeNumber}</td>
+                        <td className="py-3 text-white">{trade.productType}</td>
+                        <td className="py-3 font-medium text-white">{getPairSymbol(trade.currencyPairId)}</td>
+                        <td className="py-3 text-right text-white">
                           {Number(trade.amount).toLocaleString('ko-KR')} USD
                         </td>
-                        <td className="py-3 text-center">
+                        <td className="py-3 text-center text-white">
                           {new Date(trade.createdAt).toLocaleDateString('ko-KR')}
                         </td>
-                        <td className="py-3 text-center">
+                        <td className="py-3 text-center text-white">
                           {trade.maturityDate 
                             ? new Date(trade.maturityDate).toLocaleDateString('ko-KR')
                             : '-'
@@ -132,7 +132,7 @@ export default function TradingStatus() {
                     ))}
                     {(!trades || trades.length === 0) && (
                       <tr>
-                        <td colSpan={7} className="py-8 text-center text-gray-500">
+                        <td colSpan={7} className="py-8 text-center text-slate-400">
                           활성 거래가 없습니다.
                         </td>
                       </tr>

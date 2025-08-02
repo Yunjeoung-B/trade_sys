@@ -143,14 +143,14 @@ export default function SpreadSettings() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-900">
       <Header />
       <div className="flex">
         <Sidebar />
         <div className="flex-1 p-6">
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">스프레드 설정</h2>
-            <p className="text-gray-600">통화쌍, 상품, 고객 그룹별 스프레드를 설정할 수 있습니다.</p>
+            <h2 className="text-2xl font-bold text-white mb-2">스프레드 설정</h2>
+            <p className="text-slate-300">통화쌍, 상품, 고객 그룹별 스프레드를 설정할 수 있습니다.</p>
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

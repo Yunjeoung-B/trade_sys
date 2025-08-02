@@ -193,14 +193,14 @@ export default function UserManagement() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-900">
       <Header />
       <div className="flex">
         <Sidebar />
         <div className="flex-1 p-6">
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">사용자 관리</h2>
-            <p className="text-gray-600">사용자 계정과 그룹을 관리할 수 있습니다.</p>
+            <h2 className="text-2xl font-bold text-white mb-2">사용자 관리</h2>
+            <p className="text-slate-300">사용자 계정과 그룹을 관리할 수 있습니다.</p>
           </div>
           
           <Card>

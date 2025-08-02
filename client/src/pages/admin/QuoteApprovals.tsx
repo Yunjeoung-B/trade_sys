@@ -182,14 +182,14 @@ export default function QuoteApprovals() {
   const pendingRequests = quoteRequests?.filter(req => req.status === "pending") || [];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-900">
       <Header />
       <div className="flex">
         <Sidebar />
         <div className="flex-1 p-6">
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">호가 승인 관리</h2>
-            <p className="text-gray-600">Forward 및 Swap 거래의 호가 승인을 관리할 수 있습니다.</p>
+            <h2 className="text-2xl font-bold text-white mb-2">호가 승인 관리</h2>
+            <p className="text-slate-300">Forward 및 Swap 거래의 호가 승인을 관리할 수 있습니다.</p>
           </div>
           
           <Card className="mb-6">
