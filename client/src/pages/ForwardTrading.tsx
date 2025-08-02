@@ -211,36 +211,25 @@ export default function ForwardTrading() {
           ) : (
             <div className="flex items-center mb-6">
               <div className="flex-1 text-center">
-                <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-2xl shadow-inner">
-                  <div className="text-lg font-semibold text-gray-700 mb-4">선물환 거래 정보</div>
-                  
-                  <div className={cn(
-                    "p-3 rounded-xl mb-4",
-                    direction === "BUY" ? "bg-red-50" : "bg-blue-50"
-                  )}>
-                    <div className={cn(
-                      "text-sm font-semibold",
-                      direction === "BUY" ? "text-red-700" : "text-blue-700"
-                    )}>
-                      {direction === "BUY" ? "BUY" : "SELL"} {forwardBaseCurrency} {formatCurrencyAmount(parseFloat(removeThousandSeparator(fixedAmount)), forwardBaseCurrency)}
-                    </div>
-                    <div className={cn(
-                      "text-lg font-bold mt-1",
-                      direction === "BUY" ? "text-red-600" : "text-blue-600"
-                    )}>
-                      @ {approvedRate.toFixed(2)}
-                    </div>
+                <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-6 rounded-3xl shadow-xl text-white">
+                  <div className="text-sm font-medium mb-2 bg-blue-400/30 px-3 py-1 rounded-lg inline-block">
+                    {direction === "BUY" ? "BUY" : "SELL"} {forwardBaseCurrency}
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-4 text-center mb-3">
-                    <div className="bg-white p-3 rounded-xl shadow-sm">
-                      <div className="text-xs text-gray-500 mb-1">SPOT</div>
-                      <div className="text-sm font-semibold text-gray-700">1,384.00</div>
-                    </div>
-                    <div className="bg-white p-3 rounded-xl shadow-sm">
-                      <div className="text-xs text-gray-500 mb-1">POINT</div>
-                      <div className="text-sm font-semibold text-gray-700">{(approvedRate - 1384.00).toFixed(2)}</div>
-                    </div>
+                  <div className="text-3xl font-bold mb-2">
+                    {approvedRate.toFixed(2)}
+                  </div>
+                  
+                  <div className="text-lg font-medium mb-4">
+                    {formatCurrencyAmount(parseFloat(removeThousandSeparator(fixedAmount)), forwardBaseCurrency)}
+                  </div>
+                  
+                  <div className="text-sm opacity-90">
+                    SPOT {(1384.00).toFixed(2)} + POINT {(approvedRate - 1384.00).toFixed(2)}
+                  </div>
+                  
+                  <div className="text-xs opacity-75 mt-2">
+                    매수 {((approvedRate - 1384.00) / 1384.00 * 100).toFixed(2)}%
                   </div>
                 </div>
               </div>
