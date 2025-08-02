@@ -496,7 +496,7 @@ export default function SwapTrading() {
                           description: "스왑 거래가 성공적으로 체결되었습니다.",
                         });
                       }}
-                      className="w-full py-4 text-lg font-semibold rounded-2xl bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+                      className="w-full py-4 text-lg font-semibold rounded-2xl bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
                     >
                       거래 체결
                     </Button>
