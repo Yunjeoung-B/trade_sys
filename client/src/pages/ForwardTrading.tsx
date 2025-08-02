@@ -232,7 +232,7 @@ export default function ForwardTrading() {
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-3 gap-4 text-center mb-3">
+                  <div className="grid grid-cols-2 gap-4 text-center mb-3">
                     <div className="bg-white p-3 rounded-xl shadow-sm">
                       <div className="text-xs text-gray-500 mb-1">SPOT</div>
                       <div className="text-sm font-semibold text-gray-700">1,384.00</div>
@@ -241,14 +241,6 @@ export default function ForwardTrading() {
                       <div className="text-xs text-gray-500 mb-1">POINT</div>
                       <div className="text-sm font-semibold text-gray-700">{(approvedRate - 1384.00).toFixed(2)}</div>
                     </div>
-                    <div className="bg-white p-3 rounded-xl shadow-sm">
-                      <div className="text-xs text-gray-500 mb-1">FORWARD</div>
-                      <div className="text-sm font-semibold text-gray-700">{approvedRate.toFixed(2)}</div>
-                    </div>
-                  </div>
-                  
-                  <div className="text-xs text-gray-500 text-center">
-                    FORWARD = SPOT + POINT
                   </div>
                 </div>
               </div>
