@@ -355,25 +355,49 @@ export default function ForwardTrading() {
           <div className="flex items-center mb-6">
             <div className="flex-1">
               <div className="text-sm text-gray-700 font-medium mb-2">주문금액</div>
-              
-              {/* Currency Selection for Amount */}
-              <div className="flex justify-center mb-2">
-                <Select value={forwardBaseCurrency} onValueChange={(value: "USD" | "KRW") => setForwardBaseCurrency(value)}>
-                  <SelectTrigger className="w-32 bg-white border-gray-200 rounded-xl shadow-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="USD">USD</SelectItem>
-                    <SelectItem value="KRW">KRW</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="flex-1 grid grid-cols-2 gap-2 mb-2">
+                <Button 
+                  variant="outline"
+                  className={cn(
+                    "rounded-xl transition-all duration-200",
+                    amountCurrency === "BASE" 
+                      ? "text-white shadow-inner" 
+                      : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                  )}
+                  style={amountCurrency === "BASE" ? {
+                    backgroundColor: '#2dd4bf',
+                    borderColor: '#2dd4bf',
+                    boxShadow: '0 0 15px rgba(45, 212, 191, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                  } : {}}
+                  onClick={() => setAmountCurrency("BASE")}
+                >
+                  {forwardBaseCurrency} {direction === "BUY" ? "매수" : "매도"}
+                </Button>
+                <Button 
+                  variant="outline"
+                  className={cn(
+                    "rounded-xl transition-all duration-200",
+                    amountCurrency === "QUOTE" 
+                      ? "text-white shadow-inner" 
+                      : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                  )}
+                  style={amountCurrency === "QUOTE" ? {
+                    backgroundColor: '#2dd4bf',
+                    borderColor: '#2dd4bf',
+                    boxShadow: '0 0 15px rgba(45, 212, 191, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                  } : {}}
+                  onClick={() => setAmountCurrency("QUOTE")}
+                >
+                  {forwardBaseCurrency === "USD" ? "KRW" : "USD"} {direction === "BUY" ? "매도" : "매수"}
+                </Button>
               </div>
               <Input
                 type="text"
                 placeholder="여기에 주문금액을 입력하세요"
                 value={amount}
                 onChange={(e) => {
-                  const formattedValue = formatInputValue(e.target.value, forwardBaseCurrency);
+                  const inputCurrency = amountCurrency === "BASE" ? forwardBaseCurrency : (forwardBaseCurrency === "USD" ? "KRW" : "USD");
+                  const formattedValue = formatInputValue(e.target.value, inputCurrency);
                   setAmount(formattedValue);
                 }}
                 className="text-right text-lg bg-gray-50/50 border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-200"
@@ -387,7 +411,12 @@ export default function ForwardTrading() {
               선물환 {forwardBaseCurrency} {direction}/{forwardBaseCurrency === "USD" ? "KRW" : "USD"} {direction === "BUY" ? "SELL" : "BUY"} 주문
             </div>
             <div className="text-sm text-gray-600 mb-1">
-              거래금액: {forwardBaseCurrency} {amount ? formatCurrencyAmount(parseFloat(removeThousandSeparator(amount)), forwardBaseCurrency) : "미입력"}
+              {direction === "BUY" ? "BUY" : "SELL"}: {forwardBaseCurrency} {amountCurrency === "BASE" ? 
+                (amount ? formatCurrencyAmount(parseFloat(removeThousandSeparator(amount)), forwardBaseCurrency) : "미입력") : "거래시 확정"}
+            </div>
+            <div className="text-sm text-gray-600 mb-1">
+              {direction === "BUY" ? "SELL" : "BUY"}: {forwardBaseCurrency === "USD" ? "KRW" : "USD"} {amountCurrency === "QUOTE" ? 
+                (amount ? formatCurrencyAmount(parseFloat(removeThousandSeparator(amount)), forwardBaseCurrency === "USD" ? "KRW" : "USD") : "미입력") : "거래시 확정"}
             </div>
             {orderType === "LIMIT" && (
               <div className="text-sm text-gray-600 mb-1">
