@@ -182,7 +182,7 @@ export default function MARTrading() {
                       )}
                       onClick={() => setAmountCurrency("QUOTE")}
                     >
-                      KRW {direction === "BUY" ? "지불" : "수취"}
+                      KRW {direction === "BUY" ? "매도" : "매수"}
                     </Button>
                   </div>
                   <Input
