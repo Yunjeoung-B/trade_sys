@@ -303,8 +303,7 @@ export default function SwapTrading() {
               {!adminPriceProvided && (
                 <div className="flex items-center mb-6">
                   <div className="flex-1">
-                    <div className="text-sm text-gray-700 font-medium mb-2">스왑포인트/환율</div>
-                    <div className="text-xs text-gray-500 mb-3">관리자 승인 후 재조회</div>
+
                     
                     <div className="grid grid-cols-2 gap-4 mb-4">
                       <div>
