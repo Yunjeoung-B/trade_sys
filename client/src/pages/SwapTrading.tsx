@@ -18,6 +18,7 @@ import type { CurrencyPair } from "@shared/schema";
 export default function SwapTrading() {
   const [selectedPair, setSelectedPair] = useState("USD/KRW");
   const [direction, setDirection] = useState<"BUY_SELL_USD" | "SELL_BUY_USD">("BUY_SELL_USD");
+  const [swapBaseCurrency, setSwapBaseCurrency] = useState<"USD" | "KRW">("USD");
   const [nearDate, setNearDate] = useState<Date>(new Date());
   const [farDate, setFarDate] = useState<Date>(new Date());
   const [nearAmount, setNearAmount] = useState("");
@@ -77,7 +78,7 @@ export default function SwapTrading() {
   // 관리자 제공 가격 (시뮬레이션)
   const swapPoints = adminPriceProvided ? 14 : null;
   const nearRate = adminPriceProvided ? 1390.85 : null;
-  const farRate = adminPriceProvided ? (nearRate ? nearRate + swapPoints : null) : null;
+  const farRate = adminPriceProvided ? (nearRate ? nearRate + (swapPoints || 0) : null) : null;
 
   const handleSwapRequest = () => {
     if (!selectedPairData || !nearAmount || !farAmount) {
@@ -136,6 +137,30 @@ export default function SwapTrading() {
                         SWAP 거래를 위해서는 CHOIICE FX에 가격을 요청해야 합니다.
                       </div>
                       
+                      {/* Base Currency Selection */}
+                      <div className="mb-4">
+                        <div className="text-sm text-gray-600 mb-2">기준통화 선택</div>
+                        <Select value={swapBaseCurrency} onValueChange={(value: "USD" | "KRW") => {
+                          setSwapBaseCurrency(value);
+                          // Auto-select currency buttons based on base currency
+                          if (value === "USD") {
+                            setNearAmountCurrency("USD");
+                            setFarAmountCurrency("USD");
+                          } else {
+                            setNearAmountCurrency("KRW");
+                            setFarAmountCurrency("KRW");
+                          }
+                        }}>
+                          <SelectTrigger className="w-full bg-gray-50/50 border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-200">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="USD">USD (미국달러)</SelectItem>
+                            <SelectItem value="KRW">KRW (한국원)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
                       {/* Direction Selection */}
                       <div className="grid grid-cols-2 gap-2 mb-4">
                         <Button 
@@ -143,24 +168,34 @@ export default function SwapTrading() {
                           className={cn(
                             "rounded-xl transition-all duration-200 text-xs px-2 py-3",
                             direction === "BUY_SELL_USD" 
-                              ? "bg-teal-400 border-2 border-teal-600 text-white shadow-inner ring-2 ring-teal-300" 
+                              ? "text-white shadow-inner" 
                               : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                           )}
+                          style={direction === "BUY_SELL_USD" ? {
+                            backgroundColor: '#4169E1',
+                            borderColor: '#4169E1',
+                            boxShadow: '0 0 15px rgba(65, 105, 225, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                          } : {}}
                           onClick={() => setDirection("BUY_SELL_USD")}
                         >
-                          BUY&SELL USD
+                          BUY&SELL {swapBaseCurrency}
                         </Button>
                         <Button 
                           variant="outline"
                           className={cn(
                             "rounded-xl transition-all duration-200 text-xs px-2 py-3",
                             direction === "SELL_BUY_USD" 
-                              ? "bg-teal-400 border-2 border-teal-600 text-white shadow-inner ring-2 ring-teal-300" 
+                              ? "text-white shadow-inner" 
                               : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                           )}
+                          style={direction === "SELL_BUY_USD" ? {
+                            backgroundColor: '#FF6B6B',
+                            borderColor: '#FF6B6B',
+                            boxShadow: '0 0 15px rgba(255, 107, 107, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                          } : {}}
                           onClick={() => setDirection("SELL_BUY_USD")}
                         >
-                          SELL&BUY USD
+                          SELL&BUY {swapBaseCurrency}
                         </Button>
                       </div>
                       
@@ -323,10 +358,10 @@ export default function SwapTrading() {
                           className="text-right text-lg bg-gray-50/50 border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-200"
                         />
                         <div className="text-xs text-gray-500 mt-1">
-                          {direction === "BUY_SELL_USD" ? "SELL USD" : "BUY USD"}
+                          {direction === "BUY_SELL_USD" ? `SELL ${swapBaseCurrency}` : `BUY ${swapBaseCurrency}`}
                         </div>
                         <div className="text-xs text-gray-500">
-                          {direction === "BUY_SELL_USD" ? "BUY KRW" : "SELL KRW"}
+                          {direction === "BUY_SELL_USD" ? `BUY ${swapBaseCurrency === "USD" ? "KRW" : "USD"}` : `SELL ${swapBaseCurrency === "USD" ? "KRW" : "USD"}`}
                         </div>
                       </div>
                       
@@ -381,10 +416,10 @@ export default function SwapTrading() {
                           className="text-right text-lg bg-gray-50/50 border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-200"
                         />
                         <div className="text-xs text-gray-500 mt-1">
-                          {direction === "BUY_SELL_USD" ? "BUY USD" : "SELL USD"}
+                          {direction === "BUY_SELL_USD" ? `BUY ${swapBaseCurrency}` : `SELL ${swapBaseCurrency}`}
                         </div>
                         <div className="text-xs text-gray-500">
-                          {direction === "BUY_SELL_USD" ? "SELL KRW" : "BUY KRW"}
+                          {direction === "BUY_SELL_USD" ? `SELL ${swapBaseCurrency === "USD" ? "KRW" : "USD"}` : `BUY ${swapBaseCurrency === "USD" ? "KRW" : "USD"}`}
                         </div>
                       </div>
                     </div>
