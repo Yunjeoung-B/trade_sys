@@ -66,8 +66,25 @@ export default function ForwardTrading() {
   const selectedPairData = currencyPairs.find(p => p.symbol === selectedPair);
   const currentRate = marketRates.find((r: any) => r.currencyPairId === selectedPairData?.id);
 
-  const buyRate = currentRate ? Number(currentRate.buyRate) : 1394.55;
-  const sellRate = currentRate ? Number(currentRate.sellRate) : 1382.95;
+  // SPOT 레이트 (현물환과 동일)
+  const spotBuyRate = currentRate ? Number(currentRate.buyRate) : 1394.55;
+  const spotSellRate = currentRate ? Number(currentRate.sellRate) : 1382.95;
+  
+  // SWAP POINT 계산 (만기일까지의 기간에 따라)
+  const calculateSwapPoints = (spotRate: number, valueDate: Date) => {
+    if (!valueDate) return 0;
+    const today = new Date();
+    const daysToMaturity = Math.ceil((valueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    // 간단한 스왑포인트 계산 (실제로는 금리 차이에 따라 계산)
+    return daysToMaturity * 0.05; // 예시: 일당 0.05 포인트
+  };
+  
+  const swapPointsBuy = calculateSwapPoints(spotBuyRate, valueDate);
+  const swapPointsSell = calculateSwapPoints(spotSellRate, valueDate);
+  
+  // 선물환 레이트 = SPOT + SWAP POINTS
+  const buyRate = spotBuyRate + swapPointsBuy;
+  const sellRate = spotSellRate + swapPointsSell;
 
   const handleTrade = () => {
     if (!selectedPairData || !amount) {
@@ -118,12 +135,27 @@ export default function ForwardTrading() {
                 </Select>
               </div>
 
-              {/* Step 2: Rate display */}
+              {/* Step 2: Rate display with SPOT and SWAP POINT breakdown */}
               <div className="flex items-center mb-6">
                 <div className="flex-1 grid grid-cols-2 gap-4">
                   <div className="text-center">
                     <div className="text-sm text-gray-600 mb-1">SELL {baseCurrency}</div>
-                    <div className="text-2xl font-bold text-blue-600">
+                    
+                    {/* SPOT Rate */}
+                    <div className="text-xs text-gray-500 mb-1">SPOT</div>
+                    <div className="text-lg font-bold text-blue-600 mb-1">
+                      {spotSellRate.toFixed(2)}
+                    </div>
+                    
+                    {/* SWAP POINT */}
+                    <div className="text-xs text-gray-500 mb-1">SWAP POINT</div>
+                    <div className="text-sm font-semibold text-gray-700 mb-1">
+                      {swapPointsSell >= 0 ? '+' : ''}{swapPointsSell.toFixed(2)}
+                    </div>
+                    
+                    {/* Forward Rate */}
+                    <div className="text-xs text-gray-500 mb-1">선물환율</div>
+                    <div className="text-2xl font-bold text-blue-600 mb-2">
                       {sellRate.toFixed(2).split('.')[0]}.
                       <span className="text-lg">{sellRate.toFixed(2).split('.')[1]}</span>
                     </div>
@@ -144,7 +176,22 @@ export default function ForwardTrading() {
                   </div>
                   <div className="text-center">
                     <div className="text-sm text-gray-600 mb-1">BUY {baseCurrency}</div>
-                    <div className="text-2xl font-bold text-red-500">
+                    
+                    {/* SPOT Rate */}
+                    <div className="text-xs text-gray-500 mb-1">SPOT</div>
+                    <div className="text-lg font-bold text-red-500 mb-1">
+                      {spotBuyRate.toFixed(2)}
+                    </div>
+                    
+                    {/* SWAP POINT */}
+                    <div className="text-xs text-gray-500 mb-1">SWAP POINT</div>
+                    <div className="text-sm font-semibold text-gray-700 mb-1">
+                      {swapPointsBuy >= 0 ? '+' : ''}{swapPointsBuy.toFixed(2)}
+                    </div>
+                    
+                    {/* Forward Rate */}
+                    <div className="text-xs text-gray-500 mb-1">선물환율</div>
+                    <div className="text-2xl font-bold text-red-500 mb-2">
                       {buyRate.toFixed(2).split('.')[0]}.
                       <span className="text-lg">{buyRate.toFixed(2).split('.')[1]}</span>
                     </div>
@@ -365,6 +412,15 @@ export default function ForwardTrading() {
                     지정환율: {limitRate || "미지정"}
                   </div>
                 )}
+                <div className="text-sm text-gray-600 mb-1">
+                  SPOT환율: {direction === "BUY" ? spotBuyRate.toFixed(2) : spotSellRate.toFixed(2)}
+                </div>
+                <div className="text-sm text-gray-600 mb-1">
+                  SWAP POINT: {direction === "BUY" 
+                    ? (swapPointsBuy >= 0 ? '+' : '') + swapPointsBuy.toFixed(2)
+                    : (swapPointsSell >= 0 ? '+' : '') + swapPointsSell.toFixed(2)
+                  }
+                </div>
                 <div className="text-sm text-gray-600 mb-1">
                   적용환율: {orderType === "MARKET" 
                     ? (direction === "BUY" ? buyRate.toFixed(2) : sellRate.toFixed(2))
