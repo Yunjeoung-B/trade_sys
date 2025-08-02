@@ -125,14 +125,6 @@ export default function TradeManagement() {
     farSpread: ""
   });
   const { toast } = useToast();
-  
-  // Debug logs
-  console.log("TradeManagement rendering:", {
-    tradesCount: trades.length,
-    activeTab,
-    hedgeFilter,
-    confirmedOnly
-  });
 
   const getStatusConfig = (status: TradeRequest["status"]) => {
     switch (status) {

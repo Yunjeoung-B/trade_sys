@@ -42,11 +42,11 @@ function Router() {
       ) : (
         <>
           <Route path="/" component={Dashboard} />
-          <Route path="/spot" component={Dashboard} />
-          <Route path="/forward" component={Dashboard} />
-          <Route path="/swap" component={Dashboard} />
-          <Route path="/mar" component={Dashboard} />
-          <Route path="/rates" component={Dashboard} />
+          <Route path="/spot" component={SpotTrading} />
+          <Route path="/forward" component={ForwardTrading} />
+          <Route path="/swap" component={SwapTrading} />
+          <Route path="/mar" component={MARTrading} />
+          <Route path="/rates" component={ExchangeRates} />
           <Route path="/trades" component={TradeStatus} />
           
           {user?.role === "admin" && (
