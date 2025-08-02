@@ -161,7 +161,7 @@ export default function ForwardTrading() {
                       } : {}}
                       onClick={() => setDirection("SELL")}
                     >
-                      SELL {forwardBaseCurrency}
+                      SELL
                     </Button>
                     <Button 
                       variant="outline"
@@ -178,7 +178,7 @@ export default function ForwardTrading() {
                       } : {}}
                       onClick={() => setDirection("BUY")}
                     >
-                      BUY {forwardBaseCurrency}
+                      BUY
                     </Button>
                   </div>
                 ) : (
@@ -200,7 +200,7 @@ export default function ForwardTrading() {
                         } : {}}
                         onClick={() => setDirection("SELL")}
                       >
-                        SELL {forwardBaseCurrency}
+                        SELL
                       </Button>
                       <Button 
                         variant="outline"
@@ -217,7 +217,7 @@ export default function ForwardTrading() {
                         } : {}}
                         onClick={() => setDirection("BUY")}
                       >
-                        BUY {forwardBaseCurrency}
+                        BUY
                       </Button>
                     </div>
                   </div>
