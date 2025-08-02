@@ -11,7 +11,7 @@ import { format, addDays } from "date-fns";
 import { cn } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { formatCurrencyAmount } from "@/lib/currencyUtils";
+import { formatCurrencyAmount, formatInputValue, removeThousandSeparator } from "@/lib/currencyUtils";
 import type { CurrencyPair } from "@shared/schema";
 
 
@@ -102,7 +102,7 @@ export default function ForwardTrading() {
       currencyPairId: selectedPairData.id,
       direction,
       orderType,
-      amount: parseFloat(amount),
+      amount: parseFloat(removeThousandSeparator(amount)),
       amountCurrency,
       limitRate: orderType === "LIMIT" ? parseFloat(limitRate) : undefined,
       validityType: orderType === "LIMIT" ? validityType : undefined,
@@ -354,10 +354,14 @@ export default function ForwardTrading() {
                 </Button>
               </div>
               <Input
-                type="number"
+                type="text"
                 placeholder="여기에 주문금액을 입력하세요"
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={(e) => {
+                  const inputCurrency = amountCurrency === "BASE" ? baseCurrency : quoteCurrency;
+                  const formattedValue = formatInputValue(e.target.value, inputCurrency);
+                  setAmount(formattedValue);
+                }}
                 className="text-right text-lg bg-gray-50/50 border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-200"
               />
             </div>

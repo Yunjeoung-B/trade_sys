@@ -11,7 +11,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { formatCurrencyAmount } from "@/lib/currencyUtils";
+import { formatCurrencyAmount, formatInputValue, removeThousandSeparator } from "@/lib/currencyUtils";
 import type { CurrencyPair } from "@shared/schema";
 
 
@@ -76,7 +76,7 @@ export default function SwapTrading() {
       productType: "Swap",
       currencyPairId: selectedPairData.id,
       direction,
-      amount: parseFloat(amount),
+      amount: parseFloat(removeThousandSeparator(amount)),
       nearDate,
       farDate,
       nearRate: direction === "BUY" ? buyRate : sellRate,
@@ -236,10 +236,13 @@ export default function SwapTrading() {
                     </Button>
                   </div>
                   <Input
-                    type="number"
+                    type="text"
                     placeholder="여기에 주문금액을 입력하세요"
                     value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
+                    onChange={(e) => {
+                      const formattedValue = formatInputValue(e.target.value, baseCurrency);
+                      setAmount(formattedValue);
+                    }}
                     className="text-right text-lg bg-gray-50/50 border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-200"
                   />
                 </div>

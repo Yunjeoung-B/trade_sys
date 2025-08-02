@@ -11,7 +11,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { formatCurrencyAmount, calculateCurrencyAmount } from "@/lib/currencyUtils";
+import { formatCurrencyAmount, calculateCurrencyAmount, formatInputValue, removeThousandSeparator } from "@/lib/currencyUtils";
 import type { CurrencyPair } from "@shared/schema";
 
 
@@ -113,7 +113,7 @@ export default function SpotTrading() {
       currencyPairId: selectedPairData.id,
       direction,
       orderType,
-      amount: parseFloat(amount),
+      amount: parseFloat(removeThousandSeparator(amount)),
       amountCurrency,
       rate: tradeRate,
       settlementDate: valueDate,
@@ -369,10 +369,14 @@ export default function SpotTrading() {
                     </Button>
                   </div>
                   <Input
-                    type="number"
+                    type="text"
                     placeholder="여기에 주문금액을 입력하세요"
                     value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
+                    onChange={(e) => {
+                      const inputCurrency = amountCurrency === "BASE" ? baseCurrency : quoteCurrency;
+                      const formattedValue = formatInputValue(e.target.value, inputCurrency);
+                      setAmount(formattedValue);
+                    }}
                     className="text-right text-lg bg-gray-50/50 border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-200"
                   />
                 </div>
@@ -385,14 +389,14 @@ export default function SpotTrading() {
                 </div>
                 <div className="text-sm text-gray-600 mb-1">
                   {direction === "BUY" ? "BUY" : "SELL"}: {baseCurrency} {amountCurrency === "BASE" ? 
-                    formatCurrencyAmount(parseFloat(amount || "0"), baseCurrency) : 
-                    formatCurrencyAmount(calculateCurrencyAmount(parseFloat(amount || "0") / (direction === "BUY" ? buyRate : sellRate), baseCurrency), baseCurrency)
+                    formatCurrencyAmount(parseFloat(removeThousandSeparator(amount || "0")), baseCurrency) : 
+                    formatCurrencyAmount(calculateCurrencyAmount(parseFloat(removeThousandSeparator(amount || "0")) / (direction === "BUY" ? buyRate : sellRate), baseCurrency), baseCurrency)
                   }
                 </div>
                 <div className="text-sm text-gray-600 mb-1">
                   {direction === "BUY" ? "SELL" : "BUY"}: {quoteCurrency} {amountCurrency === "QUOTE" ? 
-                    formatCurrencyAmount(parseFloat(amount || "0"), quoteCurrency) : 
-                    formatCurrencyAmount(calculateCurrencyAmount(parseFloat(amount || "0") * (direction === "BUY" ? buyRate : sellRate), quoteCurrency), quoteCurrency)
+                    formatCurrencyAmount(parseFloat(removeThousandSeparator(amount || "0")), quoteCurrency) : 
+                    formatCurrencyAmount(calculateCurrencyAmount(parseFloat(removeThousandSeparator(amount || "0")) * (direction === "BUY" ? buyRate : sellRate), quoteCurrency), quoteCurrency)
                   }
                 </div>
                 {orderType === "LIMIT" && (

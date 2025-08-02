@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { formatCurrencyAmount, calculateCurrencyAmount } from "@/lib/currencyUtils";
+import { formatCurrencyAmount, calculateCurrencyAmount, formatInputValue, removeThousandSeparator } from "@/lib/currencyUtils";
 
 
 export default function MARTrading() {
@@ -71,7 +71,7 @@ export default function MARTrading() {
       productType: "MAR",
       currencyPairId: "usd-krw", // USD/KRW 고정
       direction,
-      amount: parseFloat(amount),
+      amount: parseFloat(removeThousandSeparator(amount)),
       amountCurrency,
       rate: marRate + (direction === "BUY" ? buySpread : sellSpread),
       settlementDate: new Date(),
@@ -179,10 +179,14 @@ export default function MARTrading() {
                     </Button>
                   </div>
                   <Input
-                    type="number"
+                    type="text"
                     placeholder="여기에 주문금액을 입력하세요"
                     value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
+                    onChange={(e) => {
+                      const inputCurrency = amountCurrency === "BASE" ? "USD" : "KRW";
+                      const formattedValue = formatInputValue(e.target.value, inputCurrency);
+                      setAmount(formattedValue);
+                    }}
                     className="text-right text-lg bg-gray-50/50 border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-200"
                   />
                 </div>
