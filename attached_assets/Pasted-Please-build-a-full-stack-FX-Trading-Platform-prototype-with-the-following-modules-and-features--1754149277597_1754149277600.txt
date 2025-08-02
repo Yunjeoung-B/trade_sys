@@ -1,0 +1,70 @@
+Please build a full-stack FX Trading Platform prototype with the following modules and features.
+
+📁 Structure:
+- Frontend: React + TailwindCSS
+- Backend: Flask (Python) or Node.js + Express
+- Database: Replit DB or SQLite (for prototype)
+- Directory layout: `/client`, `/server`, `/db`
+
+👤 USER ROLES:
+- `admin`: manages user groups, spreads, approvals, and market prices
+- `client`: logs in to view/request quotes and place orders
+
+🔐 1. Authentication
+- Login system with changeable password
+- Users belong to 3-level hierarchy:
+  - `majorGroup` (e.g., external/internal clients)
+  - `midGroup` (e.g., team name)
+  - `subGroup` (individual ID)
+
+💱 2. Spread Settings (Admin Only)
+- Spreads can be set by:
+  - FX product: Spot, Forward, Swap
+  - Currency pair
+  - Settlement date
+  - Group level: major/mid/sub
+- Final quote = source price + group-based spread + product spread + currency spread + tenor spread
+
+📄 3. Order Pages (Client)
+### a. FX Spot
+- Market order only
+- Always visible to client (no approval needed)
+- BUY/SELL toggle, real-time pricing, input amount, execute button
+
+### b. FX Forward
+- Client requests quote by selecting currency, direction, tenor
+- Quotes are hidden until manually or automatically approved
+- Admin can set auto-approval windows by user/time
+
+### c. FX Swap
+- NEAR/FAR date selection
+- Swap point, direction, NEAR rate input
+- Calculated amounts per leg
+- Quotes hidden until approved
+
+### d. MAR Order
+- Dedicated page for MAR (Market Average Rate) trading
+- Can only be submitted **before 09:00** (local time)
+- Always visible (no approval needed)
+- Spot-only product
+- BUY/SELL direction, input amount
+
+📊 4. Admin Dashboard
+- Quote approvals:
+  - Manual approval by request
+  - Auto-approval toggle per user with time settings
+- View/edit source quote feed
+  - Pull from Bloomberg API (mock data now)
+  - Manually override any value
+  - View quote logs and changes
+- Real-time monitor of currently visible quotes to clients
+
+✅ 5. System Rules Summary
+| Product   | Client sees price before approval? | Manual Approval Required? | Auto Approval Allowed? | Special Restriction |
+|-----------|------------------------------------|----------------------------|-------------------------|---------------------|
+| FX Spot   | ✅ Yes                              | ❌ No                     | ❌ No                  | None                |
+| FX FWD    | ❌ No                               | ✅ Yes                    | ✅ Yes                 | None                |
+| FX Swap   | ❌ No                               | ✅ Yes                    | ✅ Yes                 | None                |
+| MAR       | ✅ Yes                              | ❌ No                     | ❌ No                  | ⚠️ Only before 09:00 |
+
+Please scaffold the initial project structure, set up auth routes, admin dashboard template, and four order entry UIs (Spot, Forward, Swap, MAR) with mock quote components.
