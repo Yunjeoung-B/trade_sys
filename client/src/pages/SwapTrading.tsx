@@ -251,7 +251,7 @@ export default function SwapTrading() {
                   거래금액: {amount || "0"} {baseCurrency}
                 </div>
                 <div className="text-sm text-gray-600 mb-1">
-                  거래환율: 견적 승인 후 제공
+                  거래환율: 관리자 가격 제공 후 확정
                 </div>
                 <div className="text-sm text-gray-600">
                   Near Leg: {nearDate ? format(nearDate, "yyyy-MM-dd") : "미선택"}

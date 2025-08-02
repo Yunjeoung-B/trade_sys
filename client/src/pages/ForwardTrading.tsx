@@ -368,10 +368,10 @@ export default function ForwardTrading() {
               선물환 {baseCurrency} {direction}/{quoteCurrency} {direction === "BUY" ? "SELL" : "BUY"} 주문
             </div>
             <div className="text-sm text-gray-600 mb-1">
-              {direction === "BUY" ? "BUY" : "SELL"}: {baseCurrency} {amountCurrency === "BASE" ? (amount || "0") : ((parseFloat(amount || "0") / (direction === "BUY" ? buyRate : sellRate)).toFixed(2))}
+              {direction === "BUY" ? "BUY" : "SELL"}: {baseCurrency} {amountCurrency === "BASE" ? (amount || "미입력") : "거래시 확정"}
             </div>
             <div className="text-sm text-gray-600 mb-1">
-              {direction === "BUY" ? "SELL" : "BUY"}: {quoteCurrency} {amountCurrency === "QUOTE" ? (amount || "0") : ((parseFloat(amount || "0") * (direction === "BUY" ? buyRate : sellRate)).toFixed(2))}
+              {direction === "BUY" ? "SELL" : "BUY"}: {quoteCurrency} {amountCurrency === "QUOTE" ? (amount || "미입력") : "거래시 확정"}
             </div>
             {orderType === "LIMIT" && (
               <div className="text-sm text-gray-600 mb-1">
@@ -379,7 +379,7 @@ export default function ForwardTrading() {
               </div>
             )}
             <div className="text-sm text-gray-600 mb-1">
-              거래환율: 견적 승인 후 제공
+              거래환율: 관리자 가격 제공 후 확정
             </div>
             <div className="text-sm text-gray-600 mb-1">
               결제일: {valueDate ? valueDate.toISOString().split('T')[0] : "미선택"}
