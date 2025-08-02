@@ -44,13 +44,14 @@ export default function Landing() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 flex">
+    <div className="min-h-screen bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 flex">
       {/* Left side - Login Form */}
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
           {/* Logo */}
           <div className="mb-8">
-            <h1 className="text-white text-lg font-medium mb-1">CHOIICE FX</h1>
+            <h1 className="text-teal-400 text-2xl font-bold mb-1">CHOIICE FX</h1>
+            <p className="text-slate-300 text-sm">전문가를 위한 FX 거래 플랫폼</p>
           </div>
 
           {/* Login Form */}
@@ -59,32 +60,32 @@ export default function Landing() {
             
             <div className="space-y-4">
               <div>
-                <label className="text-gray-400 text-sm block mb-2">사용자 ID</label>
+                <label className="text-teal-300 text-sm block mb-2">사용자 ID</label>
                 <Input
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="bg-slate-800 border-slate-700 text-white placeholder-gray-500"
+                  className="bg-slate-800/80 border-teal-500/30 text-white placeholder-slate-400 focus:border-teal-400 focus:ring-teal-400/20"
                   placeholder="사용자 ID를 입력하세요"
                   disabled={isLoading}
                 />
               </div>
 
               <div>
-                <label className="text-gray-400 text-sm block mb-2">비밀번호</label>
+                <label className="text-teal-300 text-sm block mb-2">비밀번호</label>
                 <div className="relative">
                   <Input
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="bg-slate-800 border-slate-700 text-white placeholder-gray-500 pr-10"
+                    className="bg-slate-800/80 border-teal-500/30 text-white placeholder-slate-400 pr-10 focus:border-teal-400 focus:ring-teal-400/20"
                     placeholder="비밀번호를 입력하세요"
                     disabled={isLoading}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-teal-300"
                     disabled={isLoading}
                   >
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -96,14 +97,14 @@ export default function Landing() {
             <div className="space-y-4">
               <Button 
                 type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3"
+                className="w-full bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white py-3 font-medium"
                 disabled={isLoading}
               >
                 {isLoading ? "로그인 중..." : "LOG IN"}
               </Button>
               
               <div className="text-center text-xs text-slate-400 space-y-1">
-                <div>데모 계정:</div>
+                <div className="text-teal-300">데모 계정:</div>
                 <div>admin / password (관리자)</div>
                 <div>client / password (고객)</div>
               </div>
@@ -114,12 +115,12 @@ export default function Landing() {
 
       {/* Right side - Decorative Pattern */}
       <div className="flex-1 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-amber-600 via-orange-700 to-orange-900">
-          {/* Dot Pattern Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900">
+          {/* Geometric Pattern Overlay */}
           <div 
-            className="absolute inset-0 opacity-50"
+            className="absolute inset-0 opacity-20"
             style={{
-              backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`,
+              backgroundImage: `radial-gradient(circle at 2px 2px, rgb(20, 184, 166) 1px, transparent 0)`,
               backgroundSize: '24px 24px'
             }}
           ></div>

@@ -5,6 +5,7 @@ This is a full-stack FX Trading Platform prototype built for foreign exchange tr
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
+Design preferences: Login pages should use mint (teal) and dark navy color scheme instead of orange/amber colors.
 
 # System Architecture
 

@@ -42,52 +42,60 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 to-blue-50 flex items-center justify-center">
-      <Card className="w-full max-w-md mx-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 flex items-center justify-center">
+      <Card className="w-full max-w-md mx-4 bg-slate-800/90 border-teal-500/30">
         <CardHeader className="text-center pb-8">
           <div className="w-16 h-16 bg-gradient-to-br from-teal-400 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-            <div className="w-6 h-6 bg-white rounded-sm flex items-center justify-center">
-              <div className="w-1.5 h-4 bg-teal-600 rounded-full"></div>
+            <div className="w-6 h-6 bg-slate-900 rounded-sm flex items-center justify-center">
+              <div className="w-1.5 h-4 bg-teal-400 rounded-full"></div>
             </div>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Choice FX</h1>
-          <p className="text-gray-600 text-sm">The Smartest Choice in FX</p>
+          <h1 className="text-2xl font-bold text-white mb-2">CHOIICE FX</h1>
+          <p className="text-teal-300 text-sm">전문가를 위한 FX 거래 플랫폼</p>
         </CardHeader>
         
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <Label htmlFor="username">사용자 ID</Label>
+              <Label htmlFor="username" className="text-teal-300">사용자 ID</Label>
               <Input
                 id="username"
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="사용자 ID를 입력하세요"
+                className="bg-slate-700/80 border-teal-500/30 text-white placeholder-slate-400 focus:border-teal-400 focus:ring-teal-400/20"
                 required
               />
             </div>
             
             <div>
-              <Label htmlFor="password">비밀번호</Label>
+              <Label htmlFor="password" className="text-teal-300">비밀번호</Label>
               <Input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="비밀번호를 입력하세요"
+                className="bg-slate-700/80 border-teal-500/30 text-white placeholder-slate-400 focus:border-teal-400 focus:ring-teal-400/20"
                 required
               />
             </div>
             
             <Button
               type="submit"
-              className="w-full gradient-bg hover:opacity-90 text-white"
+              className="w-full bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white font-medium"
               disabled={loginMutation.isPending}
             >
               {loginMutation.isPending ? "로그인 중..." : "로그인"}
             </Button>
           </form>
+          
+          <div className="mt-6 text-center text-xs text-slate-400 space-y-1">
+            <div className="text-teal-300">데모 계정:</div>
+            <div>admin / password (관리자)</div>
+            <div>client / password (고객)</div>
+          </div>
         </CardContent>
       </Card>
     </div>
