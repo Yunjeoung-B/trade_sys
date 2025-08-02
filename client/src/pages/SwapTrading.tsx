@@ -120,7 +120,7 @@ export default function SwapTrading() {
                       variant="outline" 
                       size="sm" 
                       className={cn(
-                        "mt-3 w-full rounded-xl transition-all duration-200",
+                        "mt-2 w-full rounded-xl transition-all duration-200",
                         direction === "SELL" 
                           ? "bg-gradient-to-r from-blue-200 to-blue-300 border-blue-300 text-blue-800 shadow-md" 
                           : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
@@ -140,7 +140,7 @@ export default function SwapTrading() {
                       variant="outline" 
                       size="sm" 
                       className={cn(
-                        "mt-3 w-full rounded-xl transition-all duration-200",
+                        "mt-2 w-full rounded-xl transition-all duration-200",
                         direction === "BUY" 
                           ? "bg-gradient-to-r from-pink-200 to-pink-300 border-pink-300 text-pink-800 shadow-md" 
                           : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"

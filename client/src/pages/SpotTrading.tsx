@@ -156,9 +156,7 @@ export default function SpotTrading() {
                       {sellRate.toFixed(2).split('.')[0]}.
                       <span className="text-lg">{sellRate.toFixed(2).split('.')[1]}</span>
                     </div>
-                    <div className="text-xs text-gray-500">
-                      {(sellRate - 2).toFixed(2)} / {(sellRate + 2).toFixed(2)}
-                    </div>
+
                     <Button 
                       variant="outline" 
                       size="sm" 
@@ -179,14 +177,12 @@ export default function SpotTrading() {
                       {buyRate.toFixed(2).split('.')[0]}.
                       <span className="text-lg">{buyRate.toFixed(2).split('.')[1]}</span>
                     </div>
-                    <div className="text-xs text-gray-500">
-                      {(buyRate - 2).toFixed(2)} / {(buyRate + 2).toFixed(2)}
-                    </div>
+
                     <Button 
                       variant="outline" 
                       size="sm" 
                       className={cn(
-                        "mt-3 w-full rounded-xl transition-all duration-200",
+                        "mt-2 w-full rounded-xl transition-all duration-200",
                         direction === "BUY" 
                           ? "bg-gradient-to-r from-pink-200 to-pink-300 border-pink-300 text-pink-800 shadow-md" 
                           : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
