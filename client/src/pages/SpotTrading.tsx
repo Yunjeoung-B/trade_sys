@@ -159,7 +159,12 @@ export default function SpotTrading() {
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border hover:bg-accent hover:text-accent-foreground h-9 px-3 mt-2 w-full rounded-xl transition-all duration-200 border-teal-500 text-white shadow-inner bg-[#7798d4]"
+                      className={cn(
+                        "mt-2 w-full rounded-xl transition-all duration-200",
+                        direction === "SELL" 
+                          ? "bg-teal-400 border-teal-500 text-white shadow-inner" 
+                          : "bg-transparent border-gray-200 text-gray-400 hover:bg-gray-50"
+                      )}
                       onClick={() => setDirection("SELL")}
                     >
                       SELL
@@ -179,7 +184,7 @@ export default function SpotTrading() {
                         "mt-2 w-full rounded-xl transition-all duration-200",
                         direction === "BUY" 
                           ? "bg-pink-400 border-pink-500 text-white shadow-inner" 
-                          : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                          : "bg-transparent border-gray-200 text-gray-400 hover:bg-gray-50"
                       )}
                       onClick={() => setDirection("BUY")}
                     >

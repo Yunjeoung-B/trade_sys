@@ -112,7 +112,7 @@ export default function MARTrading() {
                         "mt-2 w-full rounded-xl transition-all duration-200",
                         direction === "SELL" 
                           ? "bg-teal-400 border-teal-500 text-white shadow-inner" 
-                          : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                          : "bg-transparent border-gray-200 text-gray-400 hover:bg-gray-50"
                       )}
                       onClick={() => setDirection("SELL")}
                     >
@@ -132,7 +132,7 @@ export default function MARTrading() {
                         "mt-2 w-full rounded-xl transition-all duration-200",
                         direction === "BUY" 
                           ? "bg-pink-400 border-pink-500 text-white shadow-inner" 
-                          : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                          : "bg-transparent border-gray-200 text-gray-400 hover:bg-gray-50"
                       )}
                       onClick={() => setDirection("BUY")}
                     >
