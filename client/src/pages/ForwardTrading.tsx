@@ -214,11 +214,20 @@ export default function ForwardTrading() {
                 <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-2xl shadow-inner">
                   <div className="text-lg font-semibold text-gray-700 mb-4">선물환 거래 정보</div>
                   
-                  <div className="p-3 bg-blue-50 rounded-xl mb-4">
-                    <div className="text-sm text-blue-700">
+                  <div className={cn(
+                    "p-3 rounded-xl mb-4",
+                    direction === "BUY" ? "bg-red-50" : "bg-blue-50"
+                  )}>
+                    <div className={cn(
+                      "text-sm font-semibold",
+                      direction === "BUY" ? "text-red-700" : "text-blue-700"
+                    )}>
                       {direction === "BUY" ? "BUY" : "SELL"} {forwardBaseCurrency} {formatCurrencyAmount(parseFloat(removeThousandSeparator(fixedAmount)), forwardBaseCurrency)}
                     </div>
-                    <div className="text-xs text-blue-600 mt-1">
+                    <div className={cn(
+                      "text-xs mt-1",
+                      direction === "BUY" ? "text-red-600" : "text-blue-600"
+                    )}>
                       @ {approvedRate.toFixed(2)} · {format(fixedValueDate, "yyyy-MM-dd")}
                     </div>
                   </div>
