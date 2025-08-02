@@ -380,7 +380,7 @@ export default function SpotTrading() {
               {/* Step 7: Trade Summary */}
               <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 rounded-2xl mb-6 shadow-inner">
                 <div className="text-sm text-gray-700 mb-2">
-                  {orderType === "MARKET" ? "시장가" : "지정가"} {baseCurrency} {direction}/{quoteCurrency} {direction === "BUY" ? "SELL" : "BUY"} 주문
+                  현물환 {baseCurrency} {direction}/{quoteCurrency} {direction === "BUY" ? "SELL" : "BUY"} 주문
                 </div>
                 <div className="text-sm text-gray-600 mb-1">
                   {direction === "BUY" ? "BUY" : "SELL"}: {baseCurrency} {amountCurrency === "BASE" ? (amount || "0") : ((parseFloat(amount || "0") / (direction === "BUY" ? buyRate : sellRate)).toFixed(2))}
