@@ -380,13 +380,13 @@ export default function ForwardTrading() {
               {/* Step 7: Trade Summary */}
               <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 rounded-2xl mb-6 shadow-inner">
                 <div className="text-sm text-gray-700 mb-2">
-                  선물환 {orderType === "MARKET" ? "시장가" : "지정가"} {direction} 견적요청
+                  선물환 {orderType === "MARKET" ? "시장가" : "지정가"} {baseCurrency} {direction}/{quoteCurrency} {direction === "BUY" ? "SELL" : "BUY"} 주문
                 </div>
                 <div className="text-sm text-gray-600 mb-1">
-                  거래금액: {amount || "0"} {amountCurrency === "BASE" ? baseCurrency : quoteCurrency}
+                  {direction === "BUY" ? "BUY" : "SELL"}: {baseCurrency} {amountCurrency === "BASE" ? (amount || "0") : ((parseFloat(amount || "0") / (direction === "BUY" ? buyRate : sellRate)).toFixed(2))}
                 </div>
                 <div className="text-sm text-gray-600 mb-1">
-                  만기일: {valueDate ? format(valueDate, "yyyy-MM-dd") : "미선택"}
+                  {direction === "BUY" ? "SELL" : "BUY"}: {quoteCurrency} {amountCurrency === "QUOTE" ? (amount || "0") : ((parseFloat(amount || "0") * (direction === "BUY" ? buyRate : sellRate)).toFixed(2))}
                 </div>
                 {orderType === "LIMIT" && (
                   <div className="text-sm text-gray-600 mb-1">
@@ -398,6 +398,9 @@ export default function ForwardTrading() {
                     ? (direction === "BUY" ? buyRate.toFixed(2) : sellRate.toFixed(2))
                     : (limitRate || "미지정")
                   }
+                </div>
+                <div className="text-sm text-gray-600 mb-1">
+                  결제일: {valueDate ? valueDate.toISOString().split('T')[0] : "미선택"}
                 </div>
                 {orderType === "LIMIT" && (
                   <div className="text-xs text-gray-500">
