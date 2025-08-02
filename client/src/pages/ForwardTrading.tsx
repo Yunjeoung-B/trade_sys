@@ -113,7 +113,7 @@ export default function ForwardTrading() {
                 <div className="flex-1 grid grid-cols-2 gap-4">
                   <div className="text-center">
                     <div className="text-sm text-gray-600 mb-1">SELL {baseCurrency}</div>
-                    <div className="text-2xl font-bold text-blue-600">
+                    <div className="text-2xl font-bold text-teal-600">
                       {sellRate.toFixed(2).split('.')[0]}.
                       <span className="text-lg">{sellRate.toFixed(2).split('.')[1]}</span>
                     </div>
@@ -123,7 +123,7 @@ export default function ForwardTrading() {
                       className={cn(
                         "mt-2 w-full rounded-xl transition-all duration-200",
                         direction === "SELL" 
-                          ? "bg-gradient-to-r from-teal-200 to-teal-300 border-teal-300 text-teal-800 shadow-md" 
+                          ? "bg-teal-400 border-teal-500 text-white shadow-inner" 
                           : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                       )}
                       onClick={() => setDirection("SELL")}
@@ -133,7 +133,7 @@ export default function ForwardTrading() {
                   </div>
                   <div className="text-center">
                     <div className="text-sm text-gray-600 mb-1">BUY {baseCurrency}</div>
-                    <div className="text-2xl font-bold text-red-500">
+                    <div className="text-2xl font-bold text-teal-600">
                       {buyRate.toFixed(2).split('.')[0]}.
                       <span className="text-lg">{buyRate.toFixed(2).split('.')[1]}</span>
                     </div>
@@ -143,7 +143,7 @@ export default function ForwardTrading() {
                       className={cn(
                         "mt-2 w-full rounded-xl transition-all duration-200",
                         direction === "BUY" 
-                          ? "bg-gradient-to-r from-pink-200 to-pink-300 border-pink-300 text-pink-800 shadow-md" 
+                          ? "bg-pink-400 border-pink-500 text-white shadow-inner" 
                           : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                       )}
                       onClick={() => setDirection("BUY")}
