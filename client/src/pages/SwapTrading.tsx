@@ -349,35 +349,37 @@ export default function SwapTrading() {
                         size="sm"
                         className={cn(
                           "rounded-xl transition-all duration-200 text-xs",
-                          nearAmountCurrency === "USD" 
+                          nearAmountCurrency === swapBaseCurrency 
                             ? "text-white shadow-inner" 
                             : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                         )}
-                        style={nearAmountCurrency === "USD" ? {
+                        style={nearAmountCurrency === swapBaseCurrency ? {
                           backgroundColor: '#2dd4bf',
                           borderColor: '#2dd4bf',
                           boxShadow: '0 0 15px rgba(45, 212, 191, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
                         } : {}}
-                        onClick={() => setNearAmountCurrency("USD")}
+                        onClick={() => setNearAmountCurrency(swapBaseCurrency)}
                       >
-                        USD
+                        {swapBaseCurrency}
                       </Button>
                       <Button 
                         variant="outline"
                         size="sm"
                         className={cn(
                           "rounded-xl transition-all duration-200 text-xs",
-                          nearAmountCurrency === "KRW" 
+                          nearAmountCurrency === (swapBaseCurrency === "USD" ? "KRW" : "USD")
                             ? "text-white shadow-inner" 
                             : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                         )}
-                        style={nearAmountCurrency === "KRW" ? {
+                        style={nearAmountCurrency === (swapBaseCurrency === "USD" ? "KRW" : "USD") ? {
                           backgroundColor: '#2dd4bf',
                           borderColor: '#2dd4bf',
                           boxShadow: '0 0 15px rgba(45, 212, 191, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
                         } : {}}
-                        onClick={() => setNearAmountCurrency("KRW")}
-                      >KRW 매도</Button>
+                        onClick={() => setNearAmountCurrency(swapBaseCurrency === "USD" ? "KRW" : "USD")}
+                      >
+                        {swapBaseCurrency === "USD" ? "KRW" : "USD"}
+                      </Button>
                     </div>
                     <Input
                       type="text"
@@ -405,36 +407,36 @@ export default function SwapTrading() {
                         size="sm"
                         className={cn(
                           "rounded-xl transition-all duration-200 text-xs",
-                          farAmountCurrency === "USD" 
+                          farAmountCurrency === swapBaseCurrency 
                             ? "text-white shadow-inner" 
                             : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                         )}
-                        style={farAmountCurrency === "USD" ? {
+                        style={farAmountCurrency === swapBaseCurrency ? {
                           backgroundColor: '#2dd4bf',
                           borderColor: '#2dd4bf',
                           boxShadow: '0 0 15px rgba(45, 212, 191, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
                         } : {}}
-                        onClick={() => setFarAmountCurrency("USD")}
+                        onClick={() => setFarAmountCurrency(swapBaseCurrency)}
                       >
-                        USD
+                        {swapBaseCurrency}
                       </Button>
                       <Button 
                         variant="outline"
                         size="sm"
                         className={cn(
                           "rounded-xl transition-all duration-200 text-xs",
-                          farAmountCurrency === "KRW" 
+                          farAmountCurrency === (swapBaseCurrency === "USD" ? "KRW" : "USD")
                             ? "text-white shadow-inner" 
                             : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                         )}
-                        style={farAmountCurrency === "KRW" ? {
+                        style={farAmountCurrency === (swapBaseCurrency === "USD" ? "KRW" : "USD") ? {
                           backgroundColor: '#2dd4bf',
                           borderColor: '#2dd4bf',
                           boxShadow: '0 0 15px rgba(45, 212, 191, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
                         } : {}}
-                        onClick={() => setFarAmountCurrency("KRW")}
+                        onClick={() => setFarAmountCurrency(swapBaseCurrency === "USD" ? "KRW" : "USD")}
                       >
-                        KRW
+                        {swapBaseCurrency === "USD" ? "KRW" : "USD"}
                       </Button>
                     </div>
                     <Input
