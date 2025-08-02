@@ -152,10 +152,14 @@ export default function ForwardTrading() {
                     className={cn(
                       "rounded-xl transition-all duration-200",
                       direction === "SELL" 
-                        ? "text-white shadow-inner ring-2" 
+                        ? "text-white shadow-inner" 
                         : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                     )}
-                    style={direction === "SELL" ? { backgroundColor: '#366eec', borderColor: '#366eec' } : {}}
+                    style={direction === "SELL" ? { 
+                      backgroundColor: '#4169E1', 
+                      borderColor: '#4169E1',
+                      boxShadow: '0 0 15px rgba(65, 105, 225, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                    } : {}}
                     onClick={() => setDirection("SELL")}
                   >
                     SELL {baseCurrency}
@@ -165,10 +169,14 @@ export default function ForwardTrading() {
                     className={cn(
                       "rounded-xl transition-all duration-200",
                       direction === "BUY" 
-                        ? "text-white shadow-inner ring-2" 
+                        ? "text-white shadow-inner" 
                         : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                     )}
-                    style={direction === "BUY" ? { backgroundColor: '#dc2625', borderColor: '#dc2625' } : {}}
+                    style={direction === "BUY" ? { 
+                      backgroundColor: '#FF6B6B', 
+                      borderColor: '#FF6B6B',
+                      boxShadow: '0 0 15px rgba(255, 107, 107, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                    } : {}}
                     onClick={() => setDirection("BUY")}
                   >
                     BUY {baseCurrency}
@@ -407,7 +415,12 @@ export default function ForwardTrading() {
             onClick={handleTrade}
             disabled={mutation.isPending || !amount}
             className="w-full py-4 text-lg font-semibold rounded-2xl text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
-            style={{ backgroundColor: direction === "BUY" ? '#dc2625' : '#366eec' }}
+            style={{ 
+              backgroundColor: direction === "BUY" ? '#FF6B6B' : '#4169E1',
+              boxShadow: direction === "BUY" 
+                ? '0 0 15px rgba(255, 107, 107, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)' 
+                : '0 0 15px rgba(65, 105, 225, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+            }}
           >
             {mutation.isPending ? "처리중..." : "가격 요청"}
           </Button>
