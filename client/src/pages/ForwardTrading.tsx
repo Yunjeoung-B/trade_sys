@@ -155,7 +155,7 @@ export default function ForwardTrading() {
                         ? "text-white shadow-inner ring-2" 
                         : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                     )}
-                    style={direction === "SELL" ? { backgroundColor: '#dc2625', borderColor: '#dc2625' } : {}}
+                    style={direction === "SELL" ? { backgroundColor: '#366eec', borderColor: '#366eec' } : {}}
                     onClick={() => setDirection("SELL")}
                   >
                     SELL {baseCurrency}
@@ -168,7 +168,7 @@ export default function ForwardTrading() {
                         ? "text-white shadow-inner ring-2" 
                         : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                     )}
-                    style={direction === "BUY" ? { backgroundColor: '#0d9488', borderColor: '#0d9488' } : {}}
+                    style={direction === "BUY" ? { backgroundColor: '#dc2625', borderColor: '#dc2625' } : {}}
                     onClick={() => setDirection("BUY")}
                   >
                     BUY {baseCurrency}
@@ -407,7 +407,7 @@ export default function ForwardTrading() {
             onClick={handleTrade}
             disabled={mutation.isPending || !amount}
             className="w-full py-4 text-lg font-semibold rounded-2xl text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
-            style={{ backgroundColor: direction === "BUY" ? '#0d9488' : '#dc2625' }}
+            style={{ backgroundColor: direction === "BUY" ? '#dc2625' : '#366eec' }}
           >
             {mutation.isPending ? "처리중..." : "가격 요청"}
           </Button>

@@ -502,7 +502,7 @@ export default function SwapTrading() {
                         });
                       }}
                       className="w-full py-4 text-lg font-semibold rounded-2xl text-white shadow-lg hover:shadow-xl transition-all duration-200"
-                      style={{ backgroundColor: direction === "BUY_SELL_USD" ? '#0d9488' : '#dc2625' }}
+                      style={{ backgroundColor: direction === "BUY_SELL_USD" ? '#dc2625' : '#366eec' }}
                     >
                       거래 체결
                     </Button>
