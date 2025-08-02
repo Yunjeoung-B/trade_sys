@@ -51,7 +51,7 @@ export default function Login() {
             </div>
           </div>
           <h1 className="text-2xl font-bold text-white mb-2">CHOIICE FX</h1>
-          <p className="text-teal-300 text-sm">전문가를 위한 FX 거래 플랫폼</p>
+          <p className="text-teal-300 text-sm">The Smartest Choice in FX</p>
         </CardHeader>
         
         <CardContent>

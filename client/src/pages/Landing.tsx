@@ -51,7 +51,7 @@ export default function Landing() {
           {/* Logo */}
           <div className="mb-8">
             <h1 className="text-teal-400 text-2xl font-bold mb-1">CHOIICE FX</h1>
-            <p className="text-slate-300 text-sm">전문가를 위한 FX 거래 플랫폼</p>
+            <p className="text-slate-300 text-sm">The Smartest Choice in FX</p>
           </div>
 
           {/* Login Form */}
