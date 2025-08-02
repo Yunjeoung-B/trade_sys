@@ -129,9 +129,10 @@ export default function MARTrading() {
                       className={cn(
                         "mt-2 w-full rounded-xl transition-all duration-200",
                         direction === "BUY" 
-                          ? "bg-teal-400 border-2 border-teal-600 text-white shadow-inner ring-2 ring-teal-300" 
+                          ? "text-white shadow-inner ring-2" 
                           : "bg-transparent border-gray-200 text-gray-400 hover:bg-gray-50"
                       )}
+                      style={direction === "BUY" ? { backgroundColor: '#0d9488', borderColor: '#0d9488' } : {}}
                       onClick={() => setDirection("BUY")}
                     >
                       BUY선택
@@ -207,7 +208,8 @@ export default function MARTrading() {
               <Button
                 onClick={handleTrade}
                 disabled={mutation.isPending || !amount}
-                className="w-full py-4 text-lg font-semibold rounded-2xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
+                className="w-full py-4 text-lg font-semibold rounded-2xl text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
+                style={{ backgroundColor: '#0d9488' }}
               >
                 {mutation.isPending ? "처리중..." : "즉시 거래 실행"}
               </Button>
