@@ -536,8 +536,10 @@ export default function SwapTrading() {
                       disabled={mutation.isPending}
                       className="w-full py-4 text-lg font-semibold rounded-2xl text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
                       style={{
-                        backgroundColor: '#14B8A6',
-                        boxShadow: '0 0 15px rgba(20, 184, 166, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                        backgroundColor: direction === "BUY_SELL_USD" ? '#4169E1' : '#FF6B6B',
+                        boxShadow: direction === "BUY_SELL_USD" 
+                          ? '0 0 15px rgba(65, 105, 225, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)' 
+                          : '0 0 15px rgba(255, 107, 107, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
                       }}
                     >
                       {mutation.isPending ? "처리 중..." : "가격 요청"}
