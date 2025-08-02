@@ -141,72 +141,106 @@ export default function ForwardTrading() {
             </Select>
           </div>
 
-          {/* Step 2: Quote Request Display */}
-          <div className="flex items-center mb-6">
-            <div className="flex-1 text-center">
-              <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-2xl shadow-inner">
-                <div className="text-lg font-semibold text-gray-700 mb-2">선물환 가격 요청</div>
-                <div className="text-sm text-gray-600 mb-3">
-                  선물환 거래를 위해서는 CHOIICE FX에 가격을 요청해야 합니다.
-                </div>
-                
-                {/* Currency Pair Selection */}
-                <div className="flex justify-center mb-4">
-                  <Select value={forwardBaseCurrency} onValueChange={(value: "USD" | "KRW") => setForwardBaseCurrency(value)}>
-                    <SelectTrigger className="w-40 bg-white border-gray-200 rounded-xl shadow-sm">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="USD">USD (미국달러)</SelectItem>
-                      <SelectItem value="KRW">KRW (한국원)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                {/* Direction Selection - Fixed Layout */}
-                <div className="grid grid-cols-2 gap-2 mb-4">
-                  <Button 
-                    variant="outline"
-                    className={cn(
-                      "rounded-xl transition-all duration-200",
-                      direction === "SELL" 
-                        ? "text-white shadow-inner" 
-                        : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
-                    )}
-                    style={direction === "SELL" ? { 
-                      backgroundColor: '#4169E1', 
-                      borderColor: '#4169E1',
-                      boxShadow: '0 0 15px rgba(65, 105, 225, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
-                    } : {}}
-                    onClick={() => setDirection("SELL")}
-                  >
-                    SELL
-                  </Button>
-                  <Button 
-                    variant="outline"
-                    className={cn(
-                      "rounded-xl transition-all duration-200",
-                      direction === "BUY" 
-                        ? "text-white shadow-inner" 
-                        : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
-                    )}
-                    style={direction === "BUY" ? { 
-                      backgroundColor: '#FF6B6B', 
-                      borderColor: '#FF6B6B',
-                      boxShadow: '0 0 15px rgba(255, 107, 107, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
-                    } : {}}
-                    onClick={() => setDirection("BUY")}
-                  >
-                    BUY
-                  </Button>
-                </div>
-                
-                <div className="text-xs text-gray-500">
-                  관리자 승인 후 거래 가능한 환율이 제공됩니다.
+          {/* Step 2: Quote Request Display or Trading Info */}
+          {!adminPriceProvided ? (
+            <div className="flex items-center mb-6">
+              <div className="flex-1 text-center">
+                <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-2xl shadow-inner">
+                  <div className="text-lg font-semibold text-gray-700 mb-2">선물환 가격 요청</div>
+                  <div className="text-sm text-gray-600 mb-3">
+                    선물환 거래를 위해서는 CHOIICE FX에 가격을 요청해야 합니다.
+                  </div>
+                  
+                  {/* Currency Pair Selection */}
+                  <div className="flex justify-center mb-4">
+                    <Select value={forwardBaseCurrency} onValueChange={(value: "USD" | "KRW") => setForwardBaseCurrency(value)}>
+                      <SelectTrigger className="w-40 bg-white border-gray-200 rounded-xl shadow-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="USD">USD (미국달러)</SelectItem>
+                        <SelectItem value="KRW">KRW (한국원)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {/* Direction Selection - Fixed Layout */}
+                  <div className="grid grid-cols-2 gap-2 mb-4">
+                    <Button 
+                      variant="outline"
+                      className={cn(
+                        "rounded-xl transition-all duration-200",
+                        direction === "SELL" 
+                          ? "text-white shadow-inner" 
+                          : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                      )}
+                      style={direction === "SELL" ? { 
+                        backgroundColor: '#4169E1', 
+                        borderColor: '#4169E1',
+                        boxShadow: '0 0 15px rgba(65, 105, 225, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                      } : {}}
+                      onClick={() => setDirection("SELL")}
+                    >
+                      SELL
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      className={cn(
+                        "rounded-xl transition-all duration-200",
+                        direction === "BUY" 
+                          ? "text-white shadow-inner" 
+                          : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                      )}
+                      style={direction === "BUY" ? { 
+                        backgroundColor: '#FF6B6B', 
+                        borderColor: '#FF6B6B',
+                        boxShadow: '0 0 15px rgba(255, 107, 107, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                      } : {}}
+                      onClick={() => setDirection("BUY")}
+                    >
+                      BUY
+                    </Button>
+                  </div>
+                  
+                  <div className="text-xs text-gray-500">
+                    관리자 승인 후 거래 가능한 환율이 제공됩니다.
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="flex items-center mb-6">
+              <div className="flex-1 text-center">
+                <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-2xl shadow-inner">
+                  <div className="text-lg font-semibold text-gray-700 mb-4">선물환 거래 정보</div>
+                  
+                  <div className="grid grid-cols-3 gap-4 text-center">
+                    <div className="bg-white p-3 rounded-xl shadow-sm">
+                      <div className="text-xs text-gray-500 mb-1">SPOT</div>
+                      <div className="text-sm font-semibold text-gray-700">1,384.00</div>
+                    </div>
+                    <div className="bg-white p-3 rounded-xl shadow-sm">
+                      <div className="text-xs text-gray-500 mb-1">FORWARD</div>
+                      <div className="text-sm font-semibold text-gray-700">{approvedRate.toFixed(2)}</div>
+                    </div>
+                    <div className="bg-white p-3 rounded-xl shadow-sm">
+                      <div className="text-xs text-gray-500 mb-1">POINT</div>
+                      <div className="text-sm font-semibold text-gray-700">{(approvedRate - 1384.00).toFixed(2)}</div>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4 p-3 bg-blue-50 rounded-xl">
+                    <div className="text-sm text-blue-700">
+                      {direction === "BUY" ? "BUY" : "SELL"} {forwardBaseCurrency} {formatCurrencyAmount(parseFloat(removeThousandSeparator(fixedAmount)), forwardBaseCurrency)}
+                    </div>
+                    <div className="text-xs text-blue-600 mt-1">
+                      @ {approvedRate.toFixed(2)} · {format(fixedValueDate, "yyyy-MM-dd")}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Step 3: Order Type buttons */}
           <div className="flex items-center mb-4">
