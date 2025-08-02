@@ -127,7 +127,6 @@ export default function SpotTrading() {
         <h2 className="text-2xl font-bold text-white mb-2">FX SPOT</h2>
         <p className="text-slate-200">실시간 환율로 즉시 거래가 가능합니다.</p>
       </div>
-
       <div className="max-w-md mx-auto">
             <Card className="p-8 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border-0 text-gray-900">
               {/* Step 1: 통화쌍 선택 */}
@@ -167,12 +166,7 @@ export default function SpotTrading() {
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className={cn(
-                        "mt-2 w-full rounded-xl transition-all duration-200",
-                        direction === "SELL" 
-                          ? "bg-teal-400 border-teal-500 text-white shadow-inner" 
-                          : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
-                      )}
+                      className="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border hover:bg-accent hover:text-accent-foreground h-9 px-3 mt-2 w-full rounded-xl transition-all duration-200 border-teal-500 text-white shadow-inner bg-[#7798d4]"
                       onClick={() => setDirection("SELL")}
                     >
                       SELL
