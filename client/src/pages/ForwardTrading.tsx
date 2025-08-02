@@ -149,7 +149,8 @@ export default function ForwardTrading() {
                 
                 {/* Small breakdown below */}
                 <div className="text-[14px] text-gray-500 mb-1">
-                  SPOT: {spotSellRate.toFixed(2)} | SWAP: {swapPointsSell >= 0 ? '+' : ''}{swapPointsSell.toFixed(2)}
+                  <div>SPOT: {spotSellRate.toFixed(2)}</div>
+                  <div>SWAP: {swapPointsSell >= 0 ? '+' : ''}{swapPointsSell.toFixed(2)}</div>
                 </div>
 
                 <Button 
@@ -177,7 +178,8 @@ export default function ForwardTrading() {
                 
                 {/* Small breakdown below */}
                 <div className="text-[14px] text-gray-500 mb-1">
-                  SPOT: {spotBuyRate.toFixed(2)} | SWAP: {swapPointsBuy >= 0 ? '+' : ''}{swapPointsBuy.toFixed(2)}
+                  <div>SPOT: {spotBuyRate.toFixed(2)}</div>
+                  <div>SWAP: {swapPointsBuy >= 0 ? '+' : ''}{swapPointsBuy.toFixed(2)}</div>
                 </div>
 
                 <Button 
