@@ -112,9 +112,9 @@ export default function SwapTrading() {
               <div className="flex items-center mb-6">
                 <div className="flex-1 text-center">
                   <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-2xl shadow-inner">
-                    <div className="text-lg font-semibold text-gray-700 mb-2">SWAP 견적 요청</div>
+                    <div className="text-lg font-semibold text-gray-700 mb-2">SWAP 가격 요청</div>
                     <div className="text-sm text-gray-600 mb-3">
-                      SWAP 거래를 위해서는 CHOIICE FX에 견적을 요청해야 합니다.
+                      SWAP 거래를 위해서는 CHOIICE FX에 가격을 요청해야 합니다.
                     </div>
                     
                     {/* Direction Selection */}
@@ -268,7 +268,7 @@ export default function SwapTrading() {
                 disabled={mutation.isPending}
                 className="w-full py-4 text-lg font-semibold rounded-2xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
               >
-                {mutation.isPending ? "처리 중..." : "견적 요청"}
+                {mutation.isPending ? "처리 중..." : "가격 요청"}
               </Button>
             </Card>
           </div>
