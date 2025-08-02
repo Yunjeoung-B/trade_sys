@@ -150,7 +150,9 @@ export default function MARTrading() {
               {/* Step 2.5: MAR 기준환율 표시 */}
               <div className="flex items-center justify-between mb-4 bg-gray-50 p-3 rounded-xl">
                 <span className="text-sm text-gray-600">환율</span>
-                <span className="text-lg font-semibold text-gray-800">MAR {marRate.toFixed(2)}</span>
+                <span className="text-lg font-semibold text-gray-800">
+                  MAR {direction === "BUY" ? buySpread.toFixed(2) : sellSpread.toFixed(2)}
+                </span>
               </div>
 
               {/* Step 3: Amount input */}
