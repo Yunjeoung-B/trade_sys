@@ -151,7 +151,7 @@ export default function MARTrading() {
               <div className="flex items-center justify-between mb-4 bg-gray-50 p-3 rounded-xl">
                 <span className="text-sm text-gray-600">환율</span>
                 <span className="text-lg font-semibold text-gray-800">
-                  MAR {direction === "BUY" ? buySpread.toFixed(2) : sellSpread.toFixed(2)}
+                  MAR {direction === "BUY" ? `+${buySpread.toFixed(2)}` : `${sellSpread.toFixed(2)}`}
                 </span>
               </div>
 
