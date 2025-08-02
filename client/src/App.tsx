@@ -19,6 +19,7 @@ import AdminDashboard from "@/pages/admin/AdminDashboard";
 import SpreadSettings from "@/pages/admin/SpreadSettings";
 import QuoteApprovals from "@/pages/admin/QuoteApprovals";
 import UserManagement from "@/pages/admin/UserManagement";
+import TradeManagement from "@/pages/admin/TradeManagement";
 
 function Router() {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -54,6 +55,7 @@ function Router() {
               <Route path="/admin/spreads" component={SpreadSettings} />
               <Route path="/admin/approvals" component={QuoteApprovals} />
               <Route path="/admin/users" component={UserManagement} />
+              <Route path="/admin/trades" component={TradeManagement} />
             </>
           )}
         </>

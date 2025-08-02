@@ -29,6 +29,7 @@ const adminMenuItems = [
   { path: "/admin/spreads", label: "스프레드 설정", icon: Settings },
   { path: "/admin/approvals", label: "호가 승인 관리", icon: CheckCircle },
   { path: "/admin/users", label: "사용자 관리", icon: Users },
+  { path: "/admin/trades", label: "거래 관리", icon: History },
 ];
 
 export default function Sidebar() {

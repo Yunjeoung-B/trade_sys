@@ -85,6 +85,11 @@ export const quoteRequests = pgTable("quote_requests", {
   nearDate: timestamp("near_date"), // for swaps
   farDate: timestamp("far_date"), // for swaps
   nearRate: decimal("near_rate", { precision: 12, scale: 4 }), // for swaps
+  nearAmount: decimal("near_amount", { precision: 18, scale: 2 }), // for swaps
+  farAmount: decimal("far_amount", { precision: 18, scale: 2 }), // for swaps
+  hedgeCompleted: boolean("hedge_completed").default(false),
+  nearSpread: decimal("near_spread", { precision: 8, scale: 4 }),
+  farSpread: decimal("far_spread", { precision: 8, scale: 4 }),
   status: varchar("status").default("REQUESTED"), // REQUESTED, QUOTE_READY, CONFIRMED, EXPIRED
   approvedBy: varchar("approved_by").references(() => users.id),
   approvedAt: timestamp("approved_at"),
