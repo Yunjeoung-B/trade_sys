@@ -104,520 +104,518 @@ export default function SwapTrading() {
 
   return (
     <div className="p-6">
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-white mb-2">FX SWAP</h2>
-            <p className="text-slate-200">Near Leg와 Far Leg 두 개의 거래일에 BUY/SELL 방향으로 거래하는 스왑 상품입니다.</p>
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-white mb-2">FX SWAP</h2>
+        <p className="text-slate-200">Near Leg와 Far Leg 두 개의 거래일에 BUY/SELL 방향으로 거래하는 스왑 상품입니다.</p>
+      </div>
+      <div className="max-w-md mx-auto">
+        <Card className="p-8 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border-0 text-gray-900">
+          {/* Step 1: 통화쌍 선택 */}
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-sm text-gray-600">외환스왑</span>
+            <Select value={selectedPair} onValueChange={setSelectedPair}>
+              <SelectTrigger className="w-32 bg-slate-100 border-slate-300">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {currencyPairs.map((pair) => (
+                  <SelectItem key={pair.id} value={pair.symbol}>
+                    {pair.symbol}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-          <div className="max-w-md mx-auto">
-            <Card className="p-8 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border-0 text-gray-900">
-              {/* Step 1: 통화쌍 선택 */}
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-sm text-gray-600">외환스왑</span>
-                <Select value={selectedPair} onValueChange={setSelectedPair}>
-                  <SelectTrigger className="w-32 bg-slate-100 border-slate-300">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {currencyPairs.map((pair) => (
-                      <SelectItem key={pair.id} value={pair.symbol}>
-                        {pair.symbol}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
 
-              {/* Step 2: Quote Request Display OR Admin Price Display */}
-              <div className="flex items-center mb-6">
-                <div className="flex-1 text-center">
-                  {!adminPriceProvided ? (
-                    <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-2xl shadow-inner">
-                      <div className="text-lg font-semibold text-gray-700 mb-2">SWAP 가격 요청</div>
-                      <div className="text-sm text-gray-600 mb-3">
-                        SWAP 거래를 위해서는 CHOIICE FX에 가격을 요청해야 합니다.
-                      </div>
-                      
-                      {/* Base Currency Selection */}
-                      <div className="mb-4">
-                        <div className="text-sm text-gray-600 mb-2">기준통화 선택</div>
-                        <Select value={swapBaseCurrency} onValueChange={(value: "USD" | "KRW") => {
-                          setSwapBaseCurrency(value);
-                          // Auto-select currency buttons based on base currency
-                          if (value === "USD") {
-                            setNearAmountCurrency("USD");
-                            setFarAmountCurrency("USD");
-                          } else {
-                            setNearAmountCurrency("KRW");
-                            setFarAmountCurrency("KRW");
-                          }
-                        }}>
-                          <SelectTrigger className="w-full bg-gray-50/50 border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-200">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="USD">USD (미국달러)</SelectItem>
-                            <SelectItem value="KRW">KRW (한국원)</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      
-                      {/* Direction Selection */}
-                      <div className="grid grid-cols-2 gap-2 mb-4">
-                        <Button 
-                          variant="outline"
-                          className={cn(
-                            "rounded-xl transition-all duration-200 text-xs px-2 py-3",
-                            direction === "BUY_SELL_USD" 
-                              ? "text-white shadow-inner" 
-                              : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
-                          )}
-                          style={direction === "BUY_SELL_USD" ? {
-                            backgroundColor: '#4169E1',
-                            borderColor: '#4169E1',
-                            boxShadow: '0 0 15px rgba(65, 105, 225, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
-                          } : {}}
-                          onClick={() => setDirection("BUY_SELL_USD")}
-                        >
-                          BUY&SELL {swapBaseCurrency}
-                        </Button>
-                        <Button 
-                          variant="outline"
-                          className={cn(
-                            "rounded-xl transition-all duration-200 text-xs px-2 py-3",
-                            direction === "SELL_BUY_USD" 
-                              ? "text-white shadow-inner" 
-                              : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
-                          )}
-                          style={direction === "SELL_BUY_USD" ? {
-                            backgroundColor: '#FF6B6B',
-                            borderColor: '#FF6B6B',
-                            boxShadow: '0 0 15px rgba(255, 107, 107, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
-                          } : {}}
-                          onClick={() => setDirection("SELL_BUY_USD")}
-                        >
-                          SELL&BUY {swapBaseCurrency}
-                        </Button>
-                      </div>
-                      
-                      <div className="text-xs text-gray-500">
-                        관리자 승인 후 거래 가능한 환율이 제공됩니다.
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-2 gap-2">
-                      {/* Show selected direction based on base currency and direction */}
-                      {((swapBaseCurrency === "USD" && direction === "BUY_SELL_USD") || 
-                        (swapBaseCurrency === "KRW" && direction === "BUY_SELL_USD")) ? (
+          {/* Step 2: Quote Request Display OR Admin Price Display */}
+          <div className="flex items-center mb-6">
+            <div className="flex-1 text-center">
+              {!adminPriceProvided ? (
+                <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-2xl shadow-inner">
+                  <div className="text-lg font-semibold text-gray-700 mb-2">SWAP 가격 요청</div>
+                  <div className="text-sm text-gray-600 mb-3">
+                    SWAP 거래를 위해서는 CHOIICE FX에 가격을 요청해야 합니다.
+                  </div>
+                  
+                  {/* Base Currency Selection */}
+                  <div className="mb-4">
+                    <div className="text-sm text-gray-600 mb-2">기준통화 선택</div>
+                    <Select value={swapBaseCurrency} onValueChange={(value: "USD" | "KRW") => {
+                      setSwapBaseCurrency(value);
+                      // Auto-select currency buttons based on base currency
+                      if (value === "USD") {
+                        setNearAmountCurrency("USD");
+                        setFarAmountCurrency("USD");
+                      } else {
+                        setNearAmountCurrency("KRW");
+                        setFarAmountCurrency("KRW");
+                      }
+                    }}>
+                      <SelectTrigger className="w-full bg-gray-50/50 border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-200">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="USD">USD (미국달러)</SelectItem>
+                        <SelectItem value="KRW">KRW (한국원)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {/* Direction Selection */}
+                  <div className="grid grid-cols-2 gap-2 mb-4">
+                    <Button 
+                      variant="outline"
+                      className={cn(
+                        "rounded-xl transition-all duration-200 text-xs px-2 py-3",
+                        direction === "BUY_SELL_USD" 
+                          ? "text-white shadow-inner" 
+                          : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                      )}
+                      style={direction === "BUY_SELL_USD" ? {
+                        backgroundColor: '#4169E1',
+                        borderColor: '#4169E1',
+                        boxShadow: '0 0 15px rgba(65, 105, 225, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                      } : {}}
+                      onClick={() => setDirection("BUY_SELL_USD")}
+                    >
+                      BUY&SELL {swapBaseCurrency}
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      className={cn(
+                        "rounded-xl transition-all duration-200 text-xs px-2 py-3",
+                        direction === "SELL_BUY_USD" 
+                          ? "text-white shadow-inner" 
+                          : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                      )}
+                      style={direction === "SELL_BUY_USD" ? {
+                        backgroundColor: '#FF6B6B',
+                        borderColor: '#FF6B6B',
+                        boxShadow: '0 0 15px rgba(255, 107, 107, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                      } : {}}
+                      onClick={() => setDirection("SELL_BUY_USD")}
+                    >
+                      SELL&BUY {swapBaseCurrency}
+                    </Button>
+                  </div>
+                  
+                  <div className="text-xs text-gray-500">
+                    관리자 승인 후 거래 가능한 환율이 제공됩니다.
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-2">
+                  {/* Show selected direction based on base currency and direction */}
+                  {((swapBaseCurrency === "USD" && direction === "BUY_SELL_USD") || 
+                    (swapBaseCurrency === "KRW" && direction === "BUY_SELL_USD")) ? (
+                    <>
+                      {swapBaseCurrency === "USD" ? (
                         <>
-                          {swapBaseCurrency === "USD" ? (
-                            <>
-                              <div className="bg-blue-500 text-white p-4 rounded-2xl">
-                                <div className="border-2 border-white rounded-lg px-3 py-1 mb-3 text-center">
-                                  <div className="text-lg font-bold">BUY&SELL {swapBaseCurrency}</div>
-                                </div>
-                                <div className="text-2xl font-bold">1,390.40</div>
-                                <div className="text-4xl font-bold my-2">14</div>
-                                <div className="text-lg">1,382.95</div>
-                                <div className="bg-blue-600 px-3 py-1 rounded-lg text-sm mt-2">매수 1.0%</div>
-                              </div>
-                              <div></div> {/* Empty space for the second column */}
-                            </>
-                          ) : (
-                            <>
-                              <div></div> {/* Empty space for the first column */}
-                              <div className="bg-blue-500 text-white p-4 rounded-2xl">
-                                <div className="border-2 border-white rounded-lg px-3 py-1 mb-3 text-center">
-                                  <div className="text-lg font-bold">BUY&SELL {swapBaseCurrency}</div>
-                                </div>
-                                <div className="text-2xl font-bold">1,390.40</div>
-                                <div className="text-4xl font-bold my-2">14</div>
-                                <div className="text-lg">1,382.95</div>
-                                <div className="bg-blue-600 px-3 py-1 rounded-lg text-sm mt-2">매수 1.0%</div>
-                              </div>
-                            </>
-                          )}
+                          <div className="bg-blue-500 text-white p-4 rounded-2xl">
+                            <div className="border-2 border-white rounded-lg px-3 py-1 mb-3 text-center">
+                              <div className="text-lg font-bold">BUY&SELL {swapBaseCurrency}</div>
+                            </div>
+                            <div className="text-2xl font-bold">1,390.40</div>
+                            <div className="text-4xl font-bold my-2">14</div>
+                            <div className="text-lg">1,382.95</div>
+                            <div className="bg-blue-600 px-3 py-1 rounded-lg text-sm mt-2">매수 1.0%</div>
+                          </div>
+                          <div></div> {/* Empty space for the second column */}
                         </>
                       ) : (
                         <>
-                          {swapBaseCurrency === "USD" ? (
-                            <>
-                              <div></div> {/* Empty space for the first column */}
-                              <div className="bg-red-400 text-white p-4 rounded-2xl">
-                                <div className="border-2 border-white rounded-lg px-3 py-1 mb-3 text-center">
-                                  <div className="text-lg font-bold">SELL&BUY {swapBaseCurrency}</div>
-                                </div>
-                                <div className="text-2xl font-bold">1,392.00</div>
-                                <div className="text-4xl font-bold my-2">14</div>
-                                <div className="text-lg">1,394.55</div>
-                                <div className="bg-red-600 px-3 py-1 rounded-lg text-sm mt-2">매도 1.0%</div>
-                              </div>
-                            </>
-                          ) : (
-                            <>
-                              <div className="bg-red-400 text-white p-4 rounded-2xl">
-                                <div className="border-2 border-white rounded-lg px-3 py-1 mb-3 text-center">
-                                  <div className="text-lg font-bold">SELL&BUY {swapBaseCurrency}</div>
-                                </div>
-                                <div className="text-2xl font-bold">1,392.00</div>
-                                <div className="text-4xl font-bold my-2">14</div>
-                                <div className="text-lg">1,394.55</div>
-                                <div className="bg-red-600 px-3 py-1 rounded-lg text-sm mt-2">매도 1.0%</div>
-                              </div>
-                              <div></div> {/* Empty space for the second column */}
-                            </>
-                          )}
+                          <div></div> {/* Empty space for the first column */}
+                          <div className="bg-blue-500 text-white p-4 rounded-2xl">
+                            <div className="border-2 border-white rounded-lg px-3 py-1 mb-3 text-center">
+                              <div className="text-lg font-bold">BUY&SELL {swapBaseCurrency}</div>
+                            </div>
+                            <div className="text-2xl font-bold">1,390.40</div>
+                            <div className="text-4xl font-bold my-2">14</div>
+                            <div className="text-lg">1,382.95</div>
+                            <div className="bg-blue-600 px-3 py-1 rounded-lg text-sm mt-2">매수 1.0%</div>
+                          </div>
                         </>
                       )}
-                    </div>
+                    </>
+                  ) : (
+                    <>
+                      {swapBaseCurrency === "USD" ? (
+                        <>
+                          <div></div> {/* Empty space for the first column */}
+                          <div className="bg-red-400 text-white p-4 rounded-2xl">
+                            <div className="border-2 border-white rounded-lg px-3 py-1 mb-3 text-center">
+                              <div className="text-lg font-bold">SELL&BUY {swapBaseCurrency}</div>
+                            </div>
+                            <div className="text-2xl font-bold">1,392.00</div>
+                            <div className="text-4xl font-bold my-2">14</div>
+                            <div className="text-lg">1,394.55</div>
+                            <div className="bg-red-600 px-3 py-1 rounded-lg text-sm mt-2">매도 1.0%</div>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="bg-red-400 text-white p-4 rounded-2xl">
+                            <div className="border-2 border-white rounded-lg px-3 py-1 mb-3 text-center">
+                              <div className="text-lg font-bold">SELL&BUY {swapBaseCurrency}</div>
+                            </div>
+                            <div className="text-2xl font-bold">1,392.00</div>
+                            <div className="text-4xl font-bold my-2">14</div>
+                            <div className="text-lg">1,394.55</div>
+                            <div className="bg-red-600 px-3 py-1 rounded-lg text-sm mt-2">매도 1.0%</div>
+                          </div>
+                          <div></div> {/* Empty space for the second column */}
+                        </>
+                      )}
+                    </>
                   )}
                 </div>
-              </div>
-
-              {/* Step 3: 만기일 설정 */}
-              {!adminPriceProvided && (
-                <div className="flex items-center mb-4">
-                  <div className="flex-1">
-                    <div className="text-sm text-gray-600 mb-2">만기일</div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <div className="text-sm text-gray-600 mb-1">Near Leg</div>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant="outline"
-                              className={cn(
-                                "w-full justify-start text-left font-normal text-xs bg-white border-gray-300 text-gray-900",
-                                !nearDate && "text-gray-500"
-                              )}
-                            >
-                              <CalendarIcon className="mr-1 h-3 w-3" />
-                              {nearDate ? format(nearDate, "yyyy MM dd") : "선택"}
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0">
-                            <Calendar
-                              mode="single"
-                              selected={nearDate}
-                              onSelect={(date) => date && setNearDate(date)}
-                              initialFocus
-                            />
-                          </PopoverContent>
-                        </Popover>
-                      </div>
-                      <div>
-                        <div className="text-sm text-gray-600 mb-1">Far Leg</div>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant="outline"
-                              className={cn(
-                                "w-full justify-start text-left font-normal text-xs bg-white border-gray-300 text-gray-900",
-                                !farDate && "text-gray-500"
-                              )}
-                            >
-                              <CalendarIcon className="mr-1 h-3 w-3" />
-                              {farDate ? format(farDate, "yyyy MM dd") : "선택"}
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0">
-                            <Calendar
-                              mode="single"
-                              selected={farDate}
-                              onSelect={(date) => date && setFarDate(date)}
-                              initialFocus
-                            />
-                          </PopoverContent>
-                        </Popover>
-                      </div>
-                    </div>
-                  </div>
-                </div>
               )}
-
-              {/* Step 4: Amount input - NEAR and FAR */}
-              {!adminPriceProvided && (
-                <div className="flex items-center mb-6">
-                  <div className="flex-1">
-
-                    
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                      <div>
-                        <div className="text-sm text-gray-600 mb-2">NEAR</div>
-                        <div className="grid grid-cols-2 gap-1 mb-2">
-                          <Button 
-                            variant="outline"
-                            size="sm"
-                            className={cn(
-                              "rounded-xl transition-all duration-200 text-xs",
-                              nearAmountCurrency === "USD" 
-                                ? "text-white shadow-inner" 
-                                : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
-                            )}
-                            style={nearAmountCurrency === "USD" ? {
-                              backgroundColor: '#2dd4bf',
-                              borderColor: '#2dd4bf',
-                              boxShadow: '0 0 15px rgba(45, 212, 191, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
-                            } : {}}
-                            onClick={() => setNearAmountCurrency("USD")}
-                          >
-                            USD
-                          </Button>
-                          <Button 
-                            variant="outline"
-                            size="sm"
-                            className={cn(
-                              "rounded-xl transition-all duration-200 text-xs",
-                              nearAmountCurrency === "KRW" 
-                                ? "text-white shadow-inner" 
-                                : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
-                            )}
-                            style={nearAmountCurrency === "KRW" ? {
-                              backgroundColor: '#2dd4bf',
-                              borderColor: '#2dd4bf',
-                              boxShadow: '0 0 15px rgba(45, 212, 191, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
-                            } : {}}
-                            onClick={() => setNearAmountCurrency("KRW")}
-                          >
-                            KRW
-                          </Button>
-                        </div>
-                        <Input
-                          type="text"
-                          placeholder="NEAR 금액 입력"
-                          value={nearAmount}
-                          onChange={(e) => {
-                            const formattedValue = formatInputValue(e.target.value, nearAmountCurrency);
-                            setNearAmount(formattedValue);
-                          }}
-                          className="text-right text-lg bg-gray-50/50 border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-200"
-                        />
-                        <div className="text-xs text-gray-500 mt-1">
-                          {direction === "BUY_SELL_USD" ? `SELL ${swapBaseCurrency}` : `BUY ${swapBaseCurrency}`}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {direction === "BUY_SELL_USD" ? `BUY ${swapBaseCurrency === "USD" ? "KRW" : "USD"}` : `SELL ${swapBaseCurrency === "USD" ? "KRW" : "USD"}`}
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <div className="text-sm text-gray-600 mb-2">FAR</div>
-                        <div className="grid grid-cols-2 gap-1 mb-2">
-                          <Button 
-                            variant="outline"
-                            size="sm"
-                            className={cn(
-                              "rounded-xl transition-all duration-200 text-xs",
-                              farAmountCurrency === "USD" 
-                                ? "text-white shadow-inner" 
-                                : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
-                            )}
-                            style={farAmountCurrency === "USD" ? {
-                              backgroundColor: '#2dd4bf',
-                              borderColor: '#2dd4bf',
-                              boxShadow: '0 0 15px rgba(45, 212, 191, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
-                            } : {}}
-                            onClick={() => setFarAmountCurrency("USD")}
-                          >
-                            USD
-                          </Button>
-                          <Button 
-                            variant="outline"
-                            size="sm"
-                            className={cn(
-                              "rounded-xl transition-all duration-200 text-xs",
-                              farAmountCurrency === "KRW" 
-                                ? "text-white shadow-inner" 
-                                : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
-                            )}
-                            style={farAmountCurrency === "KRW" ? {
-                              backgroundColor: '#2dd4bf',
-                              borderColor: '#2dd4bf',
-                              boxShadow: '0 0 15px rgba(45, 212, 191, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
-                            } : {}}
-                            onClick={() => setFarAmountCurrency("KRW")}
-                          >
-                            KRW
-                          </Button>
-                        </div>
-                        <Input
-                          type="text"
-                          placeholder="FAR 금액 입력"
-                          value={farAmount}
-                          onChange={(e) => {
-                            const formattedValue = formatInputValue(e.target.value, farAmountCurrency);
-                            setFarAmount(formattedValue);
-                          }}
-                          className="text-right text-lg bg-gray-50/50 border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-200"
-                        />
-                        <div className="text-xs text-gray-500 mt-1">
-                          {direction === "BUY_SELL_USD" ? `BUY ${swapBaseCurrency}` : `SELL ${swapBaseCurrency}`}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {direction === "BUY_SELL_USD" ? `SELL ${swapBaseCurrency === "USD" ? "KRW" : "USD"}` : `BUY ${swapBaseCurrency === "USD" ? "KRW" : "USD"}`}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Summary Card */}
-              <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 rounded-2xl mb-6 shadow-inner">
-                <div className="text-sm text-gray-700 mb-2">외환스왑 {direction === "BUY_SELL_USD" ? `BUY&SELL ${swapBaseCurrency}` : `SELL&BUY ${swapBaseCurrency}`} 거래</div>
-                
-                {adminPriceProvided ? (
-                  <>
-                    {/* 관리자 가격 제공 후 고정된 정보 표시 */}
-                    {direction === "BUY_SELL_USD" ? (
-                      <>
-                        <div className="text-sm text-gray-600 mb-1">
-                          NEAR SELL: USD {formatCurrencyAmount(parseFloat(removeThousandSeparator(fixedNearAmount)), "USD")}
-                        </div>
-                        <div className="text-sm text-gray-600 mb-1">
-                          NEAR BUY: KRW {formatCurrencyAmount(parseFloat(removeThousandSeparator(fixedNearAmount)) * nearRate!, "KRW")}
-                        </div>
-                        <div className="text-sm text-gray-600 mb-1">
-                          NEAR 거래환율: {nearRate?.toFixed(2)}
-                        </div>
-                        <div className="text-sm text-gray-600 mb-1">
-                          NEAR 결제일: {format(fixedNearDate, "yyyy-MM-dd")}
-                        </div>
-                        <div className="text-sm text-gray-600 mb-1">
-                          FAR BUY: USD {formatCurrencyAmount(parseFloat(removeThousandSeparator(fixedFarAmount)), "USD")}
-                        </div>
-                        <div className="text-sm text-gray-600 mb-1">
-                          FAR SELL: KRW {formatCurrencyAmount(parseFloat(removeThousandSeparator(fixedFarAmount)) * farRate!, "KRW")}
-                        </div>
-                        <div className="text-sm text-gray-600 mb-1">
-                          FAR 거래환율: {farRate?.toFixed(2)}
-                        </div>
-                        <div className="text-sm text-gray-600 mb-1">
-                          FAR 결제일: {format(fixedFarDate, "yyyy-MM-dd")}
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="text-sm text-gray-600 mb-1">
-                          NEAR BUY: USD {formatCurrencyAmount(parseFloat(removeThousandSeparator(fixedNearAmount)), "USD")}
-                        </div>
-                        <div className="text-sm text-gray-600 mb-1">
-                          NEAR SELL: KRW {formatCurrencyAmount(parseFloat(removeThousandSeparator(fixedNearAmount)) * nearRate!, "KRW")}
-                        </div>
-                        <div className="text-sm text-gray-600 mb-1">
-                          NEAR 거래환율: {nearRate?.toFixed(2)}
-                        </div>
-                        <div className="text-sm text-gray-600 mb-1">
-                          NEAR 결제일: {format(fixedNearDate, "yyyy-MM-dd")}
-                        </div>
-                        <div className="text-sm text-gray-600 mb-1">
-                          FAR SELL: USD {formatCurrencyAmount(parseFloat(removeThousandSeparator(fixedFarAmount)), "USD")}
-                        </div>
-                        <div className="text-sm text-gray-600 mb-1">
-                          FAR BUY: KRW {formatCurrencyAmount(parseFloat(removeThousandSeparator(fixedFarAmount)) * farRate!, "KRW")}
-                        </div>
-                        <div className="text-sm text-gray-600 mb-1">
-                          FAR 거래환율: {farRate?.toFixed(2)}
-                        </div>
-                        <div className="text-sm text-gray-600 mb-1">
-                          FAR 결제일: {format(fixedFarDate, "yyyy-MM-dd")}
-                        </div>
-                      </>
-                    )}
-                    <div className="text-sm text-blue-600 font-medium mt-2 pt-2 border-t border-gray-200">
-                      스왑포인트: {swapPoints} 포인트 ({direction === "BUY_SELL_USD" ? "유리" : "불리"})
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    {/* 가격 요청 전 상태 */}
-                    <div className="text-sm text-gray-600 mb-1">
-                      NEAR SELL: USD {nearAmountCurrency === "USD" && nearAmount ? 
-                        formatCurrencyAmount(parseFloat(removeThousandSeparator(nearAmount)), "USD") : "미입력"}
-                    </div>
-                    <div className="text-sm text-gray-600 mb-1">
-                      NEAR BUY: KRW {nearAmountCurrency === "KRW" && nearAmount ? 
-                        formatCurrencyAmount(parseFloat(removeThousandSeparator(nearAmount)), "KRW") : "미입력"}
-                    </div>
-                    <div className="text-sm text-gray-600 mb-1">
-                      NEAR 거래환율: 관리자 가격 제공 후 확정
-                    </div>
-                    <div className="text-sm text-gray-600 mb-1">
-                      NEAR 결제일: {nearDate ? format(nearDate, "yyyy-MM-dd") : "미선택"}
-                    </div>
-                    <div className="text-sm text-gray-600 mb-1">
-                      FAR BUY: USD {farAmountCurrency === "USD" && farAmount ? 
-                        formatCurrencyAmount(parseFloat(removeThousandSeparator(farAmount)), "USD") : "미입력"}
-                    </div>
-                    <div className="text-sm text-gray-600 mb-1">
-                      FAR SELL: KRW {farAmountCurrency === "KRW" && farAmount ? 
-                        formatCurrencyAmount(parseFloat(removeThousandSeparator(farAmount)), "KRW") : "미입력"}
-                    </div>
-                    <div className="text-sm text-gray-600 mb-1">
-                      FAR 거래환율: 관리자 가격 제공 후 확정
-                    </div>
-                    <div className="text-sm text-gray-600 mb-1">
-                      FAR 결제일: {farDate ? format(farDate, "yyyy-MM-dd") : "미선택"}
-                    </div>
-                  </>
-                )}
-              </div>
-
-              {/* Step 5: Submit button */}
-              <div className="space-y-3">
-                {!adminPriceProvided ? (
-                  <>
-                    <Button 
-                      onClick={handleSwapRequest}
-                      disabled={mutation.isPending}
-                      className="w-full py-4 text-lg font-semibold rounded-2xl text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
-                      style={{
-                        backgroundColor: direction === "BUY_SELL_USD" ? '#4169E1' : '#FF6B6B',
-                        boxShadow: direction === "BUY_SELL_USD" 
-                          ? '0 0 15px rgba(65, 105, 225, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)' 
-                          : '0 0 15px rgba(255, 107, 107, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
-                      }}
-                    >
-                      {mutation.isPending ? "처리 중..." : "가격 요청"}
-                    </Button>
-                    <Button 
-                      onClick={() => setAdminPriceProvided(true)}
-                      variant="outline"
-                      className="w-full py-2 text-sm rounded-xl border-dashed border-gray-400 text-gray-600 hover:bg-gray-50"
-                    >
-                      [데모] 관리자 가격 제공 시뮬레이션
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Button 
-                      onClick={() => {
-                        toast({
-                          title: "외환스왑 거래 체결",
-                          description: "스왑 거래가 성공적으로 체결되었습니다.",
-                        });
-                      }}
-                      className="w-full py-4 text-lg font-semibold rounded-2xl text-white shadow-lg hover:shadow-xl transition-all duration-200"
-                      style={{ 
-                        backgroundColor: direction === "BUY_SELL_USD" ? '#4169E1' : '#FF6B6B',
-                        boxShadow: direction === "BUY_SELL_USD" 
-                          ? '0 0 15px rgba(65, 105, 225, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)' 
-                          : '0 0 15px rgba(255, 107, 107, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
-                      }}
-                    >
-                      거래 체결
-                    </Button>
-                    <Button 
-                      onClick={() => setAdminPriceProvided(false)}
-                      variant="outline"
-                      className="w-full py-2 text-sm rounded-xl border-gray-300 text-gray-600 hover:bg-gray-50"
-                    >
-                      가격 요청 상태로 돌아가기
-                    </Button>
-                  </>
-                )}
-              </div>
-            </Card>
+            </div>
           </div>
+
+          {/* Step 3: 만기일 설정 */}
+          {!adminPriceProvided && (
+            <div className="flex items-center mb-4">
+              <div className="flex-1">
+                <div className="text-sm text-gray-600 mb-2">만기일</div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-sm text-gray-600 mb-1">Near Leg</div>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal text-xs bg-white border-gray-300 text-gray-900",
+                            !nearDate && "text-gray-500"
+                          )}
+                        >
+                          <CalendarIcon className="mr-1 h-3 w-3" />
+                          {nearDate ? format(nearDate, "yyyy MM dd") : "선택"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={nearDate}
+                          onSelect={(date) => date && setNearDate(date)}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-600 mb-1">Far Leg</div>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal text-xs bg-white border-gray-300 text-gray-900",
+                            !farDate && "text-gray-500"
+                          )}
+                        >
+                          <CalendarIcon className="mr-1 h-3 w-3" />
+                          {farDate ? format(farDate, "yyyy MM dd") : "선택"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={farDate}
+                          onSelect={(date) => date && setFarDate(date)}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 4: Amount input - NEAR and FAR */}
+          {!adminPriceProvided && (
+            <div className="flex items-center mb-6">
+              <div className="flex-1">
+
+                
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <div className="text-sm text-gray-600 mb-2">NEAR</div>
+                    <div className="grid grid-cols-2 gap-1 mb-2">
+                      <Button 
+                        variant="outline"
+                        size="sm"
+                        className={cn(
+                          "rounded-xl transition-all duration-200 text-xs",
+                          nearAmountCurrency === "USD" 
+                            ? "text-white shadow-inner" 
+                            : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                        )}
+                        style={nearAmountCurrency === "USD" ? {
+                          backgroundColor: '#2dd4bf',
+                          borderColor: '#2dd4bf',
+                          boxShadow: '0 0 15px rgba(45, 212, 191, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                        } : {}}
+                        onClick={() => setNearAmountCurrency("USD")}
+                      >
+                        USD
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        size="sm"
+                        className={cn(
+                          "rounded-xl transition-all duration-200 text-xs",
+                          nearAmountCurrency === "KRW" 
+                            ? "text-white shadow-inner" 
+                            : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                        )}
+                        style={nearAmountCurrency === "KRW" ? {
+                          backgroundColor: '#2dd4bf',
+                          borderColor: '#2dd4bf',
+                          boxShadow: '0 0 15px rgba(45, 212, 191, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                        } : {}}
+                        onClick={() => setNearAmountCurrency("KRW")}
+                      >KRW 매도</Button>
+                    </div>
+                    <Input
+                      type="text"
+                      placeholder="NEAR 금액 입력"
+                      value={nearAmount}
+                      onChange={(e) => {
+                        const formattedValue = formatInputValue(e.target.value, nearAmountCurrency);
+                        setNearAmount(formattedValue);
+                      }}
+                      className="text-right text-lg bg-gray-50/50 border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-200"
+                    />
+                    <div className="text-xs text-gray-500 mt-1">
+                      {direction === "BUY_SELL_USD" ? `SELL ${swapBaseCurrency}` : `BUY ${swapBaseCurrency}`}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {direction === "BUY_SELL_USD" ? `BUY ${swapBaseCurrency === "USD" ? "KRW" : "USD"}` : `SELL ${swapBaseCurrency === "USD" ? "KRW" : "USD"}`}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <div className="text-sm text-gray-600 mb-2">FAR</div>
+                    <div className="grid grid-cols-2 gap-1 mb-2">
+                      <Button 
+                        variant="outline"
+                        size="sm"
+                        className={cn(
+                          "rounded-xl transition-all duration-200 text-xs",
+                          farAmountCurrency === "USD" 
+                            ? "text-white shadow-inner" 
+                            : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                        )}
+                        style={farAmountCurrency === "USD" ? {
+                          backgroundColor: '#2dd4bf',
+                          borderColor: '#2dd4bf',
+                          boxShadow: '0 0 15px rgba(45, 212, 191, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                        } : {}}
+                        onClick={() => setFarAmountCurrency("USD")}
+                      >
+                        USD
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        size="sm"
+                        className={cn(
+                          "rounded-xl transition-all duration-200 text-xs",
+                          farAmountCurrency === "KRW" 
+                            ? "text-white shadow-inner" 
+                            : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                        )}
+                        style={farAmountCurrency === "KRW" ? {
+                          backgroundColor: '#2dd4bf',
+                          borderColor: '#2dd4bf',
+                          boxShadow: '0 0 15px rgba(45, 212, 191, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                        } : {}}
+                        onClick={() => setFarAmountCurrency("KRW")}
+                      >
+                        KRW
+                      </Button>
+                    </div>
+                    <Input
+                      type="text"
+                      placeholder="FAR 금액 입력"
+                      value={farAmount}
+                      onChange={(e) => {
+                        const formattedValue = formatInputValue(e.target.value, farAmountCurrency);
+                        setFarAmount(formattedValue);
+                      }}
+                      className="text-right text-lg bg-gray-50/50 border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-200"
+                    />
+                    <div className="text-xs text-gray-500 mt-1">
+                      {direction === "BUY_SELL_USD" ? `BUY ${swapBaseCurrency}` : `SELL ${swapBaseCurrency}`}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {direction === "BUY_SELL_USD" ? `SELL ${swapBaseCurrency === "USD" ? "KRW" : "USD"}` : `BUY ${swapBaseCurrency === "USD" ? "KRW" : "USD"}`}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Summary Card */}
+          <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 rounded-2xl mb-6 shadow-inner">
+            <div className="text-sm text-gray-700 mb-2">외환스왑 {direction === "BUY_SELL_USD" ? `BUY&SELL ${swapBaseCurrency}` : `SELL&BUY ${swapBaseCurrency}`} 거래</div>
+            
+            {adminPriceProvided ? (
+              <>
+                {/* 관리자 가격 제공 후 고정된 정보 표시 */}
+                {direction === "BUY_SELL_USD" ? (
+                  <>
+                    <div className="text-sm text-gray-600 mb-1">
+                      NEAR SELL: USD {formatCurrencyAmount(parseFloat(removeThousandSeparator(fixedNearAmount)), "USD")}
+                    </div>
+                    <div className="text-sm text-gray-600 mb-1">
+                      NEAR BUY: KRW {formatCurrencyAmount(parseFloat(removeThousandSeparator(fixedNearAmount)) * nearRate!, "KRW")}
+                    </div>
+                    <div className="text-sm text-gray-600 mb-1">
+                      NEAR 거래환율: {nearRate?.toFixed(2)}
+                    </div>
+                    <div className="text-sm text-gray-600 mb-1">
+                      NEAR 결제일: {format(fixedNearDate, "yyyy-MM-dd")}
+                    </div>
+                    <div className="text-sm text-gray-600 mb-1">
+                      FAR BUY: USD {formatCurrencyAmount(parseFloat(removeThousandSeparator(fixedFarAmount)), "USD")}
+                    </div>
+                    <div className="text-sm text-gray-600 mb-1">
+                      FAR SELL: KRW {formatCurrencyAmount(parseFloat(removeThousandSeparator(fixedFarAmount)) * farRate!, "KRW")}
+                    </div>
+                    <div className="text-sm text-gray-600 mb-1">
+                      FAR 거래환율: {farRate?.toFixed(2)}
+                    </div>
+                    <div className="text-sm text-gray-600 mb-1">
+                      FAR 결제일: {format(fixedFarDate, "yyyy-MM-dd")}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-sm text-gray-600 mb-1">
+                      NEAR BUY: USD {formatCurrencyAmount(parseFloat(removeThousandSeparator(fixedNearAmount)), "USD")}
+                    </div>
+                    <div className="text-sm text-gray-600 mb-1">
+                      NEAR SELL: KRW {formatCurrencyAmount(parseFloat(removeThousandSeparator(fixedNearAmount)) * nearRate!, "KRW")}
+                    </div>
+                    <div className="text-sm text-gray-600 mb-1">
+                      NEAR 거래환율: {nearRate?.toFixed(2)}
+                    </div>
+                    <div className="text-sm text-gray-600 mb-1">
+                      NEAR 결제일: {format(fixedNearDate, "yyyy-MM-dd")}
+                    </div>
+                    <div className="text-sm text-gray-600 mb-1">
+                      FAR SELL: USD {formatCurrencyAmount(parseFloat(removeThousandSeparator(fixedFarAmount)), "USD")}
+                    </div>
+                    <div className="text-sm text-gray-600 mb-1">
+                      FAR BUY: KRW {formatCurrencyAmount(parseFloat(removeThousandSeparator(fixedFarAmount)) * farRate!, "KRW")}
+                    </div>
+                    <div className="text-sm text-gray-600 mb-1">
+                      FAR 거래환율: {farRate?.toFixed(2)}
+                    </div>
+                    <div className="text-sm text-gray-600 mb-1">
+                      FAR 결제일: {format(fixedFarDate, "yyyy-MM-dd")}
+                    </div>
+                  </>
+                )}
+                <div className="text-sm text-blue-600 font-medium mt-2 pt-2 border-t border-gray-200">
+                  스왑포인트: {swapPoints} 포인트 ({direction === "BUY_SELL_USD" ? "유리" : "불리"})
+                </div>
+              </>
+            ) : (
+              <>
+                {/* 가격 요청 전 상태 */}
+                <div className="text-sm text-gray-600 mb-1">
+                  NEAR SELL: USD {nearAmountCurrency === "USD" && nearAmount ? 
+                    formatCurrencyAmount(parseFloat(removeThousandSeparator(nearAmount)), "USD") : "미입력"}
+                </div>
+                <div className="text-sm text-gray-600 mb-1">
+                  NEAR BUY: KRW {nearAmountCurrency === "KRW" && nearAmount ? 
+                    formatCurrencyAmount(parseFloat(removeThousandSeparator(nearAmount)), "KRW") : "미입력"}
+                </div>
+                <div className="text-sm text-gray-600 mb-1">
+                  NEAR 거래환율: 관리자 가격 제공 후 확정
+                </div>
+                <div className="text-sm text-gray-600 mb-1">
+                  NEAR 결제일: {nearDate ? format(nearDate, "yyyy-MM-dd") : "미선택"}
+                </div>
+                <div className="text-sm text-gray-600 mb-1">
+                  FAR BUY: USD {farAmountCurrency === "USD" && farAmount ? 
+                    formatCurrencyAmount(parseFloat(removeThousandSeparator(farAmount)), "USD") : "미입력"}
+                </div>
+                <div className="text-sm text-gray-600 mb-1">
+                  FAR SELL: KRW {farAmountCurrency === "KRW" && farAmount ? 
+                    formatCurrencyAmount(parseFloat(removeThousandSeparator(farAmount)), "KRW") : "미입력"}
+                </div>
+                <div className="text-sm text-gray-600 mb-1">
+                  FAR 거래환율: 관리자 가격 제공 후 확정
+                </div>
+                <div className="text-sm text-gray-600 mb-1">
+                  FAR 결제일: {farDate ? format(farDate, "yyyy-MM-dd") : "미선택"}
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Step 5: Submit button */}
+          <div className="space-y-3">
+            {!adminPriceProvided ? (
+              <>
+                <Button 
+                  onClick={handleSwapRequest}
+                  disabled={mutation.isPending}
+                  className="w-full py-4 text-lg font-semibold rounded-2xl text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
+                  style={{
+                    backgroundColor: direction === "BUY_SELL_USD" ? '#4169E1' : '#FF6B6B',
+                    boxShadow: direction === "BUY_SELL_USD" 
+                      ? '0 0 15px rgba(65, 105, 225, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)' 
+                      : '0 0 15px rgba(255, 107, 107, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                  }}
+                >
+                  {mutation.isPending ? "처리 중..." : "가격 요청"}
+                </Button>
+                <Button 
+                  onClick={() => setAdminPriceProvided(true)}
+                  variant="outline"
+                  className="w-full py-2 text-sm rounded-xl border-dashed border-gray-400 text-gray-600 hover:bg-gray-50"
+                >
+                  [데모] 관리자 가격 제공 시뮬레이션
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button 
+                  onClick={() => {
+                    toast({
+                      title: "외환스왑 거래 체결",
+                      description: "스왑 거래가 성공적으로 체결되었습니다.",
+                    });
+                  }}
+                  className="w-full py-4 text-lg font-semibold rounded-2xl text-white shadow-lg hover:shadow-xl transition-all duration-200"
+                  style={{ 
+                    backgroundColor: direction === "BUY_SELL_USD" ? '#4169E1' : '#FF6B6B',
+                    boxShadow: direction === "BUY_SELL_USD" 
+                      ? '0 0 15px rgba(65, 105, 225, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)' 
+                      : '0 0 15px rgba(255, 107, 107, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                  }}
+                >
+                  거래 체결
+                </Button>
+                <Button 
+                  onClick={() => setAdminPriceProvided(false)}
+                  variant="outline"
+                  className="w-full py-2 text-sm rounded-xl border-gray-300 text-gray-600 hover:bg-gray-50"
+                >
+                  가격 요청 상태로 돌아가기
+                </Button>
+              </>
+            )}
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }
