@@ -468,61 +468,36 @@ export default function SwapTrading() {
             {adminPriceProvided ? (
               <>
                 {/* 관리자 가격 제공 후 고정된 정보 표시 */}
-                {direction === "BUY_SELL_USD" ? (
-                  <>
-                    <div className="text-sm text-gray-600 mb-1">
-                      NEAR SELL: USD {formatCurrencyAmount(parseFloat(removeThousandSeparator(fixedNearAmount)), "USD")}
-                    </div>
-                    <div className="text-sm text-gray-600 mb-1">
-                      NEAR BUY: KRW {formatCurrencyAmount(parseFloat(removeThousandSeparator(fixedNearAmount)) * nearRate!, "KRW")}
-                    </div>
-                    <div className="text-sm text-gray-600 mb-1">
-                      NEAR 거래환율: {nearRate?.toFixed(2)}
-                    </div>
-                    <div className="text-sm text-gray-600 mb-1">
-                      NEAR 결제일: {format(fixedNearDate, "yyyy-MM-dd")}
-                    </div>
-                    <div className="text-sm text-gray-600 mb-1">
-                      FAR BUY: USD {formatCurrencyAmount(parseFloat(removeThousandSeparator(fixedFarAmount)), "USD")}
-                    </div>
-                    <div className="text-sm text-gray-600 mb-1">
-                      FAR SELL: KRW {formatCurrencyAmount(parseFloat(removeThousandSeparator(fixedFarAmount)) * farRate!, "KRW")}
-                    </div>
-                    <div className="text-sm text-gray-600 mb-1">
-                      FAR 거래환율: {farRate?.toFixed(2)}
-                    </div>
-                    <div className="text-sm text-gray-600 mb-1">
-                      FAR 결제일: {format(fixedFarDate, "yyyy-MM-dd")}
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="text-sm text-gray-600 mb-1">
-                      NEAR BUY: USD {formatCurrencyAmount(parseFloat(removeThousandSeparator(fixedNearAmount)), "USD")}
-                    </div>
-                    <div className="text-sm text-gray-600 mb-1">
-                      NEAR SELL: KRW {formatCurrencyAmount(parseFloat(removeThousandSeparator(fixedNearAmount)) * nearRate!, "KRW")}
-                    </div>
-                    <div className="text-sm text-gray-600 mb-1">
-                      NEAR 거래환율: {nearRate?.toFixed(2)}
-                    </div>
-                    <div className="text-sm text-gray-600 mb-1">
-                      NEAR 결제일: {format(fixedNearDate, "yyyy-MM-dd")}
-                    </div>
-                    <div className="text-sm text-gray-600 mb-1">
-                      FAR SELL: USD {formatCurrencyAmount(parseFloat(removeThousandSeparator(fixedFarAmount)), "USD")}
-                    </div>
-                    <div className="text-sm text-gray-600 mb-1">
-                      FAR BUY: KRW {formatCurrencyAmount(parseFloat(removeThousandSeparator(fixedFarAmount)) * farRate!, "KRW")}
-                    </div>
-                    <div className="text-sm text-gray-600 mb-1">
-                      FAR 거래환율: {farRate?.toFixed(2)}
-                    </div>
-                    <div className="text-sm text-gray-600 mb-1">
-                      FAR 결제일: {format(fixedFarDate, "yyyy-MM-dd")}
-                    </div>
-                  </>
-                )}
+                <>
+                  <div className="text-sm text-gray-600 mb-1">
+                    NEAR {direction === "BUY_SELL_USD" ? "SELL" : "BUY"}: {swapBaseCurrency} {formatCurrencyAmount(parseFloat(removeThousandSeparator(fixedNearAmount)), swapBaseCurrency)}
+                  </div>
+                  <div className="text-sm text-gray-600 mb-1">
+                    NEAR {direction === "BUY_SELL_USD" ? "BUY" : "SELL"}: {swapBaseCurrency === "USD" ? "KRW" : "USD"} {swapBaseCurrency === "USD" ? 
+                      formatCurrencyAmount(parseFloat(removeThousandSeparator(fixedNearAmount)) * nearRate!, "KRW") :
+                      formatCurrencyAmount(parseFloat(removeThousandSeparator(fixedNearAmount)) * nearRate!, "USD")}
+                  </div>
+                  <div className="text-sm text-gray-600 mb-1">
+                    NEAR 거래환율: {nearRate?.toFixed(2)}
+                  </div>
+                  <div className="text-sm text-gray-600 mb-1">
+                    NEAR 결제일: {format(fixedNearDate, "yyyy-MM-dd")}
+                  </div>
+                  <div className="text-sm text-gray-600 mb-1">
+                    FAR {direction === "BUY_SELL_USD" ? "BUY" : "SELL"}: {swapBaseCurrency} {formatCurrencyAmount(parseFloat(removeThousandSeparator(fixedFarAmount)), swapBaseCurrency)}
+                  </div>
+                  <div className="text-sm text-gray-600 mb-1">
+                    FAR {direction === "BUY_SELL_USD" ? "SELL" : "BUY"}: {swapBaseCurrency === "USD" ? "KRW" : "USD"} {swapBaseCurrency === "USD" ? 
+                      formatCurrencyAmount(parseFloat(removeThousandSeparator(fixedFarAmount)) * farRate!, "KRW") :
+                      formatCurrencyAmount(parseFloat(removeThousandSeparator(fixedFarAmount)) * farRate!, "USD")}
+                  </div>
+                  <div className="text-sm text-gray-600 mb-1">
+                    FAR 거래환율: {farRate?.toFixed(2)}
+                  </div>
+                  <div className="text-sm text-gray-600 mb-1">
+                    FAR 결제일: {format(fixedFarDate, "yyyy-MM-dd")}
+                  </div>
+                </>
                 <div className="text-sm text-blue-600 font-medium mt-2 pt-2 border-t border-gray-200">
                   스왑포인트: {swapPoints} 포인트 ({direction === "BUY_SELL_USD" ? "유리" : "불리"})
                 </div>
@@ -531,12 +506,12 @@ export default function SwapTrading() {
               <>
                 {/* 가격 요청 전 상태 */}
                 <div className="text-sm text-gray-600 mb-1">
-                  NEAR SELL: USD {nearAmountCurrency === "USD" && nearAmount ? 
-                    formatCurrencyAmount(parseFloat(removeThousandSeparator(nearAmount)), "USD") : "미입력"}
+                  NEAR {direction === "BUY_SELL_USD" ? "SELL" : "BUY"}: {swapBaseCurrency} {nearAmountCurrency === swapBaseCurrency && nearAmount ? 
+                    formatCurrencyAmount(parseFloat(removeThousandSeparator(nearAmount)), swapBaseCurrency) : "미입력"}
                 </div>
                 <div className="text-sm text-gray-600 mb-1">
-                  NEAR BUY: KRW {nearAmountCurrency === "KRW" && nearAmount ? 
-                    formatCurrencyAmount(parseFloat(removeThousandSeparator(nearAmount)), "KRW") : "미입력"}
+                  NEAR {direction === "BUY_SELL_USD" ? "BUY" : "SELL"}: {swapBaseCurrency === "USD" ? "KRW" : "USD"} {nearAmountCurrency === (swapBaseCurrency === "USD" ? "KRW" : "USD") && nearAmount ? 
+                    formatCurrencyAmount(parseFloat(removeThousandSeparator(nearAmount)), swapBaseCurrency === "USD" ? "KRW" : "USD") : "미입력"}
                 </div>
                 <div className="text-sm text-gray-600 mb-1">
                   NEAR 거래환율: 관리자 가격 제공 후 확정
@@ -545,12 +520,12 @@ export default function SwapTrading() {
                   NEAR 결제일: {nearDate ? format(nearDate, "yyyy-MM-dd") : "미선택"}
                 </div>
                 <div className="text-sm text-gray-600 mb-1">
-                  FAR BUY: USD {farAmountCurrency === "USD" && farAmount ? 
-                    formatCurrencyAmount(parseFloat(removeThousandSeparator(farAmount)), "USD") : "미입력"}
+                  FAR {direction === "BUY_SELL_USD" ? "BUY" : "SELL"}: {swapBaseCurrency} {farAmountCurrency === swapBaseCurrency && farAmount ? 
+                    formatCurrencyAmount(parseFloat(removeThousandSeparator(farAmount)), swapBaseCurrency) : "미입력"}
                 </div>
                 <div className="text-sm text-gray-600 mb-1">
-                  FAR SELL: KRW {farAmountCurrency === "KRW" && farAmount ? 
-                    formatCurrencyAmount(parseFloat(removeThousandSeparator(farAmount)), "KRW") : "미입력"}
+                  FAR {direction === "BUY_SELL_USD" ? "SELL" : "BUY"}: {swapBaseCurrency === "USD" ? "KRW" : "USD"} {farAmountCurrency === (swapBaseCurrency === "USD" ? "KRW" : "USD") && farAmount ? 
+                    formatCurrencyAmount(parseFloat(removeThousandSeparator(farAmount)), swapBaseCurrency === "USD" ? "KRW" : "USD") : "미입력"}
                 </div>
                 <div className="text-sm text-gray-600 mb-1">
                   FAR 거래환율: 관리자 가격 제공 후 확정
