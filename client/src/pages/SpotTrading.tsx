@@ -385,10 +385,13 @@ export default function SpotTrading() {
               {/* Step 7: Trade Summary */}
               <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 rounded-2xl mb-6 shadow-inner">
                 <div className="text-sm text-gray-700 mb-2">
-                  {orderType === "MARKET" ? "시장가" : "지정가"} {direction} 주문
+                  {orderType === "MARKET" ? "시장가" : "지정가"} {baseCurrency} {direction}/{quoteCurrency} {direction === "BUY" ? "SELL" : "BUY"} 주문
                 </div>
                 <div className="text-sm text-gray-600 mb-1">
-                  거래금액: {amount || "0"} {amountCurrency === "BASE" ? baseCurrency : quoteCurrency}
+                  거래금액: {baseCurrency} {amountCurrency === "BASE" ? (amount || "0") : ((parseFloat(amount || "0") / (direction === "BUY" ? buyRate : sellRate)).toFixed(2))}
+                </div>
+                <div className="text-sm text-gray-600 mb-1 ml-12">
+                  {quoteCurrency} {amountCurrency === "QUOTE" ? (amount || "0") : ((parseFloat(amount || "0") * (direction === "BUY" ? buyRate : sellRate)).toFixed(2))}
                 </div>
                 {orderType === "LIMIT" && (
                   <div className="text-sm text-gray-600 mb-1">
@@ -400,6 +403,9 @@ export default function SpotTrading() {
                     ? (direction === "BUY" ? buyRate.toFixed(2) : sellRate.toFixed(2))
                     : (limitRate || "미지정")
                   }
+                </div>
+                <div className="text-sm text-gray-600 mb-1">
+                  결제일: {valueDate}
                 </div>
                 {orderType === "LIMIT" && (
                   <div className="text-xs text-gray-500">
