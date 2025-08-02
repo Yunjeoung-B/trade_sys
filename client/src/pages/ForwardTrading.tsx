@@ -135,66 +135,46 @@ export default function ForwardTrading() {
             </Select>
           </div>
 
-          {/* Step 2: Rate display with SPOT and SWAP POINT breakdown */}
+          {/* Step 2: Quote Request Display */}
           <div className="flex items-center mb-6">
-            <div className="flex-1 grid grid-cols-2 gap-4">
-              <div className="text-center">
-                <div className="text-sm text-gray-600 mb-1">SELL {baseCurrency}</div>
-                
-                {/* Forward Rate - Main Display */}
-                <div className="text-2xl font-bold text-blue-600 mb-3">
-                  {sellRate.toFixed(2).split('.')[0]}.
-                  <span className="text-lg">{sellRate.toFixed(2).split('.')[1]}</span>
+            <div className="flex-1 text-center">
+              <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-2xl shadow-inner">
+                <div className="text-lg font-semibold text-gray-700 mb-2">선물환 견적 요청</div>
+                <div className="text-sm text-gray-600 mb-3">
+                  선물환 거래를 위해서는 CHOIICE FX에 견적을 요청해야 합니다.
                 </div>
                 
-                {/* Small breakdown below */}
-                <div className="text-[14px] text-gray-500 mb-1">
-                  <div>SPOT: {spotSellRate.toFixed(2)}</div>
-                  <div>SWAP: {swapPointsSell >= 0 ? '+' : ''}{swapPointsSell.toFixed(2)}</div>
+                {/* Direction Selection */}
+                <div className="grid grid-cols-2 gap-2 mb-4">
+                  <Button 
+                    variant="outline"
+                    className={cn(
+                      "rounded-xl transition-all duration-200",
+                      direction === "SELL" 
+                        ? "bg-teal-400 border-2 border-teal-600 text-white shadow-inner ring-2 ring-teal-300" 
+                        : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                    )}
+                    onClick={() => setDirection("SELL")}
+                  >
+                    SELL {baseCurrency}
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    className={cn(
+                      "rounded-xl transition-all duration-200",
+                      direction === "BUY" 
+                        ? "bg-teal-400 border-2 border-teal-600 text-white shadow-inner ring-2 ring-teal-300" 
+                        : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                    )}
+                    onClick={() => setDirection("BUY")}
+                  >
+                    BUY {baseCurrency}
+                  </Button>
                 </div>
-
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className={cn(
-                    "mt-2 w-full rounded-xl transition-all duration-200",
-                    direction === "SELL" 
-                      ? "bg-teal-400 border-2 border-teal-600 text-white shadow-inner ring-2 ring-teal-300" 
-                      : "bg-transparent border-gray-200 text-gray-400 hover:bg-gray-50"
-                  )}
-                  onClick={() => setDirection("SELL")}
-                >
-                  SELL
-                </Button>
-              </div>
-              <div className="text-center">
-                <div className="text-sm text-gray-600 mb-1">BUY {baseCurrency}</div>
                 
-                {/* Forward Rate - Main Display */}
-                <div className="text-2xl font-bold text-red-500 mb-3">
-                  {buyRate.toFixed(2).split('.')[0]}.
-                  <span className="text-lg">{buyRate.toFixed(2).split('.')[1]}</span>
+                <div className="text-xs text-gray-500">
+                  관리자 승인 후 거래 가능한 환율이 제공됩니다.
                 </div>
-                
-                {/* Small breakdown below */}
-                <div className="text-[14px] text-gray-500 mb-1">
-                  <div>SPOT: {spotBuyRate.toFixed(2)}</div>
-                  <div>SWAP: {swapPointsBuy >= 0 ? '+' : ''}{swapPointsBuy.toFixed(2)}</div>
-                </div>
-
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className={cn(
-                    "mt-2 w-full rounded-xl transition-all duration-200",
-                    direction === "BUY" 
-                      ? "bg-teal-400 border-2 border-teal-600 text-white shadow-inner ring-2 ring-teal-300" 
-                      : "bg-transparent border-gray-200 text-gray-400 hover:bg-gray-50"
-                  )}
-                  onClick={() => setDirection("BUY")}
-                >
-                  BUY
-                </Button>
               </div>
             </div>
           </div>
@@ -399,10 +379,7 @@ export default function ForwardTrading() {
               </div>
             )}
             <div className="text-sm text-gray-600 mb-1">
-              거래환율: {orderType === "MARKET" 
-                ? (direction === "BUY" ? buyRate.toFixed(2) : sellRate.toFixed(2))
-                : (limitRate || "미지정")
-              }
+              거래환율: 견적 승인 후 제공
             </div>
             <div className="text-sm text-gray-600 mb-1">
               결제일: {valueDate ? valueDate.toISOString().split('T')[0] : "미선택"}

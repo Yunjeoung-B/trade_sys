@@ -107,48 +107,46 @@ export default function SwapTrading() {
                 </Select>
               </div>
 
-              {/* Step 2: Rate display */}
+              {/* Step 2: Quote Request Display */}
               <div className="flex items-center mb-6">
-                <div className="flex-1 grid grid-cols-2 gap-4">
-                  <div className="text-center">
-                    <div className="text-sm text-gray-600 mb-1">SELL {baseCurrency}</div>
-                    <div className="text-2xl font-bold text-blue-600">
-                      {sellRate.toFixed(2).split('.')[0]}.
-                      <span className="text-lg">{sellRate.toFixed(2).split('.')[1]}</span>
+                <div className="flex-1 text-center">
+                  <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-2xl shadow-inner">
+                    <div className="text-lg font-semibold text-gray-700 mb-2">SWAP 견적 요청</div>
+                    <div className="text-sm text-gray-600 mb-3">
+                      SWAP 거래를 위해서는 CHOIICE FX에 견적을 요청해야 합니다.
                     </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className={cn(
-                        "mt-2 w-full rounded-xl transition-all duration-200",
-                        direction === "SELL" 
-                          ? "bg-teal-400 border-2 border-teal-600 text-white shadow-inner ring-2 ring-teal-300" 
-                          : "bg-transparent border-gray-200 text-gray-400 hover:bg-gray-50"
-                      )}
-                      onClick={() => setDirection("SELL")}
-                    >
-                      SELL
-                    </Button>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-sm text-gray-600 mb-1">BUY {baseCurrency}</div>
-                    <div className="text-2xl font-bold text-red-500">
-                      {buyRate.toFixed(2).split('.')[0]}.
-                      <span className="text-lg">{buyRate.toFixed(2).split('.')[1]}</span>
+                    
+                    {/* Direction Selection */}
+                    <div className="grid grid-cols-2 gap-2 mb-4">
+                      <Button 
+                        variant="outline"
+                        className={cn(
+                          "rounded-xl transition-all duration-200",
+                          direction === "SELL" 
+                            ? "bg-teal-400 border-2 border-teal-600 text-white shadow-inner ring-2 ring-teal-300" 
+                            : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                        )}
+                        onClick={() => setDirection("SELL")}
+                      >
+                        SELL {baseCurrency}
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        className={cn(
+                          "rounded-xl transition-all duration-200",
+                          direction === "BUY" 
+                            ? "bg-teal-400 border-2 border-teal-600 text-white shadow-inner ring-2 ring-teal-300" 
+                            : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                        )}
+                        onClick={() => setDirection("BUY")}
+                      >
+                        BUY {baseCurrency}
+                      </Button>
                     </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className={cn(
-                        "mt-2 w-full rounded-xl transition-all duration-200",
-                        direction === "BUY" 
-                          ? "bg-teal-400 border-2 border-teal-600 text-white shadow-inner ring-2 ring-teal-300" 
-                          : "bg-transparent border-gray-200 text-gray-400 hover:bg-gray-50"
-                      )}
-                      onClick={() => setDirection("BUY")}
-                    >
-                      BUY
-                    </Button>
+                    
+                    <div className="text-xs text-gray-500">
+                      관리자 승인 후 거래 가능한 환율이 제공됩니다.
+                    </div>
                   </div>
                 </div>
               </div>
@@ -251,6 +249,9 @@ export default function SwapTrading() {
                 <div className="text-sm text-gray-700 mb-2">Swap {direction} 거래</div>
                 <div className="text-sm text-gray-600 mb-1">
                   거래금액: {amount || "0"} {baseCurrency}
+                </div>
+                <div className="text-sm text-gray-600 mb-1">
+                  거래환율: 견적 승인 후 제공
                 </div>
                 <div className="text-sm text-gray-600">
                   Near Leg: {nearDate ? format(nearDate, "yyyy-MM-dd") : "미선택"}
