@@ -127,7 +127,7 @@ export default function MARTrading() {
                   </div>
                   <div className="text-center">
                     <div className="text-sm text-gray-600 mb-1">BUY USD</div>
-                    <div className="text-2xl font-bold text-red-500">
+                    <div className="text-2xl font-bold text-[#b30c5e]">
                       {buySpread.toFixed(2)}
                     </div>
                     <Button 
