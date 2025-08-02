@@ -82,7 +82,7 @@ export default function SwapTrading() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-800 via-blue-900 to-purple-900 p-6 -m-6">
+    <div className="p-6">
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-white mb-2">FX SWAP</h2>
         <p className="text-slate-200">Near Leg와 Far Leg 두 개의 거래일에 BUY/SELL 방향으로 거래하는 스왑 상품입니다.</p>

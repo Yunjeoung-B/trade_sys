@@ -122,7 +122,7 @@ export default function SpotTrading() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-800 via-blue-900 to-purple-900 p-6 -m-6">
+    <div className="p-6">
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-white mb-2">FX SPOT</h2>
         <p className="text-slate-200">실시간 환율로 즉시 거래가 가능합니다.</p>

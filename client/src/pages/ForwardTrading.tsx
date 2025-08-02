@@ -83,7 +83,7 @@ export default function ForwardTrading() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-800 via-blue-900 to-purple-900 p-6 -m-6">
+    <div className="p-6">
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-white mb-2">FX FORWARD</h2>
         <p className="text-slate-200">미래 특정일에 거래하는 선물환 상품입니다.</p>

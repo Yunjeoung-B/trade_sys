@@ -74,7 +74,7 @@ export default function MARTrading() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-800 via-blue-900 to-purple-900 p-6 -m-6">
+    <div className="p-6">
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-white mb-2">MAR</h2>
         <p className="text-slate-200">Market Average Rate - 오전 9시 이전 주문 제한</p>
