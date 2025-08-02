@@ -214,28 +214,32 @@ export default function ForwardTrading() {
                 <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-2xl shadow-inner">
                   <div className="text-lg font-semibold text-gray-700 mb-4">선물환 거래 정보</div>
                   
-                  <div className="grid grid-cols-3 gap-4 text-center">
-                    <div className="bg-white p-3 rounded-xl shadow-sm">
-                      <div className="text-xs text-gray-500 mb-1">SPOT</div>
-                      <div className="text-sm font-semibold text-gray-700">1,384.00</div>
-                    </div>
-                    <div className="bg-white p-3 rounded-xl shadow-sm">
-                      <div className="text-xs text-gray-500 mb-1">FORWARD</div>
-                      <div className="text-sm font-semibold text-gray-700">{approvedRate.toFixed(2)}</div>
-                    </div>
-                    <div className="bg-white p-3 rounded-xl shadow-sm">
-                      <div className="text-xs text-gray-500 mb-1">POINT</div>
-                      <div className="text-sm font-semibold text-gray-700">{(approvedRate - 1384.00).toFixed(2)}</div>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-4 p-3 bg-blue-50 rounded-xl">
+                  <div className="p-3 bg-blue-50 rounded-xl mb-4">
                     <div className="text-sm text-blue-700">
                       {direction === "BUY" ? "BUY" : "SELL"} {forwardBaseCurrency} {formatCurrencyAmount(parseFloat(removeThousandSeparator(fixedAmount)), forwardBaseCurrency)}
                     </div>
                     <div className="text-xs text-blue-600 mt-1">
                       @ {approvedRate.toFixed(2)} · {format(fixedValueDate, "yyyy-MM-dd")}
                     </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-4 text-center mb-3">
+                    <div className="bg-white p-3 rounded-xl shadow-sm">
+                      <div className="text-xs text-gray-500 mb-1">SPOT</div>
+                      <div className="text-sm font-semibold text-gray-700">1,384.00</div>
+                    </div>
+                    <div className="bg-white p-3 rounded-xl shadow-sm">
+                      <div className="text-xs text-gray-500 mb-1">POINT</div>
+                      <div className="text-sm font-semibold text-gray-700">{(approvedRate - 1384.00).toFixed(2)}</div>
+                    </div>
+                    <div className="bg-white p-3 rounded-xl shadow-sm">
+                      <div className="text-xs text-gray-500 mb-1">FORWARD</div>
+                      <div className="text-sm font-semibold text-gray-700">{approvedRate.toFixed(2)}</div>
+                    </div>
+                  </div>
+                  
+                  <div className="text-xs text-gray-500 text-center">
+                    FORWARD = SPOT + POINT
                   </div>
                 </div>
               </div>
