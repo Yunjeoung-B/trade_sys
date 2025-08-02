@@ -350,7 +350,7 @@ export default function SpotTrading() {
                     className={cn(
                       "rounded-xl transition-all duration-200",
                       amountCurrency === "BASE" 
-                        ? "bg-gradient-to-r from-green-100 to-green-200 border-green-300 text-green-800 shadow-md" 
+                        ? "bg-teal-400 border-teal-500 text-white shadow-inner" 
                         : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                     )}
                     onClick={() => setAmountCurrency("BASE")}
@@ -362,7 +362,7 @@ export default function SpotTrading() {
                     className={cn(
                       "rounded-xl transition-all duration-200",
                       amountCurrency === "QUOTE" 
-                        ? "bg-gradient-to-r from-purple-100 to-purple-200 border-purple-300 text-purple-800 shadow-md" 
+                        ? "bg-teal-400 border-teal-500 text-white shadow-inner" 
                         : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                     )}
                     onClick={() => setAmountCurrency("QUOTE")}
