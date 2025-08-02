@@ -12,6 +12,8 @@ import { cn } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { CurrencyPair } from "@shared/schema";
+import Header from "@/components/Header";
+import Sidebar from "@/components/Sidebar";
 
 export default function SpotTrading() {
   const [selectedPair, setSelectedPair] = useState("USD/KRW");
@@ -122,12 +124,16 @@ export default function SpotTrading() {
   };
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-white mb-2">FX SPOT</h2>
-        <p className="text-slate-200">실시간 환율로 즉시 거래가 가능합니다.</p>
-      </div>
-      <div className="max-w-md mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-slate-800 via-blue-900 to-purple-900">
+      <Header />
+      <div className="flex">
+        <Sidebar />
+        <div className="flex-1 p-6">
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold text-white mb-2">FX SPOT</h2>
+            <p className="text-slate-200">실시간 환율로 즉시 거래가 가능합니다.</p>
+          </div>
+          <div className="max-w-md mx-auto">
             <Card className="p-8 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border-0 text-gray-900">
               {/* Step 1: 통화쌍 선택 */}
               <div className="flex items-center justify-between mb-4">
@@ -418,6 +424,8 @@ export default function SpotTrading() {
                 {mutation.isPending ? "처리중..." : "거래 실행"}
               </Button>
             </Card>
+          </div>
+        </div>
       </div>
     </div>
   );

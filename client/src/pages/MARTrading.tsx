@@ -7,6 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import Header from "@/components/Header";
+import Sidebar from "@/components/Sidebar";
 
 export default function MARTrading() {
   const [direction, setDirection] = useState<"BUY" | "SELL">("BUY");
@@ -75,13 +77,16 @@ export default function MARTrading() {
   };
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-white mb-2">MAR</h2>
-        <p className="text-slate-200">Market Average Rate - 오전 9시 이전 주문 제한</p>
-      </div>
-
-      <div className="max-w-md mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-slate-800 via-blue-900 to-purple-900">
+      <Header />
+      <div className="flex">
+        <Sidebar />
+        <div className="flex-1 p-6">
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold text-white mb-2">MAR</h2>
+            <p className="text-slate-200">Market Average Rate - 오전 9시 이전 주문 제한</p>
+          </div>
+          <div className="max-w-md mx-auto">
             <Card className="p-8 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border-0 text-gray-900">
               {/* Step 1: 통화쌍 선택 */}
               <div className="flex items-center justify-between mb-4">
@@ -186,6 +191,8 @@ export default function MARTrading() {
                 </div>
               </div>
             </Card>
+          </div>
+        </div>
       </div>
     </div>
   );
