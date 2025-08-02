@@ -213,11 +213,11 @@ export default function MARTrading() {
               </Button>
 
               {/* 시간 안내 */}
-              <div className="mt-4 p-3 bg-gradient-to-r from-yellow-50 to-yellow-100 rounded-2xl text-center shadow-inner">
-                <div className="text-sm text-yellow-700">
+              <div className="mt-4 p-3 rounded-2xl text-center shadow-inner" style={{ backgroundColor: '#eda7c7' }}>
+                <div className="text-sm text-gray-700">
                   MAR 거래는 오전 9:00 이전에만 가능합니다
                 </div>
-                <div className="text-xs text-yellow-600 mt-1">
+                <div className="text-xs text-gray-600 mt-1">
                   현재 시간: {new Date().toLocaleTimeString('ko-KR')}
                 </div>
               </div>
