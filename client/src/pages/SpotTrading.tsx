@@ -340,35 +340,7 @@ export default function SpotTrading() {
                 </div>
               </div>
 
-              {/* Step 5: Amount Currency Selection */}
-              <div className="flex items-center mb-4">
-                <div className="flex-1 grid grid-cols-2 gap-2">
-                  <Button 
-                    variant="outline"
-                    className={cn(
-                      "rounded-xl transition-all duration-200",
-                      amountCurrency === "BASE" 
-                        ? "bg-teal-400 border-teal-500 text-white shadow-inner" 
-                        : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
-                    )}
-                    onClick={() => setAmountCurrency("BASE")}
-                  >
-                    {baseCurrency} 금액
-                  </Button>
-                  <Button 
-                    variant="outline"
-                    className={cn(
-                      "rounded-xl transition-all duration-200",
-                      amountCurrency === "QUOTE" 
-                        ? "bg-teal-400 border-teal-500 text-white shadow-inner" 
-                        : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
-                    )}
-                    onClick={() => setAmountCurrency("QUOTE")}
-                  >
-                    {quoteCurrency} 금액
-                  </Button>
-                </div>
-              </div>
+
 
               {/* Step 6: Amount input */}
               <div className="flex items-center mb-6">
