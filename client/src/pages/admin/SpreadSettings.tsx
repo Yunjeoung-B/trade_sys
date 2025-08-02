@@ -37,10 +37,17 @@ export default function SpreadSettings() {
   const [groupValue, setGroupValue] = useState("");
   const [baseSpread, setBaseSpread] = useState("");
   const [tenorSpreads, setTenorSpreads] = useState<Record<string, string>>({
-    "1M": "",
-    "3M": "",
-    "6M": "",
-    "1Y": ""
+    "ON": "3",      // ON&TN 3전
+    "TN": "3",      // ON&TN 3전
+    "SPOT": "10",   // SPOT~1M 기본 10전
+    "1W": "10",     // SPOT~1M 기본 10전
+    "2W": "10",     // SPOT~1M 기본 10전
+    "1M": "10",     // SPOT~1M 기본 10전
+    "2M": "20",     // 2M 20전
+    "3M": "25",     // 3M 25전
+    "6M": "30",     // 6M 30전
+    "9M": "40",     // 9M 40전
+    "12M": "50"     // 12M 50전
   });
 
   const { toast } = useToast();
@@ -98,7 +105,19 @@ export default function SpreadSettings() {
     setGroupType("");
     setGroupValue("");
     setBaseSpread("");
-    setTenorSpreads({ "1M": "", "3M": "", "6M": "", "1Y": "" });
+    setTenorSpreads({
+      "ON": "",
+      "TN": "",
+      "SPOT": "",
+      "1W": "",
+      "2W": "",
+      "1M": "",
+      "2M": "",
+      "3M": "",
+      "6M": "",
+      "9M": "",
+      "12M": ""
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -219,35 +238,38 @@ export default function SpreadSettings() {
                   )}
                   
                   <div>
-                    <Label>기본 스프레드 (pips)</Label>
+                    <Label>기본 스프레드 (전)</Label>
                     <Input
                       type="number"
-                      step="0.1"
+                      step="1"
                       value={baseSpread}
                       onChange={(e) => setBaseSpread(e.target.value)}
-                      placeholder="예: 2.5"
+                      placeholder="예: 10"
                       required
                     />
+                    <div className="text-xs text-gray-500 mt-1">
+                      기본 스프레드 단위: 전 (1 pip = 100전)
+                    </div>
                   </div>
                   
                   <div>
-                    <Label>만기별 가산 스프레드</Label>
-                    <div className="space-y-2">
+                    <Label>만기별 가산 스프레드 (기본값 설정됨)</Label>
+                    <div className="text-xs text-gray-500 mb-2">
+                      ON&TN: 3전, SPOT~1M: 10전, 2M: 20전, 3M: 25전, 6M: 30전, 9M: 40전, 12M: 50전
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
                       {Object.entries(tenorSpreads).map(([tenor, value]) => (
-                        <div key={tenor} className="flex space-x-2">
-                          <Input
-                            value={tenor}
-                            className="w-20"
-                            readOnly
-                          />
+                        <div key={tenor} className="flex space-x-2 items-center">
+                          <Label className="w-12 text-sm font-medium">{tenor}:</Label>
                           <Input
                             type="number"
-                            step="0.1"
+                            step="1"
                             value={value}
                             onChange={(e) => handleTenorSpreadChange(tenor, e.target.value)}
-                            placeholder="가산 스프레드"
+                            placeholder="전"
                             className="flex-1"
                           />
+                          <span className="text-xs text-gray-500">전</span>
                         </div>
                       ))}
                     </div>
