@@ -20,7 +20,8 @@ export default function SpotTrading() {
   const [amount, setAmount] = useState("");
   const [amountCurrency, setAmountCurrency] = useState<"BASE" | "QUOTE">("BASE"); // BASE = USD, QUOTE = KRW
   const [limitRate, setLimitRate] = useState("");
-  const [validUntil, setValidUntil] = useState<Date>(new Date());
+  const [validityType, setValidityType] = useState<"DAY" | "TIME">("DAY");
+  const [validUntilTime, setValidUntilTime] = useState("15:30");
   const [valueDate, setValueDate] = useState<Date>(new Date());
   const { toast } = useToast();
 
@@ -90,6 +91,21 @@ export default function SpotTrading() {
       ? (direction === "BUY" ? buyRate : sellRate)
       : parseFloat(limitRate);
 
+    // Calculate valid until datetime for LIMIT orders
+    let validUntilDateTime = undefined;
+    if (orderType === "LIMIT") {
+      const today = new Date();
+      if (validityType === "TIME") {
+        const [hours, minutes] = validUntilTime.split(':').map(Number);
+        validUntilDateTime = new Date(today);
+        validUntilDateTime.setHours(hours, minutes, 0, 0);
+      } else {
+        // DAY type - valid until end of day
+        validUntilDateTime = new Date(today);
+        validUntilDateTime.setHours(23, 59, 59, 999);
+      }
+    }
+
     mutation.mutate({
       productType: "Spot",
       currencyPairId: selectedPairData.id,
@@ -99,7 +115,9 @@ export default function SpotTrading() {
       amountCurrency,
       rate: tradeRate,
       settlementDate: valueDate,
-      validUntil: orderType === "LIMIT" ? validUntil : undefined,
+      validUntil: validUntilDateTime,
+      validityType,
+      validUntilTime: validityType === "TIME" ? validUntilTime : undefined,
     });
   };
 
@@ -214,33 +232,62 @@ export default function SpotTrading() {
                 </div>
               )}
 
-              {/* Step 3.6: Valid Until Date (only show for LIMIT orders) */}
+              {/* Step 3.6: Valid Until (only show for LIMIT orders) */}
               {orderType === "LIMIT" && (
                 <div className="flex items-center mb-4">
                   <div className="flex-1">
                     <div className="text-sm text-gray-700 font-medium mb-2">주문유효기간</div>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full justify-start text-left font-normal bg-gray-50 border-gray-300 text-gray-900",
-                            !validUntil && "text-gray-500"
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {validUntil ? format(validUntil, "yyyy MM dd") : "유효기간 선택"}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={validUntil}
-                          onSelect={(date) => date && setValidUntil(date)}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
+                    
+                    {/* Validity Type Selection */}
+                    <div className="grid grid-cols-2 gap-2 mb-3">
+                      <Button 
+                        variant="outline"
+                        className={cn(
+                          "bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200",
+                          validityType === "DAY" && "bg-blue-100 border-blue-300 text-blue-700"
+                        )}
+                        onClick={() => setValidityType("DAY")}
+                      >
+                        당일
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        className={cn(
+                          "bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200",
+                          validityType === "TIME" && "bg-orange-100 border-orange-300 text-orange-700"
+                        )}
+                        onClick={() => setValidityType("TIME")}
+                      >
+                        시간 지정
+                      </Button>
+                    </div>
+
+                    {/* Time Selection (only show when TIME is selected) */}
+                    {validityType === "TIME" && (
+                      <Select value={validUntilTime} onValueChange={setValidUntilTime}>
+                        <SelectTrigger className="w-full bg-gray-50 border-gray-300 text-gray-900">
+                          <SelectValue placeholder="마감시간 선택" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="09:00">09:00 (오전 9시)</SelectItem>
+                          <SelectItem value="10:00">10:00 (오전 10시)</SelectItem>
+                          <SelectItem value="11:00">11:00 (오전 11시)</SelectItem>
+                          <SelectItem value="12:00">12:00 (정오)</SelectItem>
+                          <SelectItem value="13:00">13:00 (오후 1시)</SelectItem>
+                          <SelectItem value="14:00">14:00 (오후 2시)</SelectItem>
+                          <SelectItem value="15:00">15:00 (오후 3시)</SelectItem>
+                          <SelectItem value="15:30">15:30 (오후 3시 30분)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+
+                    {/* Display current selection */}
+                    <div className="text-xs text-gray-500 mt-2">
+                      {validityType === "DAY" 
+                        ? "당일 마감까지 유효" 
+                        : `당일 ${validUntilTime}까지 유효`
+                      }
+                    </div>
                   </div>
                 </div>
               )}
@@ -338,7 +385,10 @@ export default function SpotTrading() {
                 </div>
                 {orderType === "LIMIT" && (
                   <div className="text-xs text-gray-500">
-                    유효기간: {validUntil ? format(validUntil, "yyyy-MM-dd") : "미지정"}
+                    유효기간: {validityType === "DAY" 
+                      ? "당일 마감까지" 
+                      : `당일 ${validUntilTime}까지`
+                    }
                   </div>
                 )}
               </div>
