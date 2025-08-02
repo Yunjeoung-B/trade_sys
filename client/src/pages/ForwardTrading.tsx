@@ -225,10 +225,10 @@ export default function ForwardTrading() {
                       {direction === "BUY" ? "BUY" : "SELL"} {forwardBaseCurrency} {formatCurrencyAmount(parseFloat(removeThousandSeparator(fixedAmount)), forwardBaseCurrency)}
                     </div>
                     <div className={cn(
-                      "text-xs mt-1",
+                      "text-lg font-bold mt-1",
                       direction === "BUY" ? "text-red-600" : "text-blue-600"
                     )}>
-                      @ {approvedRate.toFixed(2)} · {format(fixedValueDate, "yyyy-MM-dd")}
+                      @ {approvedRate.toFixed(2)}
                     </div>
                   </div>
                   
