@@ -33,7 +33,7 @@ export default function Header() {
   };
 
   return (
-    <nav className="bg-card shadow-sm border-b border-border">
+    <nav className="bg-slate-800/50 backdrop-blur-sm shadow-lg border-b border-slate-700/50">
       <div className="max-w-full px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
@@ -43,22 +43,22 @@ export default function Header() {
               </div>
             </div>
             <div>
-              <h1 className="text-xl font-bold text-foreground">CHOIICE FX</h1>
-              <p className="text-xs text-muted-foreground">The Smartest Choice in FX</p>
+              <h1 className="text-xl font-bold text-white">CHOIICE FX</h1>
+              <p className="text-xs text-slate-300">The Smartest Choice in FX</p>
             </div>
           </div>
           
           <div className="flex items-center space-x-6">
-            <div className="flex items-center text-sm text-muted-foreground">
+            <div className="flex items-center text-sm text-slate-300">
               <Clock className="w-4 h-4 mr-2" />
               <span className="font-mono">
                 {currentTime.toLocaleString('ko-KR')}
               </span>
             </div>
             <div className="text-sm">
-              <span className="text-gray-600">접속자:</span>
-              <span className="font-medium text-teal-600 ml-1">{user?.username}</span>
-              <span className="text-xs text-gray-500 ml-2">
+              <span className="text-slate-400">접속자:</span>
+              <span className="font-medium text-teal-300 ml-1">{user?.username}</span>
+              <span className="text-xs text-slate-400 ml-2">
                 ({user?.role === 'admin' ? '관리자' : '고객'})
               </span>
             </div>
@@ -67,7 +67,7 @@ export default function Header() {
               size="sm"
               onClick={handleLogout}
               disabled={logoutMutation.isPending}
-              className="text-gray-600 hover:text-gray-900"
+              className="text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200"
             >
               <LogOut className="w-4 h-4" />
             </Button>

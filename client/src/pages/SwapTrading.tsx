@@ -82,14 +82,14 @@ export default function SwapTrading() {
   };
 
   return (
-    <div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-800 via-blue-900 to-purple-900 p-6 -m-6">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-white mb-2">외환스왑</h2>
-        <p className="text-slate-300">Near Leg와 Far Leg 두 개의 거래일에 BUY/SELL 방향으로 거래하는 스왑 상품입니다.</p>
+        <h2 className="text-2xl font-bold text-white mb-2">FX SWAP</h2>
+        <p className="text-slate-200">Near Leg와 Far Leg 두 개의 거래일에 BUY/SELL 방향으로 거래하는 스왑 상품입니다.</p>
       </div>
 
       <div className="max-w-md mx-auto">
-            <Card className="p-6 bg-white dark:bg-white text-gray-900">
+            <Card className="p-8 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border-0 text-gray-900">
               {/* Step 1: 통화쌍 선택 */}
               <div className="flex items-center justify-between mb-4">
                 <span className="text-sm text-gray-600">외환스왑</span>
@@ -119,10 +119,15 @@ export default function SwapTrading() {
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="mt-2 w-full"
+                      className={cn(
+                        "mt-3 w-full rounded-xl transition-all duration-200",
+                        direction === "SELL" 
+                          ? "bg-gradient-to-r from-blue-200 to-blue-300 border-blue-300 text-blue-800 shadow-md" 
+                          : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                      )}
                       onClick={() => setDirection("SELL")}
                     >
-                      SELL선택
+                      SELL
                     </Button>
                   </div>
                   <div className="text-center">
@@ -132,12 +137,17 @@ export default function SwapTrading() {
                       <span className="text-lg">{buyRate.toFixed(2).split('.')[1]}</span>
                     </div>
                     <Button 
+                      variant="outline" 
                       size="sm" 
-                      className="mt-2 w-full text-white"
-                      style={{ backgroundColor: 'hsl(330, 100%, 71%)' }}
+                      className={cn(
+                        "mt-3 w-full rounded-xl transition-all duration-200",
+                        direction === "BUY" 
+                          ? "bg-gradient-to-r from-pink-200 to-pink-300 border-pink-300 text-pink-800 shadow-md" 
+                          : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                      )}
                       onClick={() => setDirection("BUY")}
                     >
-                      BUY선택
+                      BUY
                     </Button>
                   </div>
                 </div>
@@ -211,23 +221,33 @@ export default function SwapTrading() {
                     placeholder="0"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    className="text-right text-lg"
+                    className="text-right text-lg bg-gray-50/50 border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-200"
                   />
                 </div>
               </div>
 
-              {/* Step 5: Submit button */}
-              <div className="flex items-center">
-                <Button 
-                  onClick={handleSwapRequest}
-                  disabled={mutation.isPending}
-                  className="w-full text-white"
-                  style={{ backgroundColor: 'hsl(330, 100%, 71%)' }}
-                  size="lg"
-                >
-                  {mutation.isPending ? "처리 중..." : "견적 요청"}
-                </Button>
+              {/* Summary Card */}
+              <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 rounded-2xl mb-6 shadow-inner">
+                <div className="text-sm text-gray-700 mb-2">Swap {direction} 거래</div>
+                <div className="text-sm text-gray-600 mb-1">
+                  거래금액: {amount || "0"} {baseCurrency}
+                </div>
+                <div className="text-sm text-gray-600">
+                  Near Leg: {nearDate ? format(nearDate, "yyyy-MM-dd") : "미선택"}
+                </div>
+                <div className="text-sm text-gray-600">
+                  Far Leg: {farDate ? format(farDate, "yyyy-MM-dd") : "미선택"}
+                </div>
               </div>
+
+              {/* Step 5: Submit button */}
+              <Button 
+                onClick={handleSwapRequest}
+                disabled={mutation.isPending}
+                className="w-full py-4 text-lg font-semibold rounded-2xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
+              >
+                {mutation.isPending ? "처리 중..." : "견적 요청"}
+              </Button>
             </Card>
       </div>
     </div>

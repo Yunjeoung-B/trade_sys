@@ -5,19 +5,23 @@ This is a full-stack FX Trading Platform prototype built for foreign exchange tr
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
-Design preferences: Login pages should use mint (teal) and dark navy color scheme instead of orange/amber colors.
+Design preferences: Modern gradient-based UI with soft colors and rounded corners. Login pages should use mint (teal) and dark navy color scheme instead of orange/amber colors.
 Brand slogan: "The Smartest Choice in FX" (approved by user).
 Logo assets: User provided dark/white mode compatible logo assets for dark/white modes, don't modify.
+Font preference: Nanum Gothic font family for Korean text support.
+UI Style: Gradient backgrounds (slate-800 → blue-900 → purple-900), rounded-3xl cards with transparency and backdrop-blur effects.
 
 # System Architecture
 
 ## Frontend Architecture
 - **Framework**: React with TypeScript for type safety and modern component development
-- **Styling**: TailwindCSS with shadcn/ui component library for consistent design system
+- **Styling**: TailwindCSS with shadcn/ui component library for consistent design system, featuring gradient backgrounds and rounded corners
+- **Typography**: Nanum Gothic font family for Korean language support via Google Fonts
 - **Routing**: Wouter for lightweight client-side routing
 - **State Management**: React Query (@tanstack/react-query) for server state management and caching
 - **Build Tool**: Vite for fast development and optimized production builds
 - **Component Structure**: Modular design with reusable UI components, trading-specific components (Chart, MarketWatch, OrderForm), and role-based page layouts
+- **Design System**: Modern gradient-based UI with soft colors, rounded-3xl cards, transparency effects, and backdrop-blur styling
 
 ## Backend Architecture
 - **Runtime**: Node.js with Express.js framework for RESTful API development
@@ -40,10 +44,11 @@ Logo assets: User provided dark/white mode compatible logo assets for dark/white
 
 ## Trading System Features
 - **Real-time Data**: WebSocket integration for live market rate updates with 5-second refresh intervals
-- **Product Types**: Support for Spot (immediate execution), Forward (future-dated), Swap (dual-leg), and MAR (time-restricted morning orders)
+- **Product Types**: Support for FX SPOT (immediate execution), FX FORWARD (future-dated), FX SWAP (dual-leg), and MAR (time-restricted morning orders)
 - **Approval Workflow**: Configurable approval requirements for Forward and Swap products with admin oversight
 - **Spread Management**: Multi-dimensional spread settings by product type, currency pair, settlement date, and user group level
 - **Time Restrictions**: Business logic for MAR trading cutoff (9:00 AM) with real-time validation
+- **UI Enhancement**: Consistent gradient-based design across all trading pages with modern button styling and rounded input fields
 
 ## Business Logic Architecture
 - **Quote Calculation**: Layered pricing model combining source rates with group-specific spreads, product spreads, currency spreads, and tenor spreads

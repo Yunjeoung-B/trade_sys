@@ -40,7 +40,7 @@ export default function Sidebar() {
   const menuItems = user.role === "admin" ? adminMenuItems : clientMenuItems;
 
   return (
-    <div className="w-64 bg-card shadow-sm h-screen overflow-y-auto border-r border-border">
+    <div className="w-64 bg-slate-800/50 backdrop-blur-sm h-screen overflow-y-auto border-r border-slate-700/50">
       <div className="p-4">
         <div className="space-y-2">
           {menuItems.map((item) => {
@@ -52,10 +52,10 @@ export default function Sidebar() {
                 key={item.path}
                 variant="ghost"
                 className={cn(
-                  "w-full justify-start text-left px-4 py-3 rounded-lg transition-colors",
+                  "w-full justify-start text-left px-4 py-3 rounded-xl transition-all duration-200",
                   isActive
-                    ? "bg-primary/10 text-primary hover:bg-primary/15"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    ? "bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-white border border-blue-400/30 shadow-lg"
+                    : "text-slate-300 hover:text-white hover:bg-white/10"
                 )}
                 onClick={() => setLocation(item.path)}
               >
