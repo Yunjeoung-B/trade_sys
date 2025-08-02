@@ -41,8 +41,10 @@ export default function Dashboard() {
         return user.role === "admin" ? <QuoteApprovals /> : <SpotTrading />;
       case "/admin/users":
         return user.role === "admin" ? <UserManagement /> : <SpotTrading />;
+      case "/":
+        return <SpotTrading />;
       default:
-        return user.role === "admin" ? <AdminDashboard /> : <SpotTrading />;
+        return <SpotTrading />;
     }
   };
 

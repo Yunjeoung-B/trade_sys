@@ -12,8 +12,7 @@ import { cn } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { CurrencyPair } from "@shared/schema";
-import Header from "@/components/Header";
-import Sidebar from "@/components/Sidebar";
+
 
 export default function SpotTrading() {
   const [selectedPair, setSelectedPair] = useState("USD/KRW");
@@ -124,11 +123,7 @@ export default function SpotTrading() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#163959] via-[#1d3362] to-[#47398f]">
-      <Header />
-      <div className="flex">
-        <Sidebar />
-        <div className="flex-1 p-6">
+    <div className="p-6">
           <div className="mb-6">
             <h2 className="text-2xl font-bold text-white mb-2">FX SPOT</h2>
             <p className="text-slate-200">실시간 환율로 즉시 거래가 가능합니다.</p>
@@ -426,8 +421,6 @@ export default function SpotTrading() {
               </Button>
             </Card>
           </div>
-        </div>
-      </div>
     </div>
   );
 }

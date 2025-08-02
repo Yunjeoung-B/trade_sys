@@ -12,8 +12,7 @@ import { cn } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { CurrencyPair } from "@shared/schema";
-import Header from "@/components/Header";
-import Sidebar from "@/components/Sidebar";
+
 
 export default function ForwardTrading() {
   const [selectedPair, setSelectedPair] = useState("USD/KRW");
@@ -95,11 +94,7 @@ export default function ForwardTrading() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#163959] via-[#1d3362] to-[#47398f]">
-      <Header />
-      <div className="flex">
-        <Sidebar />
-        <div className="flex-1 p-6">
+    <div className="p-6">
           <div className="mb-6">
             <h2 className="text-2xl font-bold text-white mb-2">FX FORWARD</h2>
             <p className="text-slate-200">미래 특정일에 거래하는 선물환 상품입니다.</p>
@@ -423,8 +418,6 @@ export default function ForwardTrading() {
               </Button>
             </Card>
           </div>
-        </div>
-      </div>
     </div>
   );
 }

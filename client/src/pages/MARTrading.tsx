@@ -7,8 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import Header from "@/components/Header";
-import Sidebar from "@/components/Sidebar";
+
 
 export default function MARTrading() {
   const [direction, setDirection] = useState<"BUY" | "SELL">("BUY");
@@ -79,11 +78,7 @@ export default function MARTrading() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#163959] via-[#1d3362] to-[#47398f]">
-      <Header />
-      <div className="flex">
-        <Sidebar />
-        <div className="flex-1 p-6">
+    <div className="p-6">
           
           <div className="max-w-md mx-auto">
             <Card className="p-8 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border-0 text-gray-900">
@@ -231,8 +226,6 @@ export default function MARTrading() {
               </div>
             </div>
           </div>
-        </div>
-      </div>
     </div>
   );
 }
