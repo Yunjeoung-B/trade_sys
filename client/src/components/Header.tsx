@@ -43,7 +43,7 @@ export default function Header() {
               </div>
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">Choice FX</h1>
+              <h1 className="text-xl font-bold text-gray-900">CHOIICE FX</h1>
               <p className="text-xs text-gray-500">The Smartest Choice in FX</p>
             </div>
           </div>

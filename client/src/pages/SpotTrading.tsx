@@ -1,9 +1,83 @@
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
-import MarketWatch from "@/components/MarketWatch";
-import OrderForm from "@/components/OrderForm";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import type { CurrencyPair } from "@shared/schema";
 
 export default function SpotTrading() {
+  const [selectedPair, setSelectedPair] = useState("USD/KRW");
+  const [direction, setDirection] = useState<"BUY" | "SELL">("BUY");
+  const [amount, setAmount] = useState("");
+  const [valueDate, setValueDate] = useState<Date>(new Date());
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const { data: currencyPairs = [] } = useQuery<CurrencyPair[]>({
+    queryKey: ["/api/currency-pairs"],
+  });
+
+  const { data: marketRates = [] } = useQuery<any[]>({
+    queryKey: ["/api/market-rates"],
+  });
+
+  const mutation = useMutation({
+    mutationFn: async (tradeData: any) => {
+      return apiRequest("POST", "/api/trades", tradeData);
+    },
+    onSuccess: () => {
+      toast({
+        title: "거래 성공",
+        description: "현물환 거래가 성공적으로 체결되었습니다.",
+      });
+      setAmount("");
+      queryClient.invalidateQueries({ queryKey: ["/api/trades"] });
+    },
+    onError: () => {
+      toast({
+        title: "거래 실패",
+        description: "거래 처리 중 오류가 발생했습니다.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const selectedPairData = currencyPairs.find(p => p.symbol === selectedPair);
+  const currentRate = marketRates.find((r: any) => r.currencyPairId === selectedPairData?.id);
+
+  const buyRate = currentRate ? Number(currentRate.buyRate) : 1380.55;
+  const sellRate = currentRate ? Number(currentRate.sellRate) : 1382.95;
+
+  const handleTrade = () => {
+    if (!selectedPairData || !amount) {
+      toast({
+        title: "입력 오류",
+        description: "통화쌍과 금액을 입력해주세요.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    mutation.mutate({
+      productType: "Spot",
+      currencyPairId: selectedPairData.id,
+      direction,
+      amount: parseFloat(amount),
+      rate: direction === "BUY" ? buyRate : sellRate,
+      settlementDate: valueDate,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
@@ -11,21 +85,187 @@ export default function SpotTrading() {
         <Sidebar />
         <div className="flex-1 p-6">
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">현물환 거래 (FX Spot)</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">현물환</h2>
             <p className="text-gray-600">실시간 환율로 즉시 거래가 가능합니다.</p>
           </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-              <MarketWatch />
-            </div>
-            <div>
-              <OrderForm
-                productType="Spot"
-                title="주문 입력"
-                requiresApproval={false}
-              />
-            </div>
+
+          <div className="max-w-md mx-auto">
+            <Card className="p-6">
+              {/* Step 1: 선물환 */}
+              <div className="flex items-center mb-4">
+                <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white font-bold text-sm mr-3">
+                  1
+                </div>
+                <Select value={selectedPair} onValueChange={setSelectedPair}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {currencyPairs.map((pair) => (
+                      <SelectItem key={pair.id} value={pair.symbol}>
+                        {pair.symbol}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Step 2: Currency pair display */}
+              <div className="flex items-center justify-end mb-4">
+                <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                  2
+                </div>
+              </div>
+
+              {/* Step 3: Rate display */}
+              <div className="flex items-center mb-6">
+                <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white font-bold text-sm mr-4">
+                  3
+                </div>
+                <div className="flex-1 grid grid-cols-2 gap-4">
+                  <div className="text-center">
+                    <div className="text-sm text-gray-600 mb-1">SELL USD</div>
+                    <div className="text-2xl font-bold text-blue-600">
+                      {sellRate.toFixed(2).split('.')[0]}.
+                      <span className="text-lg">{sellRate.toFixed(2).split('.')[1]}</span>
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {(sellRate - 2).toFixed(2)} / {(sellRate + 2).toFixed(2)}
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="mt-2 w-full"
+                      onClick={() => setDirection("SELL")}
+                    >
+                      SELL선택
+                    </Button>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-sm text-gray-600 mb-1">BUY USD</div>
+                    <div className="text-2xl font-bold text-red-500">
+                      {buyRate.toFixed(2).split('.')[0]}.
+                      <span className="text-lg">{buyRate.toFixed(2).split('.')[1]}</span>
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {(buyRate - 2).toFixed(2)} / {(buyRate + 2).toFixed(2)}
+                    </div>
+                    <Button 
+                      size="sm" 
+                      className="mt-2 w-full bg-red-500 hover:bg-red-600 text-white"
+                      onClick={() => setDirection("BUY")}
+                    >
+                      BUY선택
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 4: Direction buttons */}
+              <div className="flex items-center mb-4">
+                <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white font-bold text-sm mr-4">
+                  4
+                </div>
+                <div className="flex-1 grid grid-cols-2 gap-2">
+                  <Button 
+                    variant={direction === "SELL" ? "default" : "outline"}
+                    onClick={() => setDirection("SELL")}
+                    className="bg-gray-600 hover:bg-gray-700 text-white"
+                  >
+                    시장가
+                  </Button>
+                  <Button 
+                    variant={direction === "BUY" ? "default" : "outline"}
+                    onClick={() => setDirection("BUY")}
+                    className="bg-gray-600 hover:bg-gray-700 text-white"
+                  >
+                    지정가
+                  </Button>
+                </div>
+              </div>
+
+              {/* Step 5: Value date */}
+              <div className="flex items-center mb-4">
+                <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white font-bold text-sm mr-4">
+                  5
+                </div>
+                <div className="flex-1">
+                  <div className="text-sm text-gray-600 mb-2">만기일</div>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !valueDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {valueDate ? format(valueDate, "yyyy MM dd") : "날짜 선택"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={valueDate}
+                        onSelect={(date) => date && setValueDate(date)}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+
+              {/* Step 6: Amount input */}
+              <div className="flex items-center mb-6">
+                <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white font-bold text-sm mr-4">
+                  6
+                </div>
+                <div className="flex-1">
+                  <div className="text-sm text-gray-600 mb-2">주문완료</div>
+                  <div className="text-right text-gray-400 text-sm mb-1">KRW</div>
+                  <div className="text-sm text-gray-600 mb-2">금액</div>
+                  <Input
+                    type="number"
+                    placeholder="0"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    className="text-right text-lg"
+                  />
+                </div>
+              </div>
+
+              {/* Step 7: Amount display */}
+              <div className="flex items-center mb-6">
+                <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white font-bold text-sm mr-4">
+                  7
+                </div>
+                <div className="flex-1">
+                  <div className="text-sm text-gray-600">BUY USD</div>
+                  <div className="text-lg font-semibold">+1M</div>
+                  <div className="text-xs text-gray-500">원화전환</div>
+                  <div className="text-lg font-semibold">+0.1M</div>
+                  <div className="text-xs text-gray-500">USD KRW</div>
+                  <div className="text-sm">SELL KRW ℹ️</div>
+                  <div className="text-lg">0원</div>
+                </div>
+              </div>
+
+              {/* Step 8: Submit button */}
+              <div className="flex justify-center">
+                <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                  8
+                </div>
+              </div>
+
+              <Button
+                onClick={handleTrade}
+                disabled={mutation.isPending || !amount}
+                className="w-full mt-4 bg-teal-600 hover:bg-teal-700 text-white py-3 text-lg font-semibold"
+              >
+                {mutation.isPending ? "처리중..." : "거래 실행"}
+              </Button>
+            </Card>
           </div>
         </div>
       </div>

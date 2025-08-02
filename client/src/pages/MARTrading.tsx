@@ -1,23 +1,78 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
-import OrderForm from "@/components/OrderForm";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertTriangle, Clock } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function MARTrading() {
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const [direction, setDirection] = useState<"BUY" | "SELL">("BUY");
+  const [amount, setAmount] = useState("");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
+  // MAR 환율은 장마감 후 결정됨 (예시)
+  const marRate = 1350.25; // 이 값은 나중에 테이블에서 가져올 예정
+  const sellRate = marRate - 0.1; // MAR - 0.1
+  const buyRate = marRate + 0.1;  // MAR + 0.1
 
-    return () => clearInterval(timer);
-  }, []);
+  const mutation = useMutation({
+    mutationFn: async (tradeData: any) => {
+      return apiRequest("POST", "/api/trades", tradeData);
+    },
+    onSuccess: () => {
+      toast({
+        title: "MAR 거래 성공",
+        description: "MAR 거래가 성공적으로 체결되었습니다.",
+      });
+      setAmount("");
+      queryClient.invalidateQueries({ queryKey: ["/api/trades"] });
+    },
+    onError: () => {
+      toast({
+        title: "거래 실패",
+        description: "거래 처리 중 오류가 발생했습니다.",
+        variant: "destructive",
+      });
+    },
+  });
 
-  const isTimeRestricted = currentTime.getHours() >= 9;
+  const handleTrade = () => {
+    if (!amount) {
+      toast({
+        title: "입력 오류",
+        description: "금액을 입력해주세요.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // MAR 거래는 9:00 AM 이전에만 가능 (시간 체크 로직)
+    const now = new Date();
+    const cutoffTime = new Date();
+    cutoffTime.setHours(9, 0, 0, 0);
+
+    if (now > cutoffTime) {
+      toast({
+        title: "거래 시간 종료",
+        description: "MAR 거래는 오전 9시 이전에만 가능합니다.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    mutation.mutate({
+      productType: "MAR",
+      currencyPairId: "usd-krw", // USD/KRW 고정
+      direction,
+      amount: parseFloat(amount),
+      rate: direction === "BUY" ? buyRate : sellRate,
+      settlementDate: new Date(),
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -26,70 +81,112 @@ export default function MARTrading() {
         <Sidebar />
         <div className="flex-1 p-6">
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">MAR 거래 (Market Average Rate)</h2>
-            <p className="text-gray-600">오전 9시 이전에만 주문 가능한 시장평균환율 거래입니다.</p>
-            
-            <Alert className={`mt-4 ${isTimeRestricted ? 'border-red-200 bg-red-50' : 'border-yellow-200 bg-yellow-50'}`}>
-              <AlertTriangle className={`h-4 w-4 ${isTimeRestricted ? 'text-red-500' : 'text-yellow-500'}`} />
-              <AlertDescription className={isTimeRestricted ? 'text-red-800' : 'text-yellow-800'}>
-                <div className="font-medium">
-                  주의사항: MAR 거래는 오전 9:00 이전에만 주문 가능합니다.
-                </div>
-                <div className="mt-2 flex items-center">
-                  <Clock className="w-4 h-4 mr-1" />
-                  현재 시각: {currentTime.toLocaleString('ko-KR')}
-                </div>
-              </AlertDescription>
-            </Alert>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">MAR</h2>
+            <p className="text-gray-600">Market Average Rate - 오전 9시 이전 주문 제한</p>
           </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <OrderForm
-              productType="MAR"
-              title="MAR 주문"
-              requiresApproval={false}
-              showTimeRestriction={true}
-            />
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>MAR 거래 안내</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="p-4 bg-blue-50 rounded-lg">
-                    <h4 className="font-medium text-blue-900 mb-2">MAR이란?</h4>
-                    <p className="text-sm text-blue-800">
-                      오전 9시부터 오후 3시 30분까지의 현물환 거래 가중평균환율로 결정되는 거래입니다.
-                    </p>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">주문 마감시간:</span>
-                      <span className="font-medium">오전 9:00</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">환율 확정시간:</span>
-                      <span className="font-medium">오후 3:30</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">정산일:</span>
-                      <span className="font-medium">거래일 + 2영업일</span>
-                    </div>
-                  </div>
 
-                  <div className="p-4 bg-gray-50 rounded-lg">
-                    <h4 className="font-medium mb-2">거래 특징</h4>
-                    <ul className="text-sm text-gray-600 space-y-1">
-                      <li>• 오전 9시 이전에만 주문 접수</li>
-                      <li>• 시장평균환율로 거래 체결</li>
-                      <li>• 환율 변동 위험 제한</li>
-                      <li>• 즉시 승인 (별도 승인 불요)</li>
-                    </ul>
+          <div className="max-w-md mx-auto">
+            <Card className="p-6">
+              {/* Step 1: MAR */}
+              <div className="flex items-center mb-4">
+                <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white font-bold text-sm mr-3">
+                  1
+                </div>
+                <span className="text-sm text-gray-600">MAR</span>
+                <div className="ml-auto flex items-center">
+                  <span className="text-sm font-medium">🇺🇸 USD/KRW</span>
+                  <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white font-bold text-sm ml-4">
+                    2
                   </div>
                 </div>
-              </CardContent>
+              </div>
+
+              {/* Step 3: Rate display - MAR 환율 */}
+              <div className="flex items-center mb-6">
+                <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white font-bold text-sm mr-4">
+                  3
+                </div>
+                <div className="flex-1 grid grid-cols-2 gap-4">
+                  <div className="text-center">
+                    <div className="text-sm text-gray-600 mb-1">SELL USD</div>
+                    <div className="text-2xl font-bold text-blue-600">
+                      -2.50
+                    </div>
+                    <div className="text-sm text-gray-500 mt-1">SELL선택</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-sm text-gray-600 mb-1">BUY USD</div>
+                    <div className="text-2xl font-bold text-red-500">
+                      +2.50
+                    </div>
+                    <Button 
+                      size="sm" 
+                      className="mt-2 w-full bg-red-500 hover:bg-red-600 text-white"
+                      onClick={() => setDirection("BUY")}
+                    >
+                      BUY선택
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* MAR 거래 정보 */}
+              <div className="mb-6 p-4 bg-blue-50 rounded-lg">
+                <div className="text-sm text-gray-600 mb-2">만기일</div>
+                <div className="text-lg font-medium">2024 06 28</div>
+                <div className="text-sm text-gray-600 mt-2">환율</div>
+                <div className="text-lg font-medium">MAR ↓ 2.50</div>
+              </div>
+
+              {/* Step 5: Amount input */}
+              <div className="flex items-center mb-6">
+                <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white font-bold text-sm mr-4">
+                  5
+                </div>
+                <div className="flex-1">
+                  <div className="text-sm text-gray-600 mb-2">금액</div>
+                  <div className="text-sm text-gray-600 mb-1">BUY USD</div>
+                  <div className="flex items-center mb-2">
+                    <span className="text-lg font-semibold text-green-600">+1M</span>
+                    <span className="ml-auto text-lg font-semibold text-green-600">+0.1M</span>
+                  </div>
+                  <div className="text-sm">SELL KRW</div>
+                  <div className="text-gray-400 text-sm mb-2">상대감슈 간신원 MAR간융</div>
+                  
+                  <Input
+                    type="number"
+                    placeholder="거래금액을 입력하세요"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    className="text-right text-lg"
+                  />
+                </div>
+              </div>
+
+              {/* Step 4: Final step indicator */}
+              <div className="flex justify-center mb-4">
+                <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                  4
+                </div>
+              </div>
+
+              <Button
+                onClick={handleTrade}
+                disabled={mutation.isPending || !amount}
+                className="w-full bg-teal-600 hover:bg-teal-700 text-white py-3 text-lg font-semibold"
+              >
+                {mutation.isPending ? "처리중..." : "MAR 거래"}
+              </Button>
+
+              {/* 시간 안내 */}
+              <div className="mt-4 p-3 bg-yellow-50 rounded-lg text-center">
+                <div className="text-sm text-yellow-700">
+                  MAR 거래는 오전 9:00 이전에만 가능합니다
+                </div>
+                <div className="text-xs text-yellow-600 mt-1">
+                  현재 시간: {new Date().toLocaleTimeString('ko-KR')}
+                </div>
+              </div>
             </Card>
           </div>
         </div>
