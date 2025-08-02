@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
 import { Card } from "@/components/ui/card";
@@ -14,7 +13,7 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { Eye, Clock, CheckCircle, XCircle, Lock } from "lucide-react";
+import { Clock, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatCurrencyAmount } from "@/lib/currencyUtils";
 import Sidebar from "@/components/Sidebar";
@@ -96,6 +95,8 @@ export default function TradeStatus() {
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState("all");
   const [trades, setTrades] = useState<TradeStatusItem[]>(mockTrades);
+  
+
 
   // Update remaining time every minute
   useEffect(() => {
@@ -194,7 +195,8 @@ export default function TradeStatus() {
   };
 
   const getTabCount = (status: string) => {
-    return filterTrades(status).length;
+    const filtered = filterTrades(status);
+    return filtered.length;
   };
 
   return (
