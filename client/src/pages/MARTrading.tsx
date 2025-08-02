@@ -13,13 +13,14 @@ import Sidebar from "@/components/Sidebar";
 export default function MARTrading() {
   const [direction, setDirection] = useState<"BUY" | "SELL">("BUY");
   const [amount, setAmount] = useState("");
+  const [amountCurrency, setAmountCurrency] = useState<"BASE" | "QUOTE">("BASE"); // BASE = USD, QUOTE = KRW
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // MAR 환율은 장마감 후 결정됨 (예시)
-  const marRate = 1350.25; // 이 값은 나중에 테이블에서 가져올 예정
-  const sellRate = marRate - 0.1; // MAR - 0.1
-  const buyRate = marRate + 0.1;  // MAR + 0.1
+  // MAR 환율은 기준환율 대비 -0.10/+0.10으로 표시
+  const marRate = 1250; // MAR 기준환율
+  const sellSpread = -0.10; // SELL시 -0.10
+  const buySpread = +0.10;  // BUY시 +0.10
 
   const mutation = useMutation({
     mutationFn: async (tradeData: any) => {
@@ -71,7 +72,8 @@ export default function MARTrading() {
       currencyPairId: "usd-krw", // USD/KRW 고정
       direction,
       amount: parseFloat(amount),
-      rate: direction === "BUY" ? buyRate : sellRate,
+      amountCurrency,
+      rate: marRate + (direction === "BUY" ? buySpread : sellSpread),
       settlementDate: new Date(),
     });
   };
@@ -101,14 +103,13 @@ export default function MARTrading() {
                 </Select>
               </div>
 
-              {/* Step 2: Rate display - MAR 환율 */}
+              {/* Step 2: Rate display - MAR 스프레드 */}
               <div className="flex items-center mb-6">
                 <div className="flex-1 grid grid-cols-2 gap-4">
                   <div className="text-center">
                     <div className="text-sm text-gray-600 mb-1">SELL USD</div>
                     <div className="text-2xl font-bold text-blue-600">
-                      {sellRate.toFixed(2).split('.')[0]}.
-                      <span className="text-lg">{sellRate.toFixed(2).split('.')[1]}</span>
+                      {sellSpread.toFixed(2)}
                     </div>
                     <Button 
                       variant="outline" 
@@ -121,14 +122,13 @@ export default function MARTrading() {
                       )}
                       onClick={() => setDirection("SELL")}
                     >
-                      SELL
+                      SELL선택
                     </Button>
                   </div>
                   <div className="text-center">
                     <div className="text-sm text-gray-600 mb-1">BUY USD</div>
                     <div className="text-2xl font-bold text-red-500">
-                      {buyRate.toFixed(2).split('.')[0]}.
-                      <span className="text-lg">{buyRate.toFixed(2).split('.')[1]}</span>
+                      {buySpread.toFixed(2)}
                     </div>
                     <Button 
                       variant="outline" 
@@ -141,19 +141,58 @@ export default function MARTrading() {
                       )}
                       onClick={() => setDirection("BUY")}
                     >
-                      BUY
+                      BUY선택
                     </Button>
                   </div>
                 </div>
               </div>
 
-              {/* Step 3: Amount input */}
+              {/* Step 2.5: MAR 기준환율 표시 */}
+              <div className="flex items-center justify-between mb-4 bg-gray-50 p-3 rounded-xl">
+                <span className="text-sm text-gray-600">환율</span>
+                <span className="text-lg font-semibold text-gray-800">MAR {marRate.toFixed(2)}</span>
+              </div>
+
+              {/* Step 3: Amount Currency Selection */}
+              <div className="flex items-center mb-4">
+                <div className="flex-1 grid grid-cols-2 gap-2">
+                  <Button 
+                    variant="outline"
+                    className={cn(
+                      "rounded-xl transition-all duration-200",
+                      amountCurrency === "BASE" 
+                        ? "bg-teal-400 border-2 border-teal-600 text-white shadow-inner ring-2 ring-teal-300" 
+                        : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                    )}
+                    onClick={() => setAmountCurrency("BASE")}
+                  >
+                    USD 금액
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    className={cn(
+                      "rounded-xl transition-all duration-200",
+                      amountCurrency === "QUOTE" 
+                        ? "bg-teal-400 border-2 border-teal-600 text-white shadow-inner ring-2 ring-teal-300" 
+                        : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                    )}
+                    onClick={() => setAmountCurrency("QUOTE")}
+                  >
+                    KRW 금액
+                  </Button>
+                </div>
+              </div>
+
+              {/* Step 4: Amount input */}
               <div className="flex items-center mb-6">
                 <div className="flex-1">
-                  <div className="text-sm text-gray-600 mb-2">금액</div>
+                  <div className="text-sm text-gray-700 font-medium mb-2">주문금액</div>
+                  <div className="text-right text-gray-500 text-sm mb-1">
+                    {amountCurrency === "BASE" ? "USD" : "KRW"}
+                  </div>
                   <Input
                     type="number"
-                    placeholder="거래금액을 입력하세요"
+                    placeholder="0"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     className="text-right text-lg bg-gray-50/50 border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-200"
@@ -165,10 +204,16 @@ export default function MARTrading() {
               <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 rounded-2xl mb-6 shadow-inner">
                 <div className="text-sm text-gray-700 mb-2">MAR {direction} 거래</div>
                 <div className="text-sm text-gray-600 mb-1">
-                  거래금액: {amount || "0"} USD
+                  거래금액: {amount || "0"} {amountCurrency === "BASE" ? "USD" : "KRW"}
+                </div>
+                <div className="text-sm text-gray-600 mb-1">
+                  기준환율: MAR {marRate.toFixed(2)}
                 </div>
                 <div className="text-sm text-gray-600">
-                  환율: {direction === "BUY" ? buyRate.toFixed(2) : sellRate.toFixed(2)}
+                  스프레드: {direction === "BUY" ? buySpread.toFixed(2) : sellSpread.toFixed(2)}
+                </div>
+                <div className="text-sm text-gray-600">
+                  적용환율: {(marRate + (direction === "BUY" ? buySpread : sellSpread)).toFixed(2)}
                 </div>
               </div>
 
