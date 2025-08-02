@@ -125,6 +125,14 @@ export default function TradeManagement() {
     farSpread: ""
   });
   const { toast } = useToast();
+  
+  // Debug logs
+  console.log("TradeManagement rendering:", {
+    tradesCount: trades.length,
+    activeTab,
+    hedgeFilter,
+    confirmedOnly
+  });
 
   const getStatusConfig = (status: TradeRequest["status"]) => {
     switch (status) {
@@ -218,7 +226,21 @@ export default function TradeManagement() {
   };
 
   const getTabCount = (status: string) => {
-    return filterTrades().length;
+    let filtered = trades;
+    
+    if (status !== "all") {
+      filtered = filtered.filter(trade => {
+        switch (status) {
+          case "requested": return trade.status === "REQUESTED";
+          case "quote_ready": return trade.status === "QUOTE_READY";  
+          case "confirmed": return trade.status === "CONFIRMED";
+          case "expired": return trade.status === "EXPIRED";
+          default: return true;
+        }
+      });
+    }
+    
+    return filtered.length;
   };
 
   const formatAmount = (amount: number, currency: string, isPositive?: boolean) => {
