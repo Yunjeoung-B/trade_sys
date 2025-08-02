@@ -161,9 +161,9 @@ export default function SpotTrading() {
                       variant="outline" 
                       size="sm" 
                       className={cn(
-                        "mt-3 w-full rounded-xl transition-all duration-200",
+                        "mt-2 w-full rounded-xl transition-all duration-200",
                         direction === "SELL" 
-                          ? "bg-gradient-to-r from-pink-200 to-pink-300 border-pink-300 text-pink-800 shadow-md" 
+                          ? "bg-gradient-to-r from-teal-200 to-teal-300 border-teal-300 text-teal-800 shadow-md" 
                           : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                       )}
                       onClick={() => setDirection("SELL")}
@@ -203,7 +203,7 @@ export default function SpotTrading() {
                     className={cn(
                       "rounded-xl transition-all duration-200",
                       orderType === "MARKET" 
-                        ? "bg-gradient-to-r from-blue-100 to-blue-200 border-blue-300 text-blue-800 shadow-md" 
+                        ? "bg-gradient-to-r from-teal-100 to-teal-200 border-teal-300 text-teal-800 shadow-md" 
                         : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                     )}
                     onClick={() => setOrderType("MARKET")}
@@ -215,7 +215,7 @@ export default function SpotTrading() {
                     className={cn(
                       "rounded-xl transition-all duration-200",
                       orderType === "LIMIT" 
-                        ? "bg-gradient-to-r from-orange-100 to-orange-200 border-orange-300 text-orange-800 shadow-md" 
+                        ? "bg-gradient-to-r from-teal-100 to-teal-200 border-teal-300 text-teal-800 shadow-md" 
                         : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                     )}
                     onClick={() => setOrderType("LIMIT")}
@@ -255,7 +255,7 @@ export default function SpotTrading() {
                         className={cn(
                           "rounded-xl transition-all duration-200",
                           validityType === "DAY" 
-                            ? "bg-gradient-to-r from-blue-100 to-blue-200 border-blue-300 text-blue-800 shadow-md" 
+                            ? "bg-gradient-to-r from-teal-100 to-teal-200 border-teal-300 text-teal-800 shadow-md" 
                             : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                         )}
                         onClick={() => setValidityType("DAY")}
@@ -267,7 +267,7 @@ export default function SpotTrading() {
                         className={cn(
                           "rounded-xl transition-all duration-200",
                           validityType === "TIME" 
-                            ? "bg-gradient-to-r from-orange-100 to-orange-200 border-orange-300 text-orange-800 shadow-md" 
+                            ? "bg-gradient-to-r from-teal-100 to-teal-200 border-teal-300 text-teal-800 shadow-md" 
                             : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                         )}
                         onClick={() => setValidityType("TIME")}

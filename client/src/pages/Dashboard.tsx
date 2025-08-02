@@ -47,7 +47,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-800 via-blue-900 to-purple-900 font-['Nanum_Gothic']">
+    <div className="min-h-screen bg-gradient-to-br from-slate-700 via-slate-800 to-blue-800 font-['Nanum_Gothic']">
       <Header />
       <div className="flex">
         <Sidebar />

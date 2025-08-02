@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 export default function MARTrading() {
   const [direction, setDirection] = useState<"BUY" | "SELL">("BUY");
@@ -110,7 +111,7 @@ export default function MARTrading() {
                       className={cn(
                         "mt-2 w-full rounded-xl transition-all duration-200",
                         direction === "SELL" 
-                          ? "bg-gradient-to-r from-blue-200 to-blue-300 border-blue-300 text-blue-800 shadow-md" 
+                          ? "bg-gradient-to-r from-teal-200 to-teal-300 border-teal-300 text-teal-800 shadow-md" 
                           : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                       )}
                       onClick={() => setDirection("SELL")}
