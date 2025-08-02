@@ -17,10 +17,11 @@ import type { CurrencyPair } from "@shared/schema";
 
 export default function SwapTrading() {
   const [selectedPair, setSelectedPair] = useState("USD/KRW");
-  const [direction, setDirection] = useState<"BUY" | "SELL">("BUY");
+  const [direction, setDirection] = useState<"BUY_SELL_USD" | "SELL_BUY_USD">("BUY_SELL_USD");
   const [nearDate, setNearDate] = useState<Date>(new Date());
   const [farDate, setFarDate] = useState<Date>(new Date());
-  const [amount, setAmount] = useState("");
+  const [nearAmount, setNearAmount] = useState("");
+  const [farAmount, setFarAmount] = useState("");
   const { toast } = useToast();
 
   // Extract base and quote currencies from selected pair
@@ -41,16 +42,17 @@ export default function SwapTrading() {
     },
     onSuccess: () => {
       toast({
-        title: "스왑 견적 요청 성공",
-        description: "외환스왑 견적 요청이 제출되었습니다. 승인을 기다려주세요.",
+        title: "스왑 가격 요청 성공",
+        description: "외환스왑 가격 요청이 제출되었습니다. 승인을 기다려주세요.",
       });
-      setAmount("");
+      setNearAmount("");
+      setFarAmount("");
       queryClient.invalidateQueries({ queryKey: ["/api/quote-requests"] });
     },
     onError: () => {
       toast({
         title: "요청 실패",
-        description: "견적 요청 처리 중 오류가 발생했습니다.",
+        description: "가격 요청 처리 중 오류가 발생했습니다.",
         variant: "destructive",
       });
     },
@@ -63,10 +65,10 @@ export default function SwapTrading() {
   const sellRate = currentRate ? Number(currentRate.sellRate) : 1390.40;
 
   const handleSwapRequest = () => {
-    if (!selectedPairData || !amount) {
+    if (!selectedPairData || !nearAmount || !farAmount) {
       toast({
         title: "입력 오류",
-        description: "통화쌍과 거래금액을 입력해주세요.",
+        description: "통화쌍과 NEAR/FAR 거래금액을 모두 입력해주세요.",
         variant: "destructive",
       });
       return;
@@ -76,10 +78,11 @@ export default function SwapTrading() {
       productType: "Swap",
       currencyPairId: selectedPairData.id,
       direction,
-      amount: parseFloat(removeThousandSeparator(amount)),
+      nearAmount: parseFloat(removeThousandSeparator(nearAmount)),
+      farAmount: parseFloat(removeThousandSeparator(farAmount)),
       nearDate,
       farDate,
-      nearRate: direction === "BUY" ? buyRate : sellRate,
+      nearRate: direction === "BUY_SELL_USD" ? buyRate : sellRate,
     });
   };
 
@@ -122,26 +125,26 @@ export default function SwapTrading() {
                       <Button 
                         variant="outline"
                         className={cn(
-                          "rounded-xl transition-all duration-200",
-                          direction === "SELL" 
+                          "rounded-xl transition-all duration-200 text-xs px-2 py-3",
+                          direction === "BUY_SELL_USD" 
                             ? "bg-teal-400 border-2 border-teal-600 text-white shadow-inner ring-2 ring-teal-300" 
                             : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                         )}
-                        onClick={() => setDirection("SELL")}
+                        onClick={() => setDirection("BUY_SELL_USD")}
                       >
-                        SELL {baseCurrency}
+                        BUY&SELL USD
                       </Button>
                       <Button 
                         variant="outline"
                         className={cn(
-                          "rounded-xl transition-all duration-200",
-                          direction === "BUY" 
+                          "rounded-xl transition-all duration-200 text-xs px-2 py-3",
+                          direction === "SELL_BUY_USD" 
                             ? "bg-teal-400 border-2 border-teal-600 text-white shadow-inner ring-2 ring-teal-300" 
                             : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                         )}
-                        onClick={() => setDirection("BUY")}
+                        onClick={() => setDirection("SELL_BUY_USD")}
                       >
-                        BUY {baseCurrency}
+                        SELL&BUY USD
                       </Button>
                     </div>
                     
@@ -211,51 +214,73 @@ export default function SwapTrading() {
                 </div>
               </div>
 
-              {/* Step 4: Amount input */}
+              {/* Step 4: Amount input - NEAR and FAR */}
               <div className="flex items-center mb-6">
                 <div className="flex-1">
-                  <div className="text-sm text-gray-700 font-medium mb-2">주문금액</div>
-                  <div className="flex-1 grid grid-cols-2 gap-2 mb-2">
-                    <Button 
-                      variant="outline"
-                      className={cn(
-                        "rounded-xl transition-all duration-200",
-                        "bg-teal-400 border-2 border-teal-600 text-white shadow-inner ring-2 ring-teal-300"
-                      )}
-                    >
-                      {baseCurrency} {direction === "BUY" ? "매수" : "매도"}
-                    </Button>
-                    <Button 
-                      variant="outline"
-                      className={cn(
-                        "rounded-xl transition-all duration-200",
-                        "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
-                      )}
-                    >
-                      {quoteCurrency} {direction === "BUY" ? "매도" : "매수"}
-                    </Button>
+                  <div className="text-sm text-gray-700 font-medium mb-2">스왑포인트/환율</div>
+                  <div className="text-xs text-gray-500 mb-3">관리자 승인 후 제소회</div>
+                  
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <div className="text-sm text-gray-600 mb-2">NEAR</div>
+                      <Input
+                        type="text"
+                        placeholder="NEAR 금액 입력"
+                        value={nearAmount}
+                        onChange={(e) => {
+                          const formattedValue = formatInputValue(e.target.value, baseCurrency);
+                          setNearAmount(formattedValue);
+                        }}
+                        className="text-right text-lg bg-gray-50/50 border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-200"
+                      />
+                      <div className="text-xs text-gray-500 mt-1">
+                        {direction === "BUY_SELL_USD" ? "SELL USD" : "BUY USD"}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {direction === "BUY_SELL_USD" ? "BUY KRW" : "SELL KRW"}
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <div className="text-sm text-gray-600 mb-2">FAR</div>
+                      <Input
+                        type="text"
+                        placeholder="FAR 금액 입력"
+                        value={farAmount}
+                        onChange={(e) => {
+                          const formattedValue = formatInputValue(e.target.value, baseCurrency);
+                          setFarAmount(formattedValue);
+                        }}
+                        className="text-right text-lg bg-gray-50/50 border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-200"
+                      />
+                      <div className="text-xs text-gray-500 mt-1">
+                        {direction === "BUY_SELL_USD" ? "BUY USD" : "SELL USD"}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {direction === "BUY_SELL_USD" ? "SELL KRW" : "BUY KRW"}
+                      </div>
+                    </div>
                   </div>
-                  <Input
-                    type="text"
-                    placeholder="여기에 주문금액을 입력하세요"
-                    value={amount}
-                    onChange={(e) => {
-                      const formattedValue = formatInputValue(e.target.value, baseCurrency);
-                      setAmount(formattedValue);
-                    }}
-                    className="text-right text-lg bg-gray-50/50 border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-200"
-                  />
                 </div>
               </div>
 
               {/* Summary Card */}
               <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 rounded-2xl mb-6 shadow-inner">
-                <div className="text-sm text-gray-700 mb-2">Swap {direction} 거래</div>
+                <div className="text-sm text-gray-700 mb-2">외환스왑 {direction === "BUY_SELL_USD" ? "BUY&SELL USD" : "SELL&BUY USD"} 거래</div>
                 <div className="text-sm text-gray-600 mb-1">
-                  거래금액: {amount ? formatCurrencyAmount(parseFloat(amount), baseCurrency) : "미입력"} {baseCurrency}
+                  NEAR 금액: {nearAmount ? formatCurrencyAmount(parseFloat(removeThousandSeparator(nearAmount)), baseCurrency) : "미입력"} {baseCurrency}
                 </div>
                 <div className="text-sm text-gray-600 mb-1">
-                  거래환율: 관리자 가격 제공 후 확정
+                  FAR 금액: {farAmount ? formatCurrencyAmount(parseFloat(removeThousandSeparator(farAmount)), baseCurrency) : "미입력"} {baseCurrency}
+                </div>
+                <div className="text-sm text-gray-600 mb-1">
+                  스왑포인트: 관리자 가격 제공 후 확정
+                </div>
+                <div className="text-sm text-gray-600 mb-1">
+                  환율-NEAR: 관리자 가격 제공 후 확정
+                </div>
+                <div className="text-sm text-gray-600 mb-1">
+                  환율-FAR: 관리자 가격 제공 후 확정
                 </div>
                 <div className="text-sm text-gray-600">
                   Near Leg: {nearDate ? format(nearDate, "yyyy-MM-dd") : "미선택"}
