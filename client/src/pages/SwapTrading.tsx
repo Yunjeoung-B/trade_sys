@@ -480,7 +480,11 @@ export default function SwapTrading() {
                     <Button 
                       onClick={handleSwapRequest}
                       disabled={mutation.isPending}
-                      className="w-full py-4 text-lg font-semibold rounded-2xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
+                      className="w-full py-4 text-lg font-semibold rounded-2xl text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
+                      style={{
+                        backgroundColor: '#14B8A6',
+                        boxShadow: '0 0 15px rgba(20, 184, 166, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                      }}
                     >
                       {mutation.isPending ? "처리 중..." : "가격 요청"}
                     </Button>
