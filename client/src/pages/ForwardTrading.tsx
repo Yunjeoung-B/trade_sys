@@ -141,23 +141,15 @@ export default function ForwardTrading() {
               <div className="text-center">
                 <div className="text-sm text-gray-600 mb-1">SELL {baseCurrency}</div>
                 
-                {/* SPOT Rate */}
-                <div className="text-xs text-gray-500 mb-1">SPOT</div>
-                <div className="font-bold mb-1 text-[14px] text-[#424b5b]">
-                  {spotSellRate.toFixed(2)}
-                </div>
-                
-                {/* SWAP POINT */}
-                <div className="text-xs text-gray-500 mb-1">SWAP POINT</div>
-                <div className="text-sm font-semibold text-gray-700 mb-1">
-                  {swapPointsSell >= 0 ? '+' : ''}{swapPointsSell.toFixed(2)}
-                </div>
-                
-                {/* Forward Rate */}
-                <div className="text-xs text-gray-500 mb-1">선물환율</div>
-                <div className="text-2xl font-bold text-blue-600 mb-2">
+                {/* Forward Rate - Main Display */}
+                <div className="text-2xl font-bold text-blue-600 mb-3">
                   {sellRate.toFixed(2).split('.')[0]}.
                   <span className="text-lg">{sellRate.toFixed(2).split('.')[1]}</span>
+                </div>
+                
+                {/* Small breakdown below */}
+                <div className="text-[14px] text-gray-500 mb-1">
+                  SPOT: {spotSellRate.toFixed(2)} | SWAP: {swapPointsSell >= 0 ? '+' : ''}{swapPointsSell.toFixed(2)}
                 </div>
 
                 <Button 
@@ -177,23 +169,15 @@ export default function ForwardTrading() {
               <div className="text-center">
                 <div className="text-sm text-gray-600 mb-1">BUY {baseCurrency}</div>
                 
-                {/* SPOT Rate */}
-                <div className="text-xs text-gray-500 mb-1">SPOT</div>
-                <div className="font-bold mb-1 text-[14px] text-[#454e5e]">
-                  {spotBuyRate.toFixed(2)}
-                </div>
-                
-                {/* SWAP POINT */}
-                <div className="text-xs text-gray-500 mb-1">SWAP POINT</div>
-                <div className="text-sm font-semibold text-gray-700 mb-1">
-                  {swapPointsBuy >= 0 ? '+' : ''}{swapPointsBuy.toFixed(2)}
-                </div>
-                
-                {/* Forward Rate */}
-                <div className="text-xs text-gray-500 mb-1">선물환율</div>
-                <div className="text-2xl font-bold text-red-500 mb-2">
+                {/* Forward Rate - Main Display */}
+                <div className="text-2xl font-bold text-red-500 mb-3">
                   {buyRate.toFixed(2).split('.')[0]}.
                   <span className="text-lg">{buyRate.toFixed(2).split('.')[1]}</span>
+                </div>
+                
+                {/* Small breakdown below */}
+                <div className="text-[14px] text-gray-500 mb-1">
+                  SPOT: {spotBuyRate.toFixed(2)} | SWAP: {swapPointsBuy >= 0 ? '+' : ''}{swapPointsBuy.toFixed(2)}
                 </div>
 
                 <Button 
