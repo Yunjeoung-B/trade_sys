@@ -24,6 +24,8 @@ export default function SwapTrading() {
   const [farAmount, setFarAmount] = useState("");
   const [nearAmountCurrency, setNearAmountCurrency] = useState<"USD" | "KRW">("USD");
   const [farAmountCurrency, setFarAmountCurrency] = useState<"USD" | "KRW">("USD");
+  // 관리자 가격 제공 시뮬레이션
+  const [adminPriceProvided, setAdminPriceProvided] = useState(false);
   const { toast } = useToast();
 
   // Extract base and quote currencies from selected pair
@@ -65,6 +67,11 @@ export default function SwapTrading() {
 
   const buyRate = currentRate ? Number(currentRate.buyRate) : 1392.00;
   const sellRate = currentRate ? Number(currentRate.sellRate) : 1390.40;
+  
+  // 관리자 제공 가격 (시뮬레이션)
+  const swapPoints = adminPriceProvided ? 12.50 : null;
+  const nearRate = adminPriceProvided ? 1390.85 : null;
+  const farRate = adminPriceProvided ? (nearRate ? nearRate + swapPoints : null) : null;
 
   const handleSwapRequest = () => {
     if (!selectedPairData || !nearAmount || !farAmount) {
@@ -220,7 +227,16 @@ export default function SwapTrading() {
               <div className="flex items-center mb-6">
                 <div className="flex-1">
                   <div className="text-sm text-gray-700 font-medium mb-2">스왑포인트/환율</div>
-                  <div className="text-xs text-gray-500 mb-3">관리자 승인 후 재조회</div>
+                  {!adminPriceProvided ? (
+                    <div className="text-xs text-gray-500 mb-3">관리자 승인 후 재조회</div>
+                  ) : (
+                    <div className="bg-green-50 border border-green-200 p-3 rounded-xl mb-3">
+                      <div className="text-sm font-medium text-green-800 mb-1">✓ 관리자 가격 제공 완료</div>
+                      <div className="text-xs text-green-700">스왑포인트: {swapPoints} 포인트</div>
+                      <div className="text-xs text-green-700">NEAR 환율: {nearRate}</div>
+                      <div className="text-xs text-green-700">FAR 환율: {farRate}</div>
+                    </div>
+                  )}
                   
                   <div className="grid grid-cols-2 gap-4 mb-4">
                     <div>
@@ -336,7 +352,7 @@ export default function SwapTrading() {
                     formatCurrencyAmount(parseFloat(removeThousandSeparator(nearAmount)), "KRW") : "미입력"}
                 </div>
                 <div className="text-sm text-gray-600 mb-1">
-                  NEAR 거래환율: 관리자 가격 제공 후 확정
+                  NEAR 거래환율: {adminPriceProvided && nearRate ? nearRate.toFixed(2) : "관리자 가격 제공 후 확정"}
                 </div>
                 <div className="text-sm text-gray-600 mb-1">
                   NEAR 결제일: {nearDate ? format(nearDate, "yyyy-MM-dd") : "미선택"}
@@ -352,21 +368,62 @@ export default function SwapTrading() {
                     formatCurrencyAmount(parseFloat(removeThousandSeparator(farAmount)), "KRW") : "미입력"}
                 </div>
                 <div className="text-sm text-gray-600 mb-1">
-                  FAR 거래환율: 관리자 가격 제공 후 확정
+                  FAR 거래환율: {adminPriceProvided && farRate ? farRate.toFixed(2) : "관리자 가격 제공 후 확정"}
                 </div>
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-gray-600 mb-1">
                   FAR 결제일: {farDate ? format(farDate, "yyyy-MM-dd") : "미선택"}
                 </div>
+                
+                {/* 스왑포인트 정보 */}
+                {adminPriceProvided && (
+                  <div className="text-sm text-blue-600 font-medium mt-2 pt-2 border-t border-gray-200">
+                    스왑포인트: {swapPoints} 포인트 ({direction === "BUY_SELL_USD" ? "유리" : "불리"})
+                  </div>
+                )}
               </div>
 
               {/* Step 5: Submit button */}
-              <Button 
-                onClick={handleSwapRequest}
-                disabled={mutation.isPending}
-                className="w-full py-4 text-lg font-semibold rounded-2xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
-              >
-                {mutation.isPending ? "처리 중..." : "가격 요청"}
-              </Button>
+              <div className="space-y-3">
+                {!adminPriceProvided ? (
+                  <>
+                    <Button 
+                      onClick={handleSwapRequest}
+                      disabled={mutation.isPending}
+                      className="w-full py-4 text-lg font-semibold rounded-2xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
+                    >
+                      {mutation.isPending ? "처리 중..." : "가격 요청"}
+                    </Button>
+                    <Button 
+                      onClick={() => setAdminPriceProvided(true)}
+                      variant="outline"
+                      className="w-full py-2 text-sm rounded-xl border-dashed border-gray-400 text-gray-600 hover:bg-gray-50"
+                    >
+                      [데모] 관리자 가격 제공 시뮬레이션
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button 
+                      onClick={() => {
+                        toast({
+                          title: "외환스왑 거래 체결",
+                          description: "스왑 거래가 성공적으로 체결되었습니다.",
+                        });
+                      }}
+                      className="w-full py-4 text-lg font-semibold rounded-2xl bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+                    >
+                      거래 체결
+                    </Button>
+                    <Button 
+                      onClick={() => setAdminPriceProvided(false)}
+                      variant="outline"
+                      className="w-full py-2 text-sm rounded-xl border-gray-300 text-gray-600 hover:bg-gray-50"
+                    >
+                      가격 요청 상태로 돌아가기
+                    </Button>
+                  </>
+                )}
+              </div>
             </Card>
           </div>
     </div>
