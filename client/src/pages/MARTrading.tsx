@@ -213,7 +213,7 @@ export default function MARTrading() {
               </Button>
 
               {/* 시간 안내 */}
-              <div className="mt-4 p-3 rounded-2xl text-center shadow-inner" style={{ backgroundColor: '#eda7c7' }}>
+              <div className="mt-4 p-3 rounded-2xl text-center shadow-inner bg-[#2dd4bf]" style={{ backgroundColor: '#eda7c7' }}>
                 <div className="text-sm text-gray-700">
                   MAR 거래는 오전 9:00 이전에만 가능합니다
                 </div>
