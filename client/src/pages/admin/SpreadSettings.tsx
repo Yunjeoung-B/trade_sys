@@ -199,7 +199,7 @@ export default function SpreadSettings() {
                         <SelectValue placeholder="그룹 유형 선택 (선택사항)" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">전체</SelectItem>
+                        <SelectItem value="all">전체</SelectItem>
                         <SelectItem value="major">Major Group</SelectItem>
                         <SelectItem value="mid">Mid Group</SelectItem>
                         <SelectItem value="sub">Sub Group</SelectItem>
