@@ -1,0 +1,177 @@
+-- CHOIICE FX 웹 애플리케이션 MySQL 데이터베이스 스키마
+-- MySQL 8.0+ 권장
+
+-- 데이터베이스 생성
+CREATE DATABASE IF NOT EXISTS choiice_fx DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE choiice_fx;
+
+-- 1. users 테이블 (사용자 테이블)
+CREATE TABLE users (
+    id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role ENUM('admin', 'client') NOT NULL,
+    major_group VARCHAR(100),
+    mid_group VARCHAR(100),
+    sub_group VARCHAR(100),
+    first_name VARCHAR(100),
+    last_name VARCHAR(100),
+    email VARCHAR(255),
+    is_active TINYINT(1) DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    INDEX idx_username (username),
+    INDEX idx_role (role),
+    INDEX idx_groups (major_group, mid_group, sub_group),
+    INDEX idx_is_active (is_active)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 2. currency_pairs 테이블 (통화쌍 테이블)
+CREATE TABLE currency_pairs (
+    id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+    symbol VARCHAR(10) UNIQUE NOT NULL,
+    base_currency VARCHAR(3) NOT NULL,
+    quote_currency VARCHAR(3) NOT NULL,
+    is_active TINYINT(1) DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    INDEX idx_symbol (symbol),
+    INDEX idx_is_active (is_active)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 3. market_rates 테이블 (시장환율 테이블)
+CREATE TABLE market_rates (
+    id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+    currency_pair_id CHAR(36) NOT NULL,
+    buy_rate DECIMAL(12, 4) NOT NULL,
+    sell_rate DECIMAL(12, 4) NOT NULL,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (currency_pair_id) REFERENCES currency_pairs(id) ON DELETE CASCADE,
+    INDEX idx_currency_pair_id (currency_pair_id),
+    INDEX idx_timestamp (timestamp DESC)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 4. spread_settings 테이블 (스프레드 설정 테이블)
+CREATE TABLE spread_settings (
+    id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+    product_type ENUM('Spot', 'Forward', 'Swap', 'MAR') NOT NULL,
+    currency_pair_id CHAR(36) NOT NULL,
+    group_type ENUM('major_group', 'mid_group', 'sub_group'),
+    group_value VARCHAR(100),
+    base_spread DECIMAL(10, 4) NOT NULL DEFAULT 0,
+    tenor_spreads JSON,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (currency_pair_id) REFERENCES currency_pairs(id) ON DELETE CASCADE,
+    INDEX idx_product_type (product_type),
+    INDEX idx_currency_pair_id (currency_pair_id),
+    INDEX idx_group (group_type, group_value)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 5. quote_requests 테이블 (견적요청 테이블)
+CREATE TABLE quote_requests (
+    id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+    user_id CHAR(36) NOT NULL,
+    currency_pair_id CHAR(36) NOT NULL,
+    product_type ENUM('Spot', 'Forward', 'Swap', 'MAR') NOT NULL,
+    direction ENUM('BUY', 'SELL') NOT NULL,
+    amount DECIMAL(18, 2) NOT NULL,
+    tenor VARCHAR(10),
+    near_date DATE,
+    far_date DATE,
+    status ENUM('REQUESTED', 'QUOTE_READY', 'CONFIRMED', 'EXPIRED') NOT NULL DEFAULT 'REQUESTED',
+    quoted_rate DECIMAL(12, 4),
+    expires_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (currency_pair_id) REFERENCES currency_pairs(id),
+    INDEX idx_user_id (user_id),
+    INDEX idx_status (status),
+    INDEX idx_created_at (created_at DESC),
+    INDEX idx_expires_at (expires_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 6. trades 테이블 (거래내역 테이블)
+CREATE TABLE trades (
+    id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+    user_id CHAR(36) NOT NULL,
+    quote_request_id CHAR(36),
+    trade_number VARCHAR(50) UNIQUE NOT NULL,
+    currency_pair_id CHAR(36) NOT NULL,
+    product_type ENUM('Spot', 'Forward', 'Swap', 'MAR') NOT NULL,
+    direction ENUM('BUY', 'SELL') NOT NULL,
+    amount DECIMAL(18, 2) NOT NULL,
+    rate DECIMAL(12, 4) NOT NULL,
+    settlement_date DATE,
+    maturity_date DATE,
+    status ENUM('active', 'settled', 'cancelled') NOT NULL DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (quote_request_id) REFERENCES quote_requests(id),
+    FOREIGN KEY (currency_pair_id) REFERENCES currency_pairs(id),
+    INDEX idx_user_id (user_id),
+    INDEX idx_trade_number (trade_number),
+    INDEX idx_status (status),
+    INDEX idx_settlement_date (settlement_date),
+    INDEX idx_created_at (created_at DESC)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 7. auto_approval_settings 테이블 (자동승인 설정 테이블)
+CREATE TABLE auto_approval_settings (
+    id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+    user_id CHAR(36) UNIQUE NOT NULL,
+    max_amount DECIMAL(18, 2) NOT NULL,
+    time_window_minutes INT DEFAULT 30,
+    is_enabled TINYINT(1) DEFAULT 1,
+    allow_weekends TINYINT(1) DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_user_id (user_id),
+    INDEX idx_is_enabled (is_enabled)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 8. sessions 테이블 (세션 테이블)
+CREATE TABLE sessions (
+    sid VARCHAR(255) NOT NULL PRIMARY KEY,
+    sess JSON NOT NULL,
+    expire DATETIME NOT NULL,
+    
+    INDEX idx_expire (expire)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 기본 통화쌍 데이터 삽입
+INSERT INTO currency_pairs (symbol, base_currency, quote_currency) VALUES 
+    ('USD/KRW', 'USD', 'KRW'),
+    ('EUR/KRW', 'EUR', 'KRW'),
+    ('JPY/KRW', 'JPY', 'KRW'),
+    ('CNY/KRW', 'CNY', 'KRW'),
+    ('GBP/KRW', 'GBP', 'KRW'),
+    ('HKD/KRW', 'HKD', 'KRW');  -- 홍콩달러 추가
+
+-- 예시: 기본 시장환율 데이터 (실제로는 실시간으로 업데이트)
+-- INSERT INTO market_rates (currency_pair_id, buy_rate, sell_rate) 
+-- SELECT id, 1300.50, 1305.50 FROM currency_pairs WHERE symbol = 'USD/KRW';
+
+-- 예시: 관리자 계정 생성 (비밀번호는 애플리케이션에서 해시 처리 필요)
+-- INSERT INTO users (username, password, role, first_name, last_name, email) VALUES 
+--     ('admin', 'hashed_password_here', 'admin', '관리자', '시스템', 'admin@choiice.com');
+
+-- 예시: 테스트 클라이언트 계정
+-- INSERT INTO users (username, password, role, major_group, mid_group, sub_group, first_name, last_name, email) VALUES 
+--     ('client01', 'hashed_password_here', 'client', '기업', '대기업', '삼성', '홍', '길동', 'hong@samsung.com');
+
+-- 사용자 권한 설정 (실제 운영 환경에서 필요)
+-- CREATE USER 'choiice_app'@'localhost' IDENTIFIED BY 'secure_password';
+-- GRANT ALL PRIVILEGES ON choiice_fx.* TO 'choiice_app'@'localhost';
+-- FLUSH PRIVILEGES;

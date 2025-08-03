@@ -24,6 +24,12 @@ import {
 import { db } from "./db";
 import { eq, and, desc, sql } from "drizzle-orm";
 import bcrypt from "bcrypt";
+import { nanoid } from "nanoid";
+
+// UUID generation utility
+function generateId(): string {
+  return nanoid();
+}
 
 export interface IStorage {
   // User operations
@@ -85,6 +91,7 @@ export class DatabaseStorage implements IStorage {
     const [user] = await db
       .insert(users)
       .values({
+        id: generateId(),
         ...userData,
         password: hashedPassword,
       })
@@ -127,7 +134,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createCurrencyPair(pairData: InsertCurrencyPair): Promise<CurrencyPair> {
-    const [pair] = await db.insert(currencyPairs).values(pairData).returning();
+    const [pair] = await db.insert(currencyPairs).values({
+      id: generateId(),
+      ...pairData,
+    }).returning();
     return pair;
   }
 
@@ -141,7 +151,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateMarketRate(rateData: InsertMarketRate): Promise<MarketRate> {
-    const [rate] = await db.insert(marketRates).values(rateData).returning();
+    const [rate] = await db.insert(marketRates).values({
+      id: generateId(),
+      ...rateData,
+    }).returning();
     return rate;
   }
 
@@ -167,7 +180,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createSpreadSetting(settingData: InsertSpreadSetting): Promise<SpreadSetting> {
-    const [setting] = await db.insert(spreadSettings).values(settingData).returning();
+    const [setting] = await db.insert(spreadSettings).values({
+      id: generateId(),
+      ...settingData,
+    }).returning();
     return setting;
   }
 
@@ -213,7 +229,10 @@ export class DatabaseStorage implements IStorage {
 
   // Quote requests
   async createQuoteRequest(requestData: InsertQuoteRequest): Promise<QuoteRequest> {
-    const [request] = await db.insert(quoteRequests).values(requestData).returning();
+    const [request] = await db.insert(quoteRequests).values({
+      id: generateId(),
+      ...requestData,
+    }).returning();
     return request;
   }
 
@@ -276,6 +295,7 @@ export class DatabaseStorage implements IStorage {
     const [trade] = await db
       .insert(trades)
       .values({
+        id: generateId(),
         ...tradeData,
         tradeNumber,
       })
@@ -320,7 +340,10 @@ export class DatabaseStorage implements IStorage {
   async upsertAutoApprovalSetting(settingData: InsertAutoApprovalSetting): Promise<AutoApprovalSetting> {
     const [setting] = await db
       .insert(autoApprovalSettings)
-      .values(settingData)
+      .values({
+        id: generateId(),
+        ...settingData,
+      })
       .onConflictDoUpdate({
         target: autoApprovalSettings.userId,
         set: {

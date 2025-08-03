@@ -26,7 +26,7 @@ export const sessions = pgTable(
 
 // Users table
 export const users = pgTable("users", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: varchar("id").primaryKey(),
   username: varchar("username").notNull().unique(),
   password: varchar("password").notNull(),
   firstName: varchar("first_name"),
@@ -43,7 +43,7 @@ export const users = pgTable("users", {
 
 // Currency pairs
 export const currencyPairs = pgTable("currency_pairs", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: varchar("id").primaryKey(),
   symbol: varchar("symbol").notNull().unique(), // USD/KRW, JPY/KRW, etc.
   baseCurrency: varchar("base_currency").notNull(),
   quoteCurrency: varchar("quote_currency").notNull(),
@@ -52,7 +52,7 @@ export const currencyPairs = pgTable("currency_pairs", {
 
 // Market rates
 export const marketRates = pgTable("market_rates", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: varchar("id").primaryKey(),
   currencyPairId: varchar("currency_pair_id").references(() => currencyPairs.id),
   buyRate: decimal("buy_rate", { precision: 12, scale: 4 }).notNull(),
   sellRate: decimal("sell_rate", { precision: 12, scale: 4 }).notNull(),
@@ -61,7 +61,7 @@ export const marketRates = pgTable("market_rates", {
 
 // Spread settings
 export const spreadSettings = pgTable("spread_settings", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: varchar("id").primaryKey(),
   productType: varchar("product_type").notNull(), // Spot, Forward, Swap, MAR
   currencyPairId: varchar("currency_pair_id").references(() => currencyPairs.id),
   groupType: varchar("group_type"), // major, mid, sub, or null for default
@@ -75,9 +75,9 @@ export const spreadSettings = pgTable("spread_settings", {
 
 // Quote requests
 export const quoteRequests = pgTable("quote_requests", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: varchar("id").primaryKey(),
   userId: varchar("user_id").references(() => users.id).notNull(),
-  productType: varchar("product_type").notNull(), // Forward, Swap
+  productType: varchar("product_type").notNull(), // Spot, Forward, Swap, MAR
   currencyPairId: varchar("currency_pair_id").references(() => currencyPairs.id),
   direction: varchar("direction").notNull(), // BUY, SELL
   amount: decimal("amount", { precision: 18, scale: 2 }).notNull(),
@@ -101,7 +101,7 @@ export const quoteRequests = pgTable("quote_requests", {
 
 // Trading history
 export const trades = pgTable("trades", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: varchar("id").primaryKey(),
   userId: varchar("user_id").references(() => users.id).notNull(),
   tradeNumber: varchar("trade_number").notNull().unique(),
   productType: varchar("product_type").notNull(),
@@ -119,7 +119,7 @@ export const trades = pgTable("trades", {
 
 // Auto approval settings
 export const autoApprovalSettings = pgTable("auto_approval_settings", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: varchar("id").primaryKey(),
   userId: varchar("user_id").references(() => users.id).notNull(),
   maxAmount: decimal("max_amount", { precision: 18, scale: 2 }).notNull(),
   timeWindowMinutes: integer("time_window_minutes").default(30),
