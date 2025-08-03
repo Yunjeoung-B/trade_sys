@@ -53,46 +53,40 @@ export default function BloombergAPI() {
       clearInterval(pollingIntervalRef.current);
     }
     
-    // 2초마다 데이터 폴링
-    pollingIntervalRef.current = setInterval(async () => {
-      try {
-        for (const symbol of symbols) {
-          const response = await fetch(`/api/admin/bloomberg/data/${symbol}/realtime`);
-          if (response.ok) {
-            const data = await response.json();
-            
-            // 시뮬레이션 데이터 생성 (API가 실제 실시간 데이터를 제공하지 않으므로)
-            const basePrice = symbol === 'USDKRW' ? 1350.5 : 
-                             symbol === 'EURKRW' ? 1450.2 : 
-                             symbol === 'JPYKRW' ? 950.8 : 1200;
-            
-            const variation = (Math.random() - 0.5) * 10;
-            const price = basePrice + variation;
-            const change = variation;
-            const changePercent = (change / basePrice) * 100;
-            const volume = Math.floor(Math.random() * 1000000) + 100000;
+    // 2초마다 데이터 폴링 (순수 시뮬레이션)
+    pollingIntervalRef.current = setInterval(() => {
+      console.log('Generating simulation data for symbols:', symbols);
+      
+      symbols.forEach(symbol => {
+        // 시뮬레이션 데이터 생성
+        const basePrice = symbol === 'USDKRW' ? 1350.5 : 
+                         symbol === 'EURKRW' ? 1450.2 : 
+                         symbol === 'JPYKRW' ? 950.8 : 1200;
+        
+        const variation = (Math.random() - 0.5) * 10;
+        const price = basePrice + variation;
+        const change = variation;
+        const changePercent = (change / basePrice) * 100;
+        const volume = Math.floor(Math.random() * 1000000) + 100000;
 
-            const marketData = {
-              symbol,
-              price: parseFloat(price.toFixed(2)),
-              change: parseFloat(change.toFixed(2)),
-              changePercent: parseFloat(changePercent.toFixed(2)),
-              volume,
-              timestamp: new Date().toISOString(),
-              source: 'bloomberg_simulation'
-            };
+        const marketData = {
+          symbol,
+          price: parseFloat(price.toFixed(2)),
+          change: parseFloat(change.toFixed(2)),
+          changePercent: parseFloat(changePercent.toFixed(2)),
+          volume,
+          timestamp: new Date().toISOString(),
+          source: 'bloomberg_simulation'
+        };
 
-            setStreamingData(prev => {
-              const newMap = new Map(prev);
-              newMap.set(symbol, marketData);
-              return newMap;
-            });
-          }
-        }
-      } catch (error) {
-        console.error('Polling error:', error);
-        // 에러가 발생해도 계속 시도
-      }
+        console.log(`Generated data for ${symbol}:`, marketData);
+
+        setStreamingData(prev => {
+          const newMap = new Map(prev);
+          newMap.set(symbol, marketData);
+          return newMap;
+        });
+      });
     }, 2000);
     
     toast({

@@ -53,6 +53,7 @@ UI Style: Gradient backgrounds (slate-800 → blue-900 → purple-900), rounded-
 - **UI Enhancement**: Consistent gradient-based design across all trading pages with modern button styling and rounded input fields
 - **Standardized Order Input**: All trading pages now use consistent layout with currency selection buttons above order amount input field, matching MAR trading design
 - **Bloomberg API Dashboard**: Comprehensive admin interface for Bloomberg API management with connection testing, real-time data display, and bulk import capabilities
+- **HTTP Polling System**: WebSocket 연결 문제 해결을 위해 HTTP 폴링 기반 실시간 데이터 시스템으로 변경 (2초 간격 업데이트)
 
 ## Business Logic Architecture
 - **Quote Calculation**: Layered pricing model combining source rates with group-specific spreads, product spreads, currency spreads, and tenor spreads
