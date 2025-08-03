@@ -375,7 +375,12 @@ export default function BloombergAPI() {
                           {item.changePercent >= 0 ? '+' : ''}{item.changePercent.toFixed(2)}%
                         </td>
                         <td className="py-2 text-right text-slate-300">{item.volume.toLocaleString()}</td>
-                        <td className="py-2 text-right text-slate-300">{new Date(item.timestamp).toLocaleTimeString()}</td>
+                        <td className="py-2 text-right text-slate-300">
+                          {new Date(item.timestamp).toLocaleTimeString()}
+                          {item.source === "bloomberg_simulation" && (
+                            <span className="ml-1 text-xs text-yellow-400">(시뮬레이션)</span>
+                          )}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -396,6 +401,14 @@ export default function BloombergAPI() {
           <CardTitle className="text-white">대량 데이터 가져오기</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="bg-blue-900/20 border border-blue-800 rounded-lg p-4">
+            <h4 className="text-blue-400 font-medium mb-2">Bloomberg API 연동 상태</h4>
+            <p className="text-slate-300 text-sm">
+              • Bloomberg Terminal이 설치되어 있고 로그인되어 있어야 합니다<br/>
+              • blpapi Python 라이브러리가 설치되어 있어야 합니다<br/>
+              • 현재는 시뮬레이션 모드로 동작합니다
+            </p>
+          </div>
           <p className="text-slate-300 text-sm">
             과거 데이터를 대량으로 가져와서 데이터베이스에 저장할 수 있습니다.
           </p>

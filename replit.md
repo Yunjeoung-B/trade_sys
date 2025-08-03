@@ -52,18 +52,24 @@ UI Style: Gradient backgrounds (slate-800 → blue-900 → purple-900), rounded-
 - **Time Restrictions**: Business logic for MAR trading cutoff (9:00 AM) with real-time validation
 - **UI Enhancement**: Consistent gradient-based design across all trading pages with modern button styling and rounded input fields
 - **Standardized Order Input**: All trading pages now use consistent layout with currency selection buttons above order amount input field, matching MAR trading design
+- **Bloomberg API Dashboard**: Comprehensive admin interface for Bloomberg API management with connection testing, real-time data display, and bulk import capabilities
 
 ## Business Logic Architecture
 - **Quote Calculation**: Layered pricing model combining source rates with group-specific spreads, product spreads, currency spreads, and tenor spreads
 - **Order Lifecycle**: Complete order flow from request creation through approval to execution and settlement
 - **Risk Management**: Approval gates for complex products with configurable auto-approval windows
 - **Compliance**: Audit trail through comprehensive trade and quote request logging
+- **Bloomberg API Integration**: Real-time market data integration with Python Bloomberg API (blpapi) and automatic fallback to simulation mode
 
 # External Dependencies
 
 ## Database Services
 - **Neon Database**: Serverless PostgreSQL hosting with connection pooling and automatic scaling
 - **Drizzle ORM**: Type-safe database toolkit with PostgreSQL dialect support
+
+## Market Data Services
+- **Bloomberg API**: Real-time and historical FX market data via Python blpapi library with automatic fallback to simulation mode
+- **Python Integration**: Child process execution for Bloomberg API calls with error handling and graceful degradation
 
 ## UI Framework & Components
 - **Radix UI**: Comprehensive set of unstyled, accessible UI primitives including dialogs, dropdowns, forms, and navigation components

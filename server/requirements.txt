@@ -1,0 +1,7 @@
+# Bloomberg API 연동을 위한 Python 패키지
+# 설치 방법: pip install -r requirements.txt
+
+blpapi>=3.18.4
+pandas>=1.5.0
+mysql-connector-python>=8.0.0
+sqlalchemy>=1.4.0
