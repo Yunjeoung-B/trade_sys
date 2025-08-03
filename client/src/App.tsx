@@ -19,7 +19,7 @@ import SpreadSettings from "@/pages/admin/SpreadSettings";
 import QuoteApprovals from "@/pages/admin/QuoteApprovals";
 import UserManagement from "@/pages/admin/UserManagement";
 import TradeManagement from "@/pages/admin/TradeManagement";
-import BloombergAPI from "@/pages/admin/BloombergAPI";
+import BloombergAPI from "@/pages/admin/BloombergAPINew";
 
 function Router() {
   const { isAuthenticated, isLoading, user } = useAuth();

@@ -42,7 +42,7 @@ function getSession() {
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: false, // Replit 개발 환경에서는 false로 설정
       maxAge: sessionTtl,
     },
   });
