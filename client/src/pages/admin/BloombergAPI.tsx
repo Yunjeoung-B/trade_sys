@@ -45,21 +45,35 @@ export default function BloombergAPI() {
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // WebSocket 연결 상태 추가
+  const [wsConnected, setWsConnected] = useState(false);
+
   // WebSocket 연결
   const connectWebSocket = useCallback(() => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      return;
+    // 기존 연결이 있으면 정리
+    if (wsRef.current) {
+      wsRef.current.close();
+      wsRef.current = null;
+    }
+
+    // 재연결 타이머 정리
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
     }
 
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const wsUrl = `${protocol}//${window.location.host}/bloomberg-ws`;
     
+    console.log('Attempting Bloomberg WebSocket connection to:', wsUrl);
+    
     try {
       wsRef.current = new WebSocket(wsUrl);
 
       wsRef.current.onopen = () => {
-        console.log("Bloomberg WebSocket connected");
-        setIsStreaming(false); // 연결됐지만 아직 스트리밍은 시작하지 않음
+        console.log("Bloomberg WebSocket connected successfully");
+        setWsConnected(true);
+        setIsStreaming(false);
       };
 
       wsRef.current.onmessage = (event) => {
@@ -67,18 +81,36 @@ export default function BloombergAPI() {
           const message = JSON.parse(event.data);
           console.log('WebSocket message received:', message);
           
-          if (message.type === 'realtime_data' && message.data) {
+          if (message.type === 'connection_confirmed') {
+            console.log('Connection confirmed:', message.message);
+            setWsConnected(true);
+          } else if (message.type === 'stream_started') {
+            console.log('Stream started:', message.message);
+            setIsStreaming(true);
+          } else if (message.type === 'stream_stopped') {
+            console.log('Stream stopped:', message.message);
+            setIsStreaming(false);
+          } else if (message.type === 'market_data') {
+            // Bloomberg 실시간 데이터
+            setStreamingData(prev => {
+              const newMap = new Map(prev);
+              newMap.set(message.symbol, {
+                symbol: message.symbol,
+                price: message.price,
+                change: message.change,
+                changePercent: message.changePercent,
+                volume: message.volume,
+                timestamp: message.timestamp,
+                source: message.source
+              });
+              return newMap;
+            });
+          } else if (message.type === 'realtime_data' && message.data) {
+            // 기존 포맷 지원
             const data = message.data;
             setStreamingData(prev => {
               const newMap = new Map(prev);
               newMap.set(data.symbol, data);
-              return newMap;
-            });
-          } else if (message.type === 'market_data') {
-            // Bloomberg streaming data format
-            setStreamingData(prev => {
-              const newMap = new Map(prev);
-              newMap.set(message.symbol, message);
               return newMap;
             });
           }
@@ -87,20 +119,25 @@ export default function BloombergAPI() {
         }
       };
 
-      wsRef.current.onclose = () => {
-        console.log("Bloomberg WebSocket disconnected");
+      wsRef.current.onclose = (event) => {
+        console.log("Bloomberg WebSocket disconnected", event.code, event.reason);
+        setWsConnected(false);
         setIsStreaming(false);
         
-        // 3초 후 재연결 시도
-        reconnectTimeoutRef.current = setTimeout(() => {
-          if (!wsRef.current || wsRef.current.readyState === WebSocket.CLOSED) {
+        // 정상적인 종료가 아닌 경우에만 재연결 시도
+        if (event.code !== 1000 && event.code !== 1001) {
+          console.log("Attempting to reconnect in 3 seconds...");
+          reconnectTimeoutRef.current = setTimeout(() => {
             connectWebSocket();
-          }
-        }, 3000);
+          }, 3000);
+        }
       };
 
       wsRef.current.onerror = (error) => {
         console.error("Bloomberg WebSocket error:", error);
+        console.error("WebSocket URL:", wsUrl);
+        console.error("WebSocket state:", wsRef.current?.readyState);
+        setWsConnected(false);
       };
 
     } catch (error) {
@@ -597,7 +634,7 @@ export default function BloombergAPI() {
             <div className="flex gap-2">
               <Button
                 onClick={startStreaming}
-                disabled={isStreaming || wsRef.current?.readyState !== WebSocket.OPEN}
+                disabled={isStreaming || !wsConnected}
                 className="bg-green-600 hover:bg-green-700"
               >
                 <Play className="w-4 h-4 mr-2" />
@@ -619,10 +656,10 @@ export default function BloombergAPI() {
           {/* 연결 상태 표시 */}
           <div className="flex items-center gap-2">
             <div className={`w-2 h-2 rounded-full ${
-              wsRef.current?.readyState === WebSocket.OPEN ? 'bg-green-400' : 'bg-red-400'
+              wsConnected ? 'bg-green-400' : 'bg-red-400'
             }`}></div>
             <span className="text-slate-300 text-sm">
-              WebSocket: {wsRef.current?.readyState === WebSocket.OPEN ? '연결됨' : '연결 안됨'}
+              WebSocket: {wsConnected ? '연결됨' : '연결 안됨'}
             </span>
             {isStreaming && (
               <>

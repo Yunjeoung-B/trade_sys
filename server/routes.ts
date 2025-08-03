@@ -627,17 +627,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Bloomberg WebSocket setup for real-time streaming
-  const bloombergWss = new WebSocketServer({ server: httpServer, path: '/bloomberg-ws' });
+  const bloombergWss = new WebSocketServer({ 
+    server: httpServer, 
+    path: '/bloomberg-ws',
+    perMessageDeflate: false,
+    maxPayload: 1024 * 1024 // 1MB
+  });
 
-  bloombergWss.on('connection', (ws) => {
-    console.log('Bloomberg client connected');
+  bloombergWss.on('connection', (ws, request) => {
+    console.log('Bloomberg client connected from:', request.socket.remoteAddress);
     bloombergClients.add(ws);
     
     // 연결 즉시 확인 메시지 전송
-    ws.send(JSON.stringify({
-      type: 'connection_confirmed',
-      message: 'Bloomberg WebSocket connected'
-    }));
+    try {
+      ws.send(JSON.stringify({
+        type: 'connection_confirmed',
+        message: 'Bloomberg WebSocket connected'
+      }));
+      console.log('Connection confirmation sent');
+    } catch (error) {
+      console.error('Error sending connection confirmation:', error);
+    }
     
     ws.on('message', (message) => {
       try {
@@ -682,6 +692,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('Bloomberg WebSocket error:', error);
       bloombergClients.delete(ws);
     });
+  });
+
+  bloombergWss.on('error', (error) => {
+    console.error('Bloomberg WebSocket server error:', error);
+  });
+
+  // HTTP upgrade 처리를 위한 디버깅
+  httpServer.on('upgrade', (request, socket, head) => {
+    console.log('WebSocket upgrade request received for:', request.url);
+    if (request.url === '/bloomberg-ws') {
+      console.log('Handling Bloomberg WebSocket upgrade');
+    }
   });
 
   function startBloombergSimulation(symbols: string[]) {
