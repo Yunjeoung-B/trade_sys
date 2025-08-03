@@ -1,7 +1,6 @@
 import { sql } from "drizzle-orm";
 import { 
   pgTable, 
-  text, 
   varchar, 
   timestamp, 
   decimal, 
@@ -57,6 +56,7 @@ export const marketRates = pgTable("market_rates", {
   buyRate: decimal("buy_rate", { precision: 12, scale: 4 }).notNull(),
   sellRate: decimal("sell_rate", { precision: 12, scale: 4 }).notNull(),
   timestamp: timestamp("timestamp").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Spread settings
