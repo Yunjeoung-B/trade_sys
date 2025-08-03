@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
-import { exec } from "child_process";
+import { exec, spawn } from "child_process";
 import { promisify } from "util";
 import {
   insertUserSchema,
@@ -19,6 +19,10 @@ import { Strategy as LocalStrategy } from "passport-local";
 import connectPg from "connect-pg-simple";
 
 const execAsync = promisify(exec);
+
+// Bloomberg streaming process
+let bloombergStreamProcess: any = null;
+const bloombergClients = new Set<WebSocket>();
 
 // Session configuration
 function getSession() {
@@ -621,6 +625,151 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("WebSocket client disconnected");
     });
   });
+
+  // Bloomberg WebSocket setup for real-time streaming
+  const bloombergWss = new WebSocketServer({ server: httpServer, path: '/bloomberg-ws' });
+
+  bloombergWss.on('connection', (ws) => {
+    console.log('Bloomberg client connected');
+    bloombergClients.add(ws);
+    
+    ws.on('message', (message) => {
+      try {
+        const data = JSON.parse(message.toString());
+        
+        if (data.type === 'start_stream' && data.symbols) {
+          startBloombergStream(data.symbols);
+        } else if (data.type === 'stop_stream') {
+          stopBloombergStream();
+        }
+      } catch (error) {
+        console.error('Bloomberg WebSocket message error:', error);
+      }
+    });
+
+    ws.on('close', () => {
+      console.log('Bloomberg client disconnected');
+      bloombergClients.delete(ws);
+      
+      // 마지막 클라이언트가 연결 해제되면 스트리밍 중지
+      if (bloombergClients.size === 0) {
+        stopBloombergStream();
+      }
+    });
+  });
+
+  function startBloombergStream(symbols: string[]) {
+    if (bloombergStreamProcess) {
+      stopBloombergStream();
+    }
+
+    try {
+      // Python Bloomberg 스트리밍 프로세스 시작
+      const symbolsString = symbols.join(',');
+      bloombergStreamProcess = spawn('python3', ['server/bloomberg.py', 'stream', symbolsString]);
+
+      bloombergStreamProcess.stdout.on('data', (data: Buffer) => {
+        try {
+          const lines = data.toString().split('\n').filter(line => line.trim());
+          
+          for (const line of lines) {
+            const marketData = JSON.parse(line);
+            
+            // 모든 연결된 클라이언트에게 브로드캐스트
+            const message = JSON.stringify({
+              type: 'realtime_data',
+              data: marketData
+            });
+            
+            bloombergClients.forEach(client => {
+              if (client.readyState === WebSocket.OPEN) {
+                client.send(message);
+              }
+            });
+          }
+        } catch (parseError) {
+          console.log('Bloomberg data parse error:', parseError);
+          
+          // Fallback: 시뮬레이션 데이터 전송
+          const simulationData = symbols.map(symbol => ({
+            symbol,
+            price: 1200 + Math.random() * 100,
+            change: (Math.random() - 0.5) * 20,
+            changePercent: (Math.random() - 0.5) * 2,
+            volume: Math.floor(Math.random() * 1000000),
+            timestamp: new Date().toISOString(),
+            source: "bloomberg_simulation"
+          }));
+          
+          const message = JSON.stringify({
+            type: 'realtime_data',
+            data: simulationData[0] // 하나씩 전송
+          });
+          
+          bloombergClients.forEach(client => {
+            if (client.readyState === WebSocket.OPEN) {
+              client.send(message);
+            }
+          });
+        }
+      });
+
+      bloombergStreamProcess.stderr.on('data', (data: Buffer) => {
+        console.error('Bloomberg stream error:', data.toString());
+      });
+
+      bloombergStreamProcess.on('close', (code: number) => {
+        console.log(`Bloomberg stream process exited with code ${code}`);
+        bloombergStreamProcess = null;
+      });
+
+    } catch (error) {
+      console.error('Bloomberg stream start error:', error);
+      
+      // Fallback: 시뮬레이션 스트리밍
+      startSimulationStream(symbols);
+    }
+  }
+
+  function stopBloombergStream() {
+    if (bloombergStreamProcess) {
+      bloombergStreamProcess.kill();
+      bloombergStreamProcess = null;
+    }
+  }
+
+  function startSimulationStream(symbols: string[]) {
+    // 시뮬레이션 데이터를 주기적으로 전송
+    const simulationInterval = setInterval(() => {
+      if (bloombergClients.size === 0) {
+        clearInterval(simulationInterval);
+        return;
+      }
+
+      symbols.forEach(symbol => {
+        const simulationData = {
+          symbol,
+          price: 1200 + Math.random() * 100,
+          change: (Math.random() - 0.5) * 20,
+          changePercent: (Math.random() - 0.5) * 2,
+          volume: Math.floor(Math.random() * 1000000),
+          timestamp: new Date().toISOString(),
+          source: "bloomberg_simulation"
+        };
+
+        const message = JSON.stringify({
+          type: 'realtime_data',
+          data: simulationData
+        });
+
+        bloombergClients.forEach(client => {
+          if (client.readyState === WebSocket.OPEN) {
+            client.send(message);
+          }
+        });
+      });
+    }, 2000); // 2초마다 업데이트
+  }
 
   // Simulate market data updates
   setInterval(async () => {

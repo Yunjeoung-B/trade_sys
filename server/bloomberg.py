@@ -10,6 +10,8 @@ class BloombergAPI:
     def __init__(self):
         self.session = None
         self.service = None
+        self.subscription_service = None
+        self.is_streaming = False
         
     def connect(self) -> bool:
         """Bloomberg API 연결"""
@@ -28,6 +30,13 @@ class BloombergAPI:
                 return False
                 
             self.service = self.session.getService("//blp/refdata")
+            
+            # 실시간 스트리밍을 위한 mktdata 서비스도 열기
+            if not self.session.openService("//blp/mktdata"):
+                print("Warning: mktdata service not available")
+            else:
+                self.subscription_service = self.session.getService("//blp/mktdata")
+            
             return True
             
         except Exception as e:
@@ -173,8 +182,86 @@ class BloombergAPI:
                 
         return results
     
+    def start_realtime_streaming(self, symbols: List[str], callback_func=None) -> bool:
+        """실시간 스트리밍 시작"""
+        if not self.session or not self.subscription_service:
+            raise Exception("Bloomberg API 또는 스트리밍 서비스가 연결되지 않았습니다")
+        
+        try:
+            # 구독 생성
+            subscriptions = blp.SubscriptionList()
+            
+            for symbol in symbols:
+                bloomberg_ticker = f'{symbol} Curncy'
+                subscriptions.add(bloomberg_ticker, 
+                                "BID,ASK,LAST_PRICE,CHG_NET_1D,CHG_PCT_1D,VOLUME")
+            
+            # 구독 시작
+            self.session.subscribe(subscriptions)
+            self.is_streaming = True
+            
+            # 실시간 이벤트 처리 루프
+            while self.is_streaming:
+                event = self.session.nextEvent(1000)  # 1초 타임아웃
+                
+                if event.eventType() == blp.Event.SUBSCRIPTION_DATA:
+                    for msg in event:
+                        data = self._process_subscription_data(msg)
+                        if data and callback_func:
+                            callback_func(data)
+                        elif data:
+                            print(json.dumps(data))
+                            
+                elif event.eventType() == blp.Event.SUBSCRIPTION_STATUS:
+                    # 구독 상태 변경 처리
+                    for msg in event:
+                        print(f"Subscription status: {msg}")
+                        
+            return True
+            
+        except Exception as e:
+            print(f"스트리밍 시작 실패: {e}")
+            return False
+    
+    def _process_subscription_data(self, msg) -> Optional[Dict]:
+        """구독 데이터 처리"""
+        try:
+            topic = msg.topicName()
+            symbol = topic.split()[0].replace(" Curncy", "")
+            
+            # 필드 데이터 추출
+            bid = msg.getElementAsFloat("BID") if msg.hasElement("BID") else 0
+            ask = msg.getElementAsFloat("ASK") if msg.hasElement("ASK") else 0
+            last_price = msg.getElementAsFloat("LAST_PRICE") if msg.hasElement("LAST_PRICE") else 0
+            change = msg.getElementAsFloat("CHG_NET_1D") if msg.hasElement("CHG_NET_1D") else 0
+            change_pct = msg.getElementAsFloat("CHG_PCT_1D") if msg.hasElement("CHG_PCT_1D") else 0
+            volume = msg.getElementAsFloat("VOLUME") if msg.hasElement("VOLUME") else 0
+            
+            return {
+                "symbol": symbol,
+                "price": last_price or (bid + ask) / 2,
+                "bid": bid,
+                "ask": ask,
+                "change": change,
+                "changePercent": change_pct,
+                "volume": int(volume),
+                "timestamp": datetime.now().isoformat(),
+                "source": "bloomberg_streaming"
+            }
+            
+        except Exception as e:
+            print(f"구독 데이터 처리 오류: {e}")
+            return None
+    
+    def stop_streaming(self):
+        """실시간 스트리밍 중지"""
+        self.is_streaming = False
+        if self.session:
+            self.session.unsubscribeAll()
+    
     def disconnect(self):
         """Bloomberg API 연결 해제"""
+        self.stop_streaming()
         if self.session:
             self.session.stop()
 
@@ -226,6 +313,20 @@ def main():
                 
             data = bloomberg.get_historical_data(symbols, start_date, end_date)
             print(json.dumps(data))
+            
+        elif command == "stream":
+            if len(sys.argv) < 3:
+                print(json.dumps({"error": "심볼이 필요합니다"}))
+                return
+                
+            symbols = sys.argv[2].split(",")
+            
+            if not bloomberg.connect():
+                print(json.dumps({"error": "Bloomberg API 연결 실패"}))
+                return
+                
+            # 스트리밍 시작 (무한 루프로 실행)
+            bloomberg.start_realtime_streaming(symbols)
             
         else:
             print(json.dumps({"error": f"알 수 없는 명령어: {command}"}))

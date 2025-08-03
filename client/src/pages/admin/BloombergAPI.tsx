@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, RefreshCw, Download, Database, BarChart3 } from "lucide-react";
+import { Loader2, RefreshCw, Download, Database, BarChart3, Play, Pause, Activity } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -36,8 +36,121 @@ export default function BloombergAPI() {
   const [selectedSymbols, setSelectedSymbols] = useState<string[]>([]);
   const [customSymbol, setCustomSymbol] = useState("");
   const [requestType, setRequestType] = useState("realtime");
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [streamingData, setStreamingData] = useState<Map<string, BloombergData>>(new Map());
+  const [streamingSymbols, setStreamingSymbols] = useState<string[]>(["USDKRW", "EURKRW", "JPYKRW"]);
+  
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const wsRef = useRef<WebSocket | null>(null);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // WebSocket 연결
+  const connectWebSocket = useCallback(() => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      return;
+    }
+
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const wsUrl = `${protocol}//${window.location.host}/bloomberg-ws`;
+    
+    try {
+      wsRef.current = new WebSocket(wsUrl);
+
+      wsRef.current.onopen = () => {
+        console.log("Bloomberg WebSocket connected");
+        setIsStreaming(false); // 연결됐지만 아직 스트리밍은 시작하지 않음
+      };
+
+      wsRef.current.onmessage = (event) => {
+        try {
+          const message = JSON.parse(event.data);
+          
+          if (message.type === 'realtime_data' && message.data) {
+            const data = message.data;
+            setStreamingData(prev => {
+              const newMap = new Map(prev);
+              newMap.set(data.symbol, data);
+              return newMap;
+            });
+          }
+        } catch (error) {
+          console.error('Bloomberg WebSocket message parse error:', error);
+        }
+      };
+
+      wsRef.current.onclose = () => {
+        console.log("Bloomberg WebSocket disconnected");
+        setIsStreaming(false);
+        
+        // 3초 후 재연결 시도
+        reconnectTimeoutRef.current = setTimeout(() => {
+          if (!wsRef.current || wsRef.current.readyState === WebSocket.CLOSED) {
+            connectWebSocket();
+          }
+        }, 3000);
+      };
+
+      wsRef.current.onerror = (error) => {
+        console.error("Bloomberg WebSocket error:", error);
+      };
+
+    } catch (error) {
+      console.error("Bloomberg WebSocket connection error:", error);
+    }
+  }, []);
+
+  // 컴포넌트 마운트 시 WebSocket 연결
+  useEffect(() => {
+    connectWebSocket();
+    
+    return () => {
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+    };
+  }, [connectWebSocket]);
+
+  // 스트리밍 시작
+  const startStreaming = useCallback(() => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({
+        type: 'start_stream',
+        symbols: streamingSymbols
+      }));
+      setIsStreaming(true);
+      
+      toast({
+        title: "실시간 스트리밍 시작",
+        description: `${streamingSymbols.join(', ')} 데이터를 실시간으로 수신합니다.`,
+      });
+    } else {
+      toast({
+        title: "연결 오류",
+        description: "WebSocket 연결이 필요합니다.",
+        variant: "destructive",
+      });
+    }
+  }, [streamingSymbols, toast]);
+
+  // 스트리밍 중지
+  const stopStreaming = useCallback(() => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({
+        type: 'stop_stream'
+      }));
+    }
+    setIsStreaming(false);
+    setStreamingData(new Map());
+    
+    toast({
+      title: "실시간 스트리밍 중지",
+      description: "데이터 수신이 중지되었습니다.",
+    });
+  }, [toast]);
 
   // Bloomberg API 상태 조회
   const { data: apiStatus, isLoading: statusLoading } = useQuery<BloombergApiStatus>({
@@ -450,6 +563,124 @@ export default function BloombergAPI() {
               </Button>
             </div>
           </div>
+        </CardContent>
+      </Card>
+      {/* 실시간 스트리밍 모니터링 */}
+      <Card className="bg-slate-800/50 border-slate-600 backdrop-blur-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-white flex items-center gap-2">
+            <Activity className="w-5 h-5" />
+            실시간 스트리밍 모니터링
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <Label className="text-slate-300">모니터링 통화쌍</Label>
+              <div className="flex flex-wrap gap-2">
+                {streamingSymbols.map(symbol => (
+                  <Badge key={symbol} variant="outline" className="border-blue-600 text-blue-400">
+                    {symbol}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+            
+            <div className="flex gap-2">
+              <Button
+                onClick={startStreaming}
+                disabled={isStreaming || wsRef.current?.readyState !== WebSocket.OPEN}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                <Play className="w-4 h-4 mr-2" />
+                스트리밍 시작
+              </Button>
+              
+              <Button
+                onClick={stopStreaming}
+                disabled={!isStreaming}
+                variant="outline"
+                className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
+              >
+                <Pause className="w-4 h-4 mr-2" />
+                스트리밍 중지
+              </Button>
+            </div>
+          </div>
+
+          {/* 연결 상태 표시 */}
+          <div className="flex items-center gap-2">
+            <div className={`w-2 h-2 rounded-full ${
+              wsRef.current?.readyState === WebSocket.OPEN ? 'bg-green-400' : 'bg-red-400'
+            }`}></div>
+            <span className="text-slate-300 text-sm">
+              WebSocket: {wsRef.current?.readyState === WebSocket.OPEN ? '연결됨' : '연결 안됨'}
+            </span>
+            {isStreaming && (
+              <>
+                <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></div>
+                <span className="text-blue-400 text-sm">실시간 데이터 수신 중</span>
+              </>
+            )}
+          </div>
+
+          {/* 실시간 데이터 테이블 */}
+          {streamingData.size > 0 && (
+            <div className="mt-6">
+              <h4 className="text-white font-medium mb-3">실시간 환율 데이터</h4>
+              <div className="bg-slate-900/50 rounded-lg overflow-hidden">
+                <table className="w-full">
+                  <thead className="bg-slate-700/50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-slate-300 font-medium">통화쌍</th>
+                      <th className="px-4 py-3 text-right text-slate-300 font-medium">현재가</th>
+                      <th className="px-4 py-3 text-right text-slate-300 font-medium">변동</th>
+                      <th className="px-4 py-3 text-right text-slate-300 font-medium">변동률</th>
+                      <th className="px-4 py-3 text-right text-slate-300 font-medium">거래량</th>
+                      <th className="px-4 py-3 text-right text-slate-300 font-medium">시간</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Array.from(streamingData.values()).map((item) => (
+                      <tr key={item.symbol} className="border-t border-slate-700/50 hover:bg-slate-700/30">
+                        <td className="px-4 py-3 font-medium text-white">{item.symbol}</td>
+                        <td className="px-4 py-3 text-right text-white font-mono">
+                          {item.price.toFixed(2)}
+                        </td>
+                        <td className={`px-4 py-3 text-right font-mono ${
+                          item.change >= 0 ? 'text-green-400' : 'text-red-400'
+                        }`}>
+                          {item.change >= 0 ? '+' : ''}{item.change.toFixed(2)}
+                        </td>
+                        <td className={`px-4 py-3 text-right font-mono ${
+                          item.changePercent >= 0 ? 'text-green-400' : 'text-red-400'
+                        }`}>
+                          {item.changePercent >= 0 ? '+' : ''}{item.changePercent.toFixed(2)}%
+                        </td>
+                        <td className="px-4 py-3 text-right text-slate-300 font-mono">
+                          {item.volume.toLocaleString()}
+                        </td>
+                        <td className="px-4 py-3 text-right text-slate-300 text-sm">
+                          {new Date(item.timestamp).toLocaleTimeString()}
+                          {item.source === "bloomberg_simulation" && (
+                            <span className="ml-1 text-xs text-yellow-400">(시뮬레이션)</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* 스트리밍이 활성화되었지만 데이터가 없는 경우 */}
+          {isStreaming && streamingData.size === 0 && (
+            <div className="text-center py-8">
+              <Activity className="w-8 h-8 mx-auto text-blue-400 animate-pulse mb-2" />
+              <p className="text-slate-300">실시간 데이터를 기다리는 중...</p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
