@@ -16,7 +16,6 @@ import {
 import { Clock, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatCurrencyAmount } from "@/lib/currencyUtils";
-import Sidebar from "@/components/Sidebar";
 import { useLocation } from "wouter";
 
 interface TradeStatusItem {
@@ -200,19 +199,16 @@ export default function TradeStatus() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
-      <Sidebar />
-      
-      <div className="lg:ml-64 p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
-              Trade Status
-            </h1>
-            <p className="text-gray-600">거래 요청 현황을 확인하고 관리하세요</p>
-          </div>
+    <div className="min-h-screen bg-slate-900 p-6">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-white mb-2">
+            Trade Status
+          </h1>
+          <p className="text-slate-300">거래 요청 현황을 확인하고 관리하세요</p>
+        </div>
 
-          <Card className="backdrop-blur-sm bg-white/80 border-0 shadow-xl rounded-3xl">
+        <Card className="backdrop-blur-sm bg-slate-800/50 border border-slate-700 shadow-xl rounded-3xl">
             <div className="p-6">
               <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList className="grid w-full grid-cols-5 mb-6">
@@ -357,17 +353,16 @@ export default function TradeStatus() {
               { label: "거래체결완료", count: getTabCount("confirmed"), color: "bg-blue-500" },
               { label: "거래시한만료", count: getTabCount("expired"), color: "bg-gray-500" }
             ].map((stat, index) => (
-              <Card key={index} className="backdrop-blur-sm bg-white/60 border-0 shadow-lg rounded-2xl">
+              <Card key={index} className="backdrop-blur-sm bg-slate-800/50 border border-slate-700 shadow-lg rounded-2xl">
                 <div className="p-4 text-center">
                   <div className={cn("w-3 h-3 rounded-full mx-auto mb-2", stat.color)}></div>
-                  <div className="text-2xl font-bold text-gray-800">{stat.count}</div>
-                  <div className="text-sm text-gray-600">{stat.label}</div>
+                  <div className="text-2xl font-bold text-white">{stat.count}</div>
+                  <div className="text-sm text-slate-300">{stat.label}</div>
                 </div>
               </Card>
             ))}
           </div>
         </div>
       </div>
-    </div>
-  );
+    );
 }
