@@ -415,7 +415,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/admin/bloomberg/data", isAdmin, async (req, res) => {
     try {
       const { symbols = [], requestType = "realtime" } = req.query;
-      const symbolArray = Array.isArray(symbols) ? symbols : symbols.toString().split(',');
+      const symbolArray = Array.isArray(symbols) ? symbols.map(s => String(s)) : symbols.toString().split(',');
       
       if (requestType === "realtime") {
         try {
@@ -494,8 +494,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // 시장 데이터 저장
         await storage.createMarketRate({
           currencyPairId: currencyPair.id,
-          buyRate: item.price + (item.change / 2),
-          sellRate: item.price - (item.change / 2),
+          buyRate: (item.price + (item.change / 2)).toString(),
+          sellRate: (item.price - (item.change / 2)).toString(),
         });
       }
 
@@ -543,8 +543,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           await storage.createMarketRate({
             currencyPairId: currencyPair.id,
-            buyRate: item.price + 0.5,
-            sellRate: item.price - 0.5,
+            buyRate: (item.price + 0.5).toString(),
+            sellRate: (item.price - 0.5).toString(),
           });
           
           totalRecords++;
@@ -585,8 +585,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const price = 1200 + Math.random() * 100;
             await storage.createMarketRate({
               currencyPairId: currencyPair.id,
-              buyRate: price + 0.5,
-              sellRate: price - 0.5,
+              buyRate: (price + 0.5).toString(),
+              sellRate: (price - 0.5).toString(),
             });
             
             totalRecords++;
