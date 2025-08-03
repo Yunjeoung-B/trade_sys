@@ -31,10 +31,12 @@ UI Style: Gradient backgrounds (slate-800 → blue-900 → purple-900), rounded-
 - **Session Management**: PostgreSQL-backed session storage using connect-pg-simple for scalable session persistence
 
 ## Database Design
-- **Database**: PostgreSQL with Drizzle ORM for type-safe database operations
+- **Database**: PostgreSQL with Drizzle ORM for type-safe database operations (MySQL configuration attempted but reverted due to local server unavailability)
 - **Connection**: Neon serverless PostgreSQL for cloud-native deployment
 - **Schema Design**: Comprehensive schema covering users with hierarchical groups (majorGroup/midGroup/subGroup), currency pairs, market rates with historical tracking, spread settings with granular controls, quote requests with approval workflows, trades, and auto-approval settings
 - **Data Relationships**: Well-defined foreign key relationships between entities with proper indexing for performance
+- **UUID Generation**: Application-level UUID generation using nanoid() library instead of database auto-generation
+- **MySQL Compatibility**: Schema designed to be compatible with both PostgreSQL and MySQL with minor type adjustments
 
 ## Authentication & Authorization
 - **User Roles**: Two-tier system with 'admin' and 'client' roles providing different access levels
