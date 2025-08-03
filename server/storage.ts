@@ -43,10 +43,12 @@ export interface IStorage {
   // Currency pairs
   getCurrencyPairs(): Promise<CurrencyPair[]>;
   getCurrencyPair(id: string): Promise<CurrencyPair | undefined>;
+  getCurrencyPairBySymbol(symbol: string): Promise<CurrencyPair | undefined>;
   createCurrencyPair(pair: InsertCurrencyPair): Promise<CurrencyPair>;
 
   // Market rates
   getLatestMarketRates(): Promise<MarketRate[]>;
+  createMarketRate(rate: InsertMarketRate): Promise<MarketRate>;
   updateMarketRate(rate: InsertMarketRate): Promise<MarketRate>;
   getMarketRateHistory(currencyPairId: string, hours: number): Promise<MarketRate[]>;
 
@@ -133,6 +135,11 @@ export class DatabaseStorage implements IStorage {
     return pair;
   }
 
+  async getCurrencyPairBySymbol(symbol: string): Promise<CurrencyPair | undefined> {
+    const [pair] = await db.select().from(currencyPairs).where(eq(currencyPairs.symbol, symbol));
+    return pair;
+  }
+
   async createCurrencyPair(pairData: InsertCurrencyPair): Promise<CurrencyPair> {
     const [pair] = await db.insert(currencyPairs).values({
       id: generateId(),
@@ -148,6 +155,22 @@ export class DatabaseStorage implements IStorage {
       .from(marketRates)
       .orderBy(desc(marketRates.timestamp))
       .limit(10);
+  }
+
+  async createMarketRate(rateData: InsertMarketRate): Promise<MarketRate> {
+    const [rate] = await db.insert(marketRates).values({
+      id: generateId(),
+      ...rateData,
+    }).returning();
+    return rate;
+  }
+
+  async createMarketRate(rateData: InsertMarketRate): Promise<MarketRate> {
+    const [rate] = await db.insert(marketRates).values({
+      id: generateId(),
+      ...rateData,
+    }).returning();
+    return rate;
   }
 
   async updateMarketRate(rateData: InsertMarketRate): Promise<MarketRate> {

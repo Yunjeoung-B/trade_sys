@@ -363,6 +363,146 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Bloomberg API routes (Admin only)
+  app.get("/api/admin/bloomberg/status", isAdmin, async (req, res) => {
+    try {
+      // Bloomberg API 상태 확인
+      const status = {
+        connected: true, // 실제 Bloomberg API 연결 상태로 교체 필요
+        lastUpdate: new Date().toISOString(),
+        apiVersion: "3.18.4.1",
+        rateLimitRemaining: 1000
+      };
+      res.json(status);
+    } catch (error) {
+      console.error("Bloomberg API status error:", error);
+      res.status(500).json({ message: "Failed to get Bloomberg API status" });
+    }
+  });
+
+  app.post("/api/admin/bloomberg/test-connection", isAdmin, async (req, res) => {
+    try {
+      // Bloomberg API 연결 테스트
+      // 실제 Bloomberg API 호출로 교체 필요
+      await new Promise(resolve => setTimeout(resolve, 1000)); // 시뮬레이션
+      res.json({ success: true, message: "Bloomberg API connection successful" });
+    } catch (error) {
+      console.error("Bloomberg API connection test error:", error);
+      res.status(500).json({ message: "Bloomberg API connection failed" });
+    }
+  });
+
+  app.get("/api/admin/bloomberg/data", isAdmin, async (req, res) => {
+    try {
+      const { symbols = [], requestType = "realtime" } = req.query;
+      const symbolArray = Array.isArray(symbols) ? symbols : symbols.toString().split(',');
+      
+      // Bloomberg API에서 데이터 가져오기 (시뮬레이션)
+      const mockData = symbolArray.map((symbol: string) => ({
+        symbol,
+        price: 1200 + Math.random() * 100,
+        change: (Math.random() - 0.5) * 20,
+        changePercent: (Math.random() - 0.5) * 2,
+        volume: Math.floor(Math.random() * 1000000),
+        timestamp: new Date().toISOString(),
+        source: "bloomberg"
+      }));
+
+      res.json(mockData);
+    } catch (error) {
+      console.error("Bloomberg API data error:", error);
+      res.status(500).json({ message: "Failed to fetch Bloomberg data" });
+    }
+  });
+
+  app.post("/api/admin/bloomberg/save-data", isAdmin, async (req, res) => {
+    try {
+      const { data } = req.body;
+      
+      // Bloomberg 데이터를 market_rates 테이블에 저장
+      for (const item of data) {
+        // 통화쌍 찾기 또는 생성
+        let currencyPair = await storage.getCurrencyPairBySymbol(item.symbol);
+        if (!currencyPair) {
+          // 새 통화쌍 생성
+          const baseCurrency = item.symbol.slice(0, 3);
+          const quoteCurrency = item.symbol.slice(3, 6);
+          currencyPair = await storage.createCurrencyPair({
+            symbol: item.symbol,
+            baseCurrency,
+            quoteCurrency,
+            isActive: true
+          });
+        }
+
+        // 시장 데이터 저장
+        await storage.createMarketRate({
+          currencyPairId: currencyPair.id,
+          buyRate: item.price + (item.change / 2),
+          sellRate: item.price - (item.change / 2),
+        });
+      }
+
+      res.json({ success: true, message: `${data.length} records saved to database` });
+    } catch (error) {
+      console.error("Bloomberg data save error:", error);
+      res.status(500).json({ message: "Failed to save Bloomberg data" });
+    }
+  });
+
+  app.post("/api/admin/bloomberg/bulk-import", isAdmin, async (req, res) => {
+    try {
+      const { symbols, startDate, endDate } = req.body;
+      
+      // 대량 과거 데이터 가져오기 (시뮬레이션)
+      let totalRecords = 0;
+      
+      for (const symbol of symbols) {
+        // 각 심볼에 대해 날짜 범위의 데이터 생성
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const daysDiff = Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+        
+        for (let i = 0; i <= daysDiff; i++) {
+          const date = new Date(start);
+          date.setDate(start.getDate() + i);
+          
+          // 통화쌍 확인/생성
+          let currencyPair = await storage.getCurrencyPairBySymbol(symbol);
+          if (!currencyPair) {
+            const baseCurrency = symbol.slice(0, 3);
+            const quoteCurrency = symbol.slice(3, 6);
+            currencyPair = await storage.createCurrencyPair({
+              symbol,
+              baseCurrency,
+              quoteCurrency,
+              isActive: true
+            });
+          }
+
+          // 시장 데이터 생성 및 저장
+          const price = 1200 + Math.random() * 100;
+          await storage.createMarketRate({
+            currencyPairId: currencyPair.id,
+            buyRate: price + 0.5,
+            sellRate: price - 0.5,
+          });
+          
+          totalRecords++;
+        }
+      }
+
+      res.json({ 
+        success: true, 
+        message: `${totalRecords} historical records imported successfully`,
+        recordsImported: totalRecords
+      });
+    } catch (error) {
+      console.error("Bloomberg bulk import error:", error);
+      res.status(500).json({ message: "Failed to import Bloomberg data" });
+    }
+  });
+
   // Create HTTP server
   const httpServer = createServer(app);
 

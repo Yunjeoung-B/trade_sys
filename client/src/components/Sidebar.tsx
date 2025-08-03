@@ -13,6 +13,7 @@ import {
   Settings,
   CheckCircle,
   Users,
+  Database,
 } from "lucide-react";
 
 const clientMenuItems = [
@@ -30,6 +31,7 @@ const adminMenuItems = [
   { path: "/admin/approvals", label: "호가 승인 관리", icon: CheckCircle },
   { path: "/admin/users", label: "사용자 관리", icon: Users },
   { path: "/admin/trades", label: "거래 관리", icon: History },
+  { path: "/admin/bloomberg", label: "Bloomberg API", icon: Database },
 ];
 
 export default function Sidebar() {

@@ -19,6 +19,7 @@ import SpreadSettings from "@/pages/admin/SpreadSettings";
 import QuoteApprovals from "@/pages/admin/QuoteApprovals";
 import UserManagement from "@/pages/admin/UserManagement";
 import TradeManagement from "@/pages/admin/TradeManagement";
+import BloombergAPI from "@/pages/admin/BloombergAPI";
 
 function Router() {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -55,6 +56,7 @@ function Router() {
               <Route path="/admin/approvals" component={QuoteApprovals} />
               <Route path="/admin/users" component={UserManagement} />
               <Route path="/admin/trades" component={TradeManagement} />
+              <Route path="/admin/bloomberg" component={BloombergAPI} />
             </>
           )}
         </Layout>
