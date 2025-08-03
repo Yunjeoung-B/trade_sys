@@ -65,12 +65,20 @@ export default function BloombergAPI() {
       wsRef.current.onmessage = (event) => {
         try {
           const message = JSON.parse(event.data);
+          console.log('WebSocket message received:', message);
           
           if (message.type === 'realtime_data' && message.data) {
             const data = message.data;
             setStreamingData(prev => {
               const newMap = new Map(prev);
               newMap.set(data.symbol, data);
+              return newMap;
+            });
+          } else if (message.type === 'market_data') {
+            // Bloomberg streaming data format
+            setStreamingData(prev => {
+              const newMap = new Map(prev);
+              newMap.set(message.symbol, message);
               return newMap;
             });
           }
