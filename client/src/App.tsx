@@ -4,16 +4,15 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
+import Layout from "@/components/Layout";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/Landing";
 import Login from "@/pages/Login";
-import Dashboard from "@/pages/Dashboard";
 import SpotTrading from "@/pages/SpotTrading";
 import ForwardTrading from "@/pages/ForwardTrading";
 import SwapTrading from "@/pages/SwapTrading";
 import MARTrading from "@/pages/MARTrading";
 import ExchangeRates from "@/pages/ExchangeRates";
-import TradingStatus from "@/pages/TradingStatus";
 import TradeStatus from "@/pages/TradeStatus";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import SpreadSettings from "@/pages/admin/SpreadSettings";
@@ -40,8 +39,8 @@ function Router() {
           <Route path="/login" component={Login} />
         </>
       ) : (
-        <>
-          <Route path="/" component={Dashboard} />
+        <Layout>
+          <Route path="/" component={SpotTrading} />
           <Route path="/spot" component={SpotTrading} />
           <Route path="/forward" component={ForwardTrading} />
           <Route path="/swap" component={SwapTrading} />
@@ -58,7 +57,7 @@ function Router() {
               <Route path="/admin/trades" component={TradeManagement} />
             </>
           )}
-        </>
+        </Layout>
       )}
       <Route component={NotFound} />
     </Switch>
