@@ -318,9 +318,10 @@ export default function TradeStatus() {
                                     disabled={statusConfig.buttonDisabled}
                                     onClick={() => handleViewQuote(trade)}
                                     className={cn(
-                                      "rounded-xl text-xs",
+                                      "rounded-xl text-xs text-white",
                                       !statusConfig.buttonDisabled && trade.status === "QUOTE_READY" && 
-                                      "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
+                                      "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700",
+                                      statusConfig.buttonDisabled && "border-slate-500 text-slate-300"
                                     )}
                                   >
                                     {statusConfig.buttonLabel}
