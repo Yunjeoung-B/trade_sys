@@ -249,15 +249,15 @@ export default function TradeStatus() {
                     <div className="rounded-2xl border border-gray-200 overflow-hidden">
                       <Table>
                         <TableHeader>
-                          <TableRow className="bg-gray-50/50">
-                            <TableHead className="text-center font-semibold">요청시간</TableHead>
-                            <TableHead className="text-center font-semibold">상품</TableHead>
-                            <TableHead className="text-center font-semibold">통화</TableHead>
-                            <TableHead className="text-center font-semibold">거래금액</TableHead>
-                            <TableHead className="text-center font-semibold">만기일</TableHead>
-                            <TableHead className="text-center font-semibold">상태</TableHead>
-                            <TableHead className="text-center font-semibold">남은시간</TableHead>
-                            <TableHead className="text-center font-semibold">작업</TableHead>
+                          <TableRow className="border-slate-600">
+                            <TableHead className="text-center font-semibold text-white">요청시간</TableHead>
+                            <TableHead className="text-center font-semibold text-white">상품</TableHead>
+                            <TableHead className="text-center font-semibold text-white">통화</TableHead>
+                            <TableHead className="text-center font-semibold text-white">거래금액</TableHead>
+                            <TableHead className="text-center font-semibold text-white">만기일</TableHead>
+                            <TableHead className="text-center font-semibold text-white">상태</TableHead>
+                            <TableHead className="text-center font-semibold text-white">남은시간</TableHead>
+                            <TableHead className="text-center font-semibold text-white">작업</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -266,7 +266,7 @@ export default function TradeStatus() {
                             return (
                               <TableRow 
                                 key={trade.id} 
-                                className="hover:bg-gray-50/50 cursor-pointer transition-colors"
+                                className="hover:bg-slate-700/50 cursor-pointer transition-colors border-slate-600 text-white"
                                 onDoubleClick={() => handleRowDoubleClick(trade)}
                               >
                                 <TableCell className="text-center">
@@ -333,7 +333,7 @@ export default function TradeStatus() {
                       </Table>
                       
                       {filterTrades(tabValue).length === 0 && (
-                        <div className="text-center py-12 text-gray-500">
+                        <div className="text-center py-12 text-slate-400">
                           <div className="text-4xl mb-4">📊</div>
                           <p>해당 상태의 거래가 없습니다</p>
                         </div>
