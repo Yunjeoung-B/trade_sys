@@ -1,6 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import Header from "@/components/Header";
-import Sidebar from "@/components/Sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -42,29 +40,25 @@ export default function ExchangeRates() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900">
-      <Header />
-      <div className="flex">
-        <Sidebar />
-        <div className="flex-1 p-6">
-          <div className="mb-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold text-white mb-2">환율조회</h2>
-                <p className="text-slate-300">실시간 환율 정보를 확인하세요.</p>
-              </div>
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center text-sm text-slate-300">
-                  <Clock className="w-4 h-4 mr-2" />
-                  <span>마지막 업데이트: {lastUpdate.toLocaleTimeString('ko-KR')}</span>
-                </div>
-                <Button variant="outline" size="sm" onClick={handleRefresh} className="border-slate-600 text-slate-300">
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  새로고침
-                </Button>
-              </div>
-            </div>
+    <div className="min-h-screen bg-slate-900 p-6">
+      <div className="mb-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-white mb-2">환율조회</h2>
+            <p className="text-slate-300">실시간 환율 정보를 확인하세요.</p>
           </div>
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center text-sm text-slate-300">
+              <Clock className="w-4 h-4 mr-2" />
+              <span>마지막 업데이트: {lastUpdate.toLocaleTimeString('ko-KR')}</span>
+            </div>
+            <Button variant="outline" size="sm" onClick={handleRefresh} className="border-slate-600 text-slate-300">
+              <RefreshCw className="w-4 h-4 mr-2" />
+              새로고침
+            </Button>
+          </div>
+        </div>
+      </div>
 
           {/* 주요 환율 요약 */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
@@ -174,18 +168,16 @@ export default function ExchangeRates() {
             })}
           </div>
 
-          {/* 하단 정보 */}
-          <div className="mt-8 p-4 bg-blue-900/20 rounded-lg border border-blue-800">
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center space-x-4">
-                <span className="font-medium text-white">환율 정보</span>
-                <span className="text-slate-400">• 5초마다 자동 업데이트</span>
-                <span className="text-slate-400">• 실시간 시세 반영</span>
-              </div>
-              <div className="text-slate-400">
-                총 {currencyPairs.length}개 통화쌍
-              </div>
-            </div>
+      {/* 하단 정보 */}
+      <div className="mt-8 p-4 bg-blue-900/20 rounded-lg border border-blue-800">
+        <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center space-x-4">
+            <span className="font-medium text-white">환율 정보</span>
+            <span className="text-slate-400">• 5초마다 자동 업데이트</span>
+            <span className="text-slate-400">• 실시간 시세 반영</span>
+          </div>
+          <div className="text-slate-400">
+            총 {currencyPairs.length}개 통화쌍
           </div>
         </div>
       </div>
