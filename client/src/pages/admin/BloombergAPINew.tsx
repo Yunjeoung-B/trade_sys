@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Play, Square, RefreshCw, Download, Upload, CheckCircle, AlertCircle } from "lucide-react";
+import { exportBloombergDataToExcel } from "@/utils/excelUtils";
+import { Loader2, Play, Square, RefreshCw, Download, Upload, CheckCircle, AlertCircle, XCircle } from "lucide-react";
 
 interface BloombergData {
   symbol: string;
@@ -387,10 +388,24 @@ export default function BloombergAPI() {
       {isStreaming && streamingData.size > 0 && (
         <Card className="bg-slate-900/50 border-slate-700">
           <CardHeader>
-            <CardTitle className="text-slate-200">실시간 환율 데이터</CardTitle>
-            <CardDescription className="text-slate-400">
-              2초마다 업데이트되는 실시간 시세 정보
-            </CardDescription>
+            <div className="flex justify-between items-start">
+              <div>
+                <CardTitle className="text-slate-200">실시간 환율 데이터</CardTitle>
+                <CardDescription className="text-slate-400">
+                  2초마다 업데이트되는 실시간 시세 정보
+                </CardDescription>
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => exportBloombergDataToExcel(streamingData)}
+                disabled={streamingData.size === 0}
+                className="bg-green-500/10 border-green-400/30 text-green-400 hover:bg-green-500/20"
+                size="sm"
+              >
+                <Download className="mr-2 h-4 w-4" />
+                엑셀 내보내기
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">

@@ -24,11 +24,12 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Edit, Filter, CheckCircle, XCircle, Clock } from "lucide-react";
+import { Edit, Filter, CheckCircle, XCircle, Clock, Download, Upload, FileDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatCurrencyAmount } from "@/lib/currencyUtils";
 import Sidebar from "@/components/Sidebar";
 import { useToast } from "@/hooks/use-toast";
+import { exportTradesToExcel, downloadTradeTemplate, importTradesFromExcel } from "@/utils/excelUtils";
 
 interface TradeRequest {
   id: string;
@@ -240,17 +241,88 @@ export default function TradeManagement() {
     return `${sign}${formatCurrencyAmount(Math.abs(amount), currency)}`;
   };
 
+  // 파일 업로드 핸들러
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const importedTrades = await importTradesFromExcel(file);
+      setTrades(prev => [...prev, ...importedTrades]);
+      toast({
+        title: "엑셀 가져오기 성공",
+        description: `${importedTrades.length}개의 거래를 가져왔습니다.`,
+      });
+    } catch (error) {
+      toast({
+        title: "가져오기 실패",
+        description: "엑셀 파일을 읽을 수 없습니다.",
+        variant: "destructive",
+      });
+    }
+    
+    // 파일 입력 초기화
+    if (event.target) {
+      event.target.value = '';
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
       <Sidebar />
       
       <div className="lg:ml-64 p-6">
         <div className="max-w-7xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
-              Trade Management
-            </h1>
-            <p className="text-gray-600">관리자 전용 거래 요청 관리 및 스프레드 조정</p>
+          <div className="mb-8 flex justify-between items-start">
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
+                Trade Management
+              </h1>
+              <p className="text-gray-600">관리자 전용 거래 요청 관리 및 스프레드 조정</p>
+            </div>
+            
+            {/* 엑셀 기능 버튼들 */}
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => exportTradesToExcel(trades)}
+                className="bg-green-500/10 border-green-400/30 text-green-600 hover:bg-green-500/20"
+                size="sm"
+              >
+                <Download className="mr-2 h-4 w-4" />
+                엑셀 내보내기
+              </Button>
+              
+              <Button
+                variant="outline"
+                onClick={downloadTradeTemplate}
+                className="bg-blue-500/10 border-blue-400/30 text-blue-600 hover:bg-blue-500/20"
+                size="sm"
+              >
+                <FileDown className="mr-2 h-4 w-4" />
+                템플릿 다운로드
+              </Button>
+              
+              <label className="cursor-pointer">
+                <Button
+                  variant="outline"
+                  className="bg-purple-500/10 border-purple-400/30 text-purple-600 hover:bg-purple-500/20"
+                  size="sm"
+                  asChild
+                >
+                  <span>
+                    <Upload className="mr-2 h-4 w-4" />
+                    엑셀 가져오기
+                  </span>
+                </Button>
+                <input
+                  type="file"
+                  accept=".xlsx,.xls"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+              </label>
+            </div>
           </div>
 
           {/* Filters */}
