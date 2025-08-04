@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
-import * as XLSX from 'xlsx';
 import { WebSocket } from 'ws';
+import * as XLSX from 'xlsx';
 
 interface ExcelCellData {
   cellAddress: string;
@@ -96,7 +96,8 @@ class ExcelMonitor {
 
   // 엑셀 파일 읽기
   private readExcelFile(filePath: string): ExcelCellData[] {
-    const workbook = XLSX.readFile(filePath);
+    const fileBuffer = fs.readFileSync(filePath);
+    const workbook = XLSX.read(fileBuffer, { type: 'buffer' });
     const result: ExcelCellData[] = [];
     const fileName = path.basename(filePath);
     const timestamp = new Date().toISOString();
@@ -179,12 +180,30 @@ class ExcelMonitor {
   // 특정 셀 값 가져오기
   getCellValue(filePath: string, sheetName: string, cellAddress: string): any {
     try {
-      const workbook = XLSX.readFile(filePath);
+      if (!fs.existsSync(filePath)) {
+        console.error(`Excel file not found: ${filePath}`);
+        return null;
+      }
+
+      // XLSX 라이브러리 로드 확인 완료
+      
+      // ES 모듈에서 XLSX 사용 - readFile 대신 read 사용
+      const fileBuffer = fs.readFileSync(filePath);
+      const workbook = XLSX.read(fileBuffer, { type: 'buffer' });
+      
+      if (!workbook.Sheets[sheetName]) {
+        console.error(`Sheet '${sheetName}' not found in workbook`);
+        console.log('Available sheets:', Object.keys(workbook.Sheets));
+        return null;
+      }
+
       const worksheet = workbook.Sheets[sheetName];
       const cell = worksheet[cellAddress];
+      
+      console.log(`Getting cell ${cellAddress} from ${sheetName}:`, cell ? cell.v : 'null');
       return cell ? cell.v : null;
     } catch (error) {
-      console.error(`Error getting cell value:`, error);
+      console.error(`Error getting cell value from ${filePath}:`, error);
       return null;
     }
   }
@@ -192,7 +211,8 @@ class ExcelMonitor {
   // 특정 범위의 데이터 가져오기
   getRangeData(filePath: string, sheetName: string, range: string): any[][] {
     try {
-      const workbook = XLSX.readFile(filePath);
+      const fileBuffer = fs.readFileSync(filePath);
+      const workbook = XLSX.read(fileBuffer, { type: 'buffer' });
       const worksheet = workbook.Sheets[sheetName];
       const data = XLSX.utils.sheet_to_json(worksheet, { 
         header: 1,
