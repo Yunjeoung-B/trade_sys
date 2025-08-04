@@ -49,16 +49,25 @@ function Router() {
           <Route path="/rates" component={ExchangeRates} />
           <Route path="/trades" component={TradeStatus} />
           
-          {user?.role === "admin" && (
-            <>
-              <Route path="/admin" component={AdminDashboard} />
-              <Route path="/admin/spreads" component={SpreadSettings} />
-              <Route path="/admin/approvals" component={QuoteApprovals} />
-              <Route path="/admin/users" component={UserManagement} />
-              <Route path="/admin/trades" component={TradeManagement} />
-              <Route path="/admin/bloomberg" component={BloombergAPI} />
-            </>
-          )}
+          {/* Admin routes - 관리자 권한 확인 */}
+          <Route path="/admin">
+            {user?.role === "admin" ? <AdminDashboard /> : <NotFound />}
+          </Route>
+          <Route path="/admin/spreads">
+            {user?.role === "admin" ? <SpreadSettings /> : <NotFound />}
+          </Route>
+          <Route path="/admin/approvals">
+            {user?.role === "admin" ? <QuoteApprovals /> : <NotFound />}
+          </Route>
+          <Route path="/admin/users">
+            {user?.role === "admin" ? <UserManagement /> : <NotFound />}
+          </Route>
+          <Route path="/admin/trades">
+            {user?.role === "admin" ? <TradeManagement /> : <NotFound />}
+          </Route>
+          <Route path="/admin/bloomberg">
+            {user?.role === "admin" ? <BloombergAPI /> : <NotFound />}
+          </Route>
         </Layout>
       )}
       <Route component={NotFound} />
