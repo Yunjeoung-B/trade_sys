@@ -20,6 +20,7 @@ import QuoteApprovals from "@/pages/admin/QuoteApprovals";
 import UserManagement from "@/pages/admin/UserManagement";
 import TradeManagement from "@/pages/admin/TradeManagement";
 import BloombergAPI from "@/pages/admin/BloombergAPINew";
+import ExcelMonitoring from "@/pages/admin/ExcelMonitoring";
 
 function Router() {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -67,6 +68,9 @@ function Router() {
           </Route>
           <Route path="/admin/bloomberg">
             {user?.role === "admin" ? <BloombergAPI /> : <NotFound />}
+          </Route>
+          <Route path="/admin/excel">
+            {user?.role === "admin" ? <ExcelMonitoring /> : <NotFound />}
           </Route>
         </Layout>
       )}

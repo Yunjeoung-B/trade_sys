@@ -4,6 +4,9 @@ import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
 import { exec, spawn } from "child_process";
 import { promisify } from "util";
+import { excelMonitor } from "./excelMonitor";
+import * as path from "path";
+import * as fs from "fs";
 import {
   insertUserSchema,
   insertCurrencyPairSchema,
@@ -624,6 +627,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     ws.on("close", () => {
       console.log("WebSocket client disconnected");
     });
+
+    ws.on("error", (error) => {
+      console.error("WebSocket error:", error);
+    });
+  });
+
+  // Setup Excel monitoring WebSocket
+  const excelWss = new WebSocketServer({ server: httpServer, path: "/excel-ws" });
+  
+  excelWss.on("connection", (ws: WebSocket) => {
+    console.log("Excel WebSocket client connected");
+    excelMonitor.addClient(ws);
+    
+    // 클라이언트에게 현재 모니터링 중인 파일 목록 전송
+    const watchedFiles = excelMonitor.getWatchedFiles();
+    ws.send(JSON.stringify({
+      type: "watched_files",
+      files: watchedFiles
+    }));
+
+    ws.on("close", () => {
+      console.log("WebSocket client disconnected");
+    });
   });
 
   // Bloomberg WebSocket setup for real-time streaming
@@ -818,6 +844,108 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error broadcasting market data:", error);
     }
   }, 5000); // Update every 5 seconds
+
+  // Excel monitoring API endpoints
+  app.post("/api/excel/start-monitoring", isAdmin, async (req, res) => {
+    try {
+      const { filePath } = req.body;
+      
+      if (!filePath) {
+        return res.status(400).json({ message: "File path is required" });
+      }
+
+      const success = excelMonitor.startWatching(filePath);
+      
+      if (success) {
+        res.json({ 
+          success: true, 
+          message: `Started monitoring ${path.basename(filePath)}`,
+          filePath 
+        });
+      } else {
+        res.status(400).json({ 
+          success: false, 
+          message: "Failed to start monitoring file" 
+        });
+      }
+    } catch (error) {
+      console.error("Excel monitoring start error:", error);
+      res.status(500).json({ message: "Failed to start Excel monitoring" });
+    }
+  });
+
+  app.post("/api/excel/stop-monitoring", isAdmin, async (req, res) => {
+    try {
+      const { filePath } = req.body;
+      
+      if (!filePath) {
+        return res.status(400).json({ message: "File path is required" });
+      }
+
+      const success = excelMonitor.stopWatching(filePath);
+      
+      if (success) {
+        res.json({ 
+          success: true, 
+          message: `Stopped monitoring ${path.basename(filePath)}` 
+        });
+      } else {
+        res.status(400).json({ 
+          success: false, 
+          message: "File was not being monitored" 
+        });
+      }
+    } catch (error) {
+      console.error("Excel monitoring stop error:", error);
+      res.status(500).json({ message: "Failed to stop Excel monitoring" });
+    }
+  });
+
+  app.get("/api/excel/watched-files", isAdmin, async (req, res) => {
+    try {
+      const watchedFiles = excelMonitor.getWatchedFiles();
+      res.json({ files: watchedFiles });
+    } catch (error) {
+      console.error("Excel watched files error:", error);
+      res.status(500).json({ message: "Failed to get watched files" });
+    }
+  });
+
+  app.post("/api/excel/get-cell-value", isAdmin, async (req, res) => {
+    try {
+      const { filePath, sheetName, cellAddress } = req.body;
+      const value = excelMonitor.getCellValue(filePath, sheetName, cellAddress);
+      
+      res.json({ 
+        success: true, 
+        value,
+        filePath: path.basename(filePath),
+        sheetName,
+        cellAddress 
+      });
+    } catch (error) {
+      console.error("Excel cell value error:", error);
+      res.status(500).json({ message: "Failed to get cell value" });
+    }
+  });
+
+  app.post("/api/excel/get-range-data", isAdmin, async (req, res) => {
+    try {
+      const { filePath, sheetName, range } = req.body;
+      const data = excelMonitor.getRangeData(filePath, sheetName, range);
+      
+      res.json({ 
+        success: true, 
+        data,
+        filePath: path.basename(filePath),
+        sheetName,
+        range 
+      });
+    } catch (error) {
+      console.error("Excel range data error:", error);
+      res.status(500).json({ message: "Failed to get range data" });
+    }
+  });
 
   return httpServer;
 }
