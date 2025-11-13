@@ -17,7 +17,7 @@ interface SpreadSetting {
   groupType?: string;
   groupValue?: string;
   baseSpread: string;
-  tenorSpreads?: any;
+  tenorSpreads?: Record<string, number>;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -37,18 +37,21 @@ export default function SpreadSettings() {
   const [groupValue, setGroupValue] = useState("");
   const [baseSpread, setBaseSpread] = useState("10");
   const [tenorSpreads, setTenorSpreads] = useState<Record<string, string>>({
-    "ON": "3",      // ON&TN 3전
-    "TN": "3",      // ON&TN 3전
-    "SPOT": "10",   // SPOT~1M 기본 10전
-    "1W": "10",     // SPOT~1M 기본 10전
-    "2W": "10",     // SPOT~1M 기본 10전
-    "1M": "10",     // SPOT~1M 기본 10전
-    "2M": "20",     // 2M 20전
-    "3M": "25",     // 3M 25전
-    "6M": "30",     // 6M 30전
-    "9M": "40",     // 9M 40전
-    "12M": "50"     // 12M 50전
+    "ON": "3",
+    "TN": "3",
+    "SPOT": "10",
+    "1W": "10",
+    "2W": "10",
+    "1M": "10",
+    "2M": "20",
+    "3M": "25",
+    "6M": "30",
+    "9M": "40",
+    "12M": "50"
   });
+
+  const [filterGroupType, setFilterGroupType] = useState("all");
+  const [filterGroupValue, setFilterGroupValue] = useState("");
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -71,29 +74,10 @@ export default function SpreadSettings() {
       queryClient.invalidateQueries({ queryKey: ["/api/spread-settings"] });
       resetForm();
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({
         title: "오류",
-        description: "스프레드 설정 저장 중 오류가 발생했습니다.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const updateSpreadMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) => 
-      apiRequest("PUT", `/api/spread-settings/${id}`, data),
-    onSuccess: () => {
-      toast({
-        title: "성공",
-        description: "스프레드 설정이 업데이트되었습니다.",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/spread-settings"] });
-    },
-    onError: () => {
-      toast({
-        title: "오류",
-        description: "스프레드 설정 업데이트 중 오류가 발생했습니다.",
+        description: error?.error || "스프레드 설정 저장 중 오류가 발생했습니다.",
         variant: "destructive",
       });
     },
@@ -126,12 +110,14 @@ export default function SpreadSettings() {
     const spreadData = {
       productType,
       currencyPairId,
-      groupType: groupType || null,
+      groupType: groupType && groupType !== "all" ? groupType : null,
       groupValue: groupValue || null,
       baseSpread: parseFloat(baseSpread),
-      tenorSpreads: Object.keys(tenorSpreads).some(key => tenorSpreads[key]) 
+      tenorSpreads: (productType === "Swap" || productType === "Forward") && Object.keys(tenorSpreads).some(key => tenorSpreads[key]) 
         ? Object.fromEntries(
-            Object.entries(tenorSpreads).filter(([_, value]) => value !== "")
+            Object.entries(tenorSpreads)
+              .filter(([_, value]) => value !== "")
+              .map(([key, value]) => [key, parseFloat(value)])
           )
         : null,
       isActive: true,
@@ -161,6 +147,24 @@ export default function SpreadSettings() {
     }
   };
 
+  const filteredSettings = spreadSettings?.filter(setting => {
+    if (filterGroupType === "all") return true;
+    if (filterGroupType === "none") return !setting.groupType;
+    if (filterGroupValue) {
+      return setting.groupType === filterGroupType && setting.groupValue === filterGroupValue;
+    }
+    return setting.groupType === filterGroupType;
+  });
+
+  const uniqueGroupValues = Array.from(
+    new Set(
+      spreadSettings
+        ?.filter(s => s.groupType === filterGroupType)
+        .map(s => s.groupValue)
+        .filter(Boolean) || []
+    )
+  );
+
   return (
     <div className="min-h-screen bg-slate-900">
       <Header />
@@ -183,7 +187,7 @@ export default function SpreadSettings() {
                   <div>
                     <Label>상품 유형</Label>
                     <Select value={productType} onValueChange={setProductType}>
-                      <SelectTrigger>
+                      <SelectTrigger data-testid="select-product-type">
                         <SelectValue placeholder="상품 유형 선택" />
                       </SelectTrigger>
                       <SelectContent>
@@ -198,7 +202,7 @@ export default function SpreadSettings() {
                   <div>
                     <Label>통화쌍</Label>
                     <Select value={currencyPairId} onValueChange={setCurrencyPairId}>
-                      <SelectTrigger>
+                      <SelectTrigger data-testid="select-currency-pair">
                         <SelectValue placeholder="통화쌍 선택" />
                       </SelectTrigger>
                       <SelectContent>
@@ -214,7 +218,7 @@ export default function SpreadSettings() {
                   <div>
                     <Label>고객 그룹 유형</Label>
                     <Select value={groupType} onValueChange={setGroupType}>
-                      <SelectTrigger>
+                      <SelectTrigger data-testid="select-group-type">
                         <SelectValue placeholder="그룹 유형 선택 (선택사항)" />
                       </SelectTrigger>
                       <SelectContent>
@@ -226,10 +230,11 @@ export default function SpreadSettings() {
                     </Select>
                   </div>
 
-                  {groupType && (
+                  {groupType && groupType !== "all" && (
                     <div>
                       <Label>그룹 값</Label>
                       <Input
+                        data-testid="input-group-value"
                         value={groupValue}
                         onChange={(e) => setGroupValue(e.target.value)}
                         placeholder="그룹 식별자 입력"
@@ -240,6 +245,7 @@ export default function SpreadSettings() {
                   <div>
                     <Label>기본 스프레드 (전)</Label>
                     <Input
+                      data-testid="input-base-spread"
                       type="number"
                       step="1"
                       value={baseSpread}
@@ -252,31 +258,35 @@ export default function SpreadSettings() {
                     </div>
                   </div>
                   
-                  <div>
-                    <Label>만기별 가산 스프레드 (기본값 설정됨)</Label>
-                    <div className="text-xs text-gray-500 mb-2">
-                      ON&TN: 3전, SPOT~1M: 10전, 2M: 20전, 3M: 25전, 6M: 30전, 9M: 40전, 12M: 50전
+                  {(productType === "Swap" || productType === "Forward") && (
+                    <div>
+                      <Label>만기별 가산 스프레드</Label>
+                      <div className="text-xs text-gray-500 mb-2">
+                        ON&TN: 3전, SPOT~1M: 10전, 2M: 20전, 3M: 25전, 6M: 30전, 9M: 40전, 12M: 50전
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {Object.entries(tenorSpreads).map(([tenor, value]) => (
+                          <div key={tenor} className="flex space-x-2 items-center">
+                            <Label className="w-12 text-sm font-medium">{tenor}:</Label>
+                            <Input
+                              type="number"
+                              step="1"
+                              value={value}
+                              onChange={(e) => handleTenorSpreadChange(tenor, e.target.value)}
+                              placeholder="전"
+                              className="flex-1"
+                              data-testid={`input-tenor-${tenor}`}
+                            />
+                            <span className="text-xs text-gray-500">전</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      {Object.entries(tenorSpreads).map(([tenor, value]) => (
-                        <div key={tenor} className="flex space-x-2 items-center">
-                          <Label className="w-12 text-sm font-medium">{tenor}:</Label>
-                          <Input
-                            type="number"
-                            step="1"
-                            value={value}
-                            onChange={(e) => handleTenorSpreadChange(tenor, e.target.value)}
-                            placeholder="전"
-                            className="flex-1"
-                          />
-                          <span className="text-xs text-gray-500">전</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                  )}
                   
                   <Button
                     type="submit"
+                    data-testid="button-save-spread"
                     className="w-full gradient-bg hover:opacity-90"
                     disabled={createSpreadMutation.isPending || !productType || !currencyPairId || !baseSpread}
                   >
@@ -292,6 +302,43 @@ export default function SpreadSettings() {
                 <CardTitle>현재 스프레드</CardTitle>
               </CardHeader>
               <CardContent>
+                <div className="mb-4 flex gap-2">
+                  <div className="flex-1">
+                    <Select value={filterGroupType} onValueChange={(value) => {
+                      setFilterGroupType(value);
+                      setFilterGroupValue("");
+                    }}>
+                      <SelectTrigger data-testid="filter-group-type">
+                        <SelectValue placeholder="그룹 필터" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">전체</SelectItem>
+                        <SelectItem value="none">그룹 없음</SelectItem>
+                        <SelectItem value="major">Major Group</SelectItem>
+                        <SelectItem value="mid">Mid Group</SelectItem>
+                        <SelectItem value="sub">Sub Group</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {filterGroupType !== "all" && filterGroupType !== "none" && uniqueGroupValues.length > 0 && (
+                    <div className="flex-1">
+                      <Select value={filterGroupValue} onValueChange={setFilterGroupValue}>
+                        <SelectTrigger data-testid="filter-group-value">
+                          <SelectValue placeholder="그룹값 필터" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">전체</SelectItem>
+                          {uniqueGroupValues.map((val) => (
+                            <SelectItem key={val} value={val || ""}>
+                              {val}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </div>
+
                 {isLoading ? (
                   <div className="text-center py-4">로딩 중...</div>
                 ) : (
@@ -302,25 +349,44 @@ export default function SpreadSettings() {
                           <th className="text-left py-2">상품</th>
                           <th className="text-left py-2">통화쌍</th>
                           <th className="text-left py-2">그룹</th>
+                          <th className="text-left py-2">그룹값</th>
                           <th className="text-right py-2">스프레드</th>
+                          <th className="text-left py-2 pl-2">만기별</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {spreadSettings?.map((setting) => (
-                          <tr key={setting.id} className="border-b hover:bg-gray-50">
-                            <td className="py-2">{setting.productType}</td>
-                            <td className="py-2">{getPairSymbol(setting.currencyPairId)}</td>
-                            <td className="py-2 text-xs">
-                              {getGroupTypeText(setting.groupType)}
-                              {setting.groupValue && `: ${setting.groupValue}`}
-                            </td>
-                            <td className="text-right">
-                              {parseFloat(setting.baseSpread).toFixed(1)} pips
-                            </td>
-                          </tr>
-                        )) || (
+                        {filteredSettings && filteredSettings.length > 0 ? (
+                          filteredSettings.map((setting) => (
+                            <tr key={setting.id} className="border-b hover:bg-gray-50" data-testid={`spread-row-${setting.id}`}>
+                              <td className="py-2">{setting.productType}</td>
+                              <td className="py-2">{getPairSymbol(setting.currencyPairId)}</td>
+                              <td className="py-2 text-xs">
+                                {getGroupTypeText(setting.groupType)}
+                              </td>
+                              <td className="py-2 text-xs">
+                                {setting.groupValue || "-"}
+                              </td>
+                              <td className="text-right">
+                                {parseFloat(setting.baseSpread).toFixed(1)}전
+                              </td>
+                              <td className="py-2 text-xs pl-2">
+                                {setting.tenorSpreads ? (
+                                  <div className="text-gray-600">
+                                    {Object.entries(setting.tenorSpreads)
+                                      .slice(0, 3)
+                                      .map(([tenor, spread]) => `${tenor}:${spread}전`)
+                                      .join(", ")}
+                                    {Object.keys(setting.tenorSpreads).length > 3 && "..."}
+                                  </div>
+                                ) : (
+                                  "-"
+                                )}
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
                           <tr>
-                            <td colSpan={4} className="py-8 text-center text-gray-500">
+                            <td colSpan={6} className="py-8 text-center text-gray-500">
                               설정된 스프레드가 없습니다.
                             </td>
                           </tr>
