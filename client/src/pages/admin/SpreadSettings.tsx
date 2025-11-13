@@ -123,12 +123,12 @@ export default function SpreadSettings() {
       currencyPairId,
       groupType: groupType && groupType !== "all" ? groupType : null,
       groupValue: groupValue || null,
-      baseSpread: productType === "Swap" ? 0 : parseFloat(baseSpread),
+      baseSpread: productType === "Swap" ? "0" : baseSpread,
       tenorSpreads: productType === "Swap" && Object.keys(tenorSpreads).some(key => tenorSpreads[key]) 
         ? Object.fromEntries(
             Object.entries(tenorSpreads)
               .filter(([_, value]) => value !== "")
-              .map(([key, value]) => [key, parseFloat(value)])
+              .map(([key, value]) => [key, value])
           )
         : null,
       isActive: true,
