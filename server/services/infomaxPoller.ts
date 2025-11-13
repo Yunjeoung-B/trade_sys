@@ -48,7 +48,7 @@ class InfomaxPoller {
       yesterday.setDate(yesterday.getDate() - 1);
       const dateStr = yesterday.toISOString().split('T')[0].replace(/-/g, '');
       
-      const result = await infomaxService.fetchTickData(dateStr);
+      const result = await infomaxService.fetchTickData(dateStr, 'SMB');
 
       console.log('[Infomax Poller] API Response:', {
         success: result.success,
