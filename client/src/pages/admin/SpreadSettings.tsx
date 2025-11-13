@@ -461,24 +461,36 @@ export default function SpreadSettings() {
                 <DialogTitle>만기별 스프레드 상세</DialogTitle>
               </DialogHeader>
               <div className="mt-4">
-                {selectedTenorSpreads && (
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-left py-2 px-4 font-semibold">만기</th>
-                        <th className="text-right py-2 px-4 font-semibold">수수료</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {Object.entries(selectedTenorSpreads).map(([tenor, spread]) => (
-                        <tr key={tenor} className="border-b hover:bg-gray-50">
-                          <td className="py-2 px-4">{tenor}</td>
-                          <td className="text-right py-2 px-4">{spread}전</td>
+                {selectedTenorSpreads && (() => {
+                  const tenorOrder = ["SPOT", "ON", "TN", "1W", "2W", "1M", "2M", "3M", "6M", "9M", "12M"];
+                  const sortedEntries = Object.entries(selectedTenorSpreads).sort((a, b) => {
+                    const indexA = tenorOrder.indexOf(a[0]);
+                    const indexB = tenorOrder.indexOf(b[0]);
+                    if (indexA === -1 && indexB === -1) return 0;
+                    if (indexA === -1) return 1;
+                    if (indexB === -1) return -1;
+                    return indexA - indexB;
+                  });
+                  
+                  return (
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left py-2 px-4 font-semibold">만기</th>
+                          <th className="text-right py-2 px-4 font-semibold">수수료</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
+                      </thead>
+                      <tbody>
+                        {sortedEntries.map(([tenor, spread]) => (
+                          <tr key={tenor} className="border-b hover:bg-gray-50">
+                            <td className="py-2 px-4">{tenor}</td>
+                            <td className="text-right py-2 px-4">{spread}전</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  );
+                })()}
               </div>
             </DialogContent>
           </Dialog>
