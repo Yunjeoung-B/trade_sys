@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Trash2 } from "lucide-react";
@@ -35,6 +36,8 @@ export default function SpreadSettings() {
   const [groupType, setGroupType] = useState("");
   const [groupValue, setGroupValue] = useState("");
   const [baseSpread, setBaseSpread] = useState("10");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedTenorSpreads, setSelectedTenorSpreads] = useState<Record<string, number> | null>(null);
   const [tenorSpreads, setTenorSpreads] = useState<Record<string, string>>({
     "ON": "3",
     "TN": "3",
@@ -400,7 +403,16 @@ export default function SpreadSettings() {
                               <td className="text-right">
                                 {setting.productType === "Swap" ? "-" : `${parseFloat(setting.baseSpread).toFixed(1)}전`}
                               </td>
-                              <td className="py-2 text-xs pl-2">
+                              <td 
+                                className="py-2 text-xs pl-2 cursor-pointer hover:bg-blue-50"
+                                onDoubleClick={() => {
+                                  if (setting.tenorSpreads) {
+                                    setSelectedTenorSpreads(setting.tenorSpreads);
+                                    setDialogOpen(true);
+                                  }
+                                }}
+                                data-testid={`tenor-spreads-${setting.id}`}
+                              >
                                 {setting.tenorSpreads ? (
                                   <div className="text-gray-600">
                                     {Object.entries(setting.tenorSpreads)
@@ -441,6 +453,35 @@ export default function SpreadSettings() {
               </CardContent>
             </Card>
           </div>
+
+          {/* 만기별 스프레드 상세 보기 다이얼로그 */}
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>만기별 스프레드 상세</DialogTitle>
+              </DialogHeader>
+              <div className="mt-4">
+                {selectedTenorSpreads && (
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left py-2 px-4 font-semibold">만기</th>
+                        <th className="text-right py-2 px-4 font-semibold">수수료</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Object.entries(selectedTenorSpreads).map(([tenor, spread]) => (
+                        <tr key={tenor} className="border-b hover:bg-gray-50">
+                          <td className="py-2 px-4">{tenor}</td>
+                          <td className="text-right py-2 px-4">{spread}전</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
     </div>
   );
 }
