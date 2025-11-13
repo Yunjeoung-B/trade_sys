@@ -1,7 +1,5 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import Header from "@/components/Header";
-import Sidebar from "@/components/Sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -177,15 +175,11 @@ export default function SpreadSettings() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-900">
-      <Header />
-      <div className="flex">
-        <Sidebar />
-        <div className="flex-1 p-6">
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-white mb-2">스프레드 설정</h2>
-            <p className="text-slate-300">통화쌍, 상품, 고객 그룹별 스프레드를 설정할 수 있습니다.</p>
-          </div>
+    <div className="p-6">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-white mb-2">스프레드 설정</h2>
+        <p className="text-slate-300">통화쌍, 상품, 고객 그룹별 스프레드를 설정할 수 있습니다.</p>
+      </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Spread Configuration */}
@@ -412,8 +406,6 @@ export default function SpreadSettings() {
               </CardContent>
             </Card>
           </div>
-        </div>
-      </div>
     </div>
   );
 }

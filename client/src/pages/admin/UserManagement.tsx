@@ -1,7 +1,5 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import Header from "@/components/Header";
-import Sidebar from "@/components/Sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -193,14 +191,10 @@ export default function UserManagement() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900">
-      <Header />
-      <div className="flex">
-        <Sidebar />
-        <div className="flex-1 p-6">
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-white mb-2">사용자 관리</h2>
-            <p className="text-slate-300">사용자 계정과 그룹을 관리할 수 있습니다.</p>
+    <div className="p-6">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-white mb-2">사용자 관리</h2>
+        <p className="text-slate-300">사용자 계정과 그룹을 관리할 수 있습니다.</p>
           </div>
           
           <Card>
@@ -506,8 +500,6 @@ export default function UserManagement() {
               </form>
             </DialogContent>
           </Dialog>
-        </div>
-      </div>
     </div>
   );
 }

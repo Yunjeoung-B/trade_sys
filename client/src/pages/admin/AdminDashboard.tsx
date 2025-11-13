@@ -1,6 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import Header from "@/components/Header";
-import Sidebar from "@/components/Sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, TrendingUp, Clock, AlertTriangle } from "lucide-react";
 import type { User, Trade, QuoteRequest } from "@shared/schema";
@@ -30,14 +28,10 @@ export default function AdminDashboard() {
   }, 0);
 
   return (
-    <div className="min-h-screen bg-slate-900">
-      <Header />
-      <div className="flex">
-        <Sidebar />
-        <div className="flex-1 p-6">
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-white mb-2">관리자 대시보드</h2>
-            <p className="text-slate-300">시스템 전체 현황을 모니터링할 수 있습니다.</p>
+    <div className="p-6">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-white mb-2">관리자 대시보드</h2>
+        <p className="text-slate-300">시스템 전체 현황을 모니터링할 수 있습니다.</p>
           </div>
           
           {/* Stats Cards */}
@@ -134,8 +128,6 @@ export default function AdminDashboard() {
               </div>
             </CardContent>
           </Card>
-        </div>
-      </div>
     </div>
   );
 }
