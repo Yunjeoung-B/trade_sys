@@ -122,10 +122,14 @@ class InfomaxService {
     }
   }
 
-  async fetchTickData(): Promise<InfomaxApiResponse> {
+  async fetchTickData(date?: string): Promise<InfomaxApiResponse> {
     const params: InfomaxTickParams = {
       data: 'order',
     };
+    
+    if (date) {
+      params.date = date;
+    }
     
     return this.testConnection(params);
   }

@@ -43,7 +43,12 @@ class InfomaxPoller {
 
   private async poll() {
     try {
-      const result = await infomaxService.fetchTickData();
+      // Get yesterday's date in YYYYMMDD format (KST)
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const dateStr = yesterday.toISOString().split('T')[0].replace(/-/g, '');
+      
+      const result = await infomaxService.fetchTickData(dateStr);
 
       console.log('[Infomax Poller] API Response:', {
         success: result.success,
