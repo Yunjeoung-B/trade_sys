@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { Trash2 } from "lucide-react";
 
 interface SpreadSetting {
   id: string;
@@ -84,6 +85,24 @@ export default function SpreadSettings() {
       toast({
         title: "오류",
         description: error?.error || error?.message || "스프레드 설정 저장 중 오류가 발생했습니다.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteSpreadMutation = useMutation({
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/spread-settings/${id}`),
+    onSuccess: () => {
+      toast({
+        title: "성공",
+        description: "스프레드 설정이 삭제되었습니다.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/spread-settings"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "오류",
+        description: error?.message || "스프레드 설정 삭제 중 오류가 발생했습니다.",
         variant: "destructive",
       });
     },
@@ -363,6 +382,7 @@ export default function SpreadSettings() {
                           <th className="text-left py-2">그룹값</th>
                           <th className="text-right py-2">수수료</th>
                           <th className="text-left py-2 pl-2">만기별</th>
+                          <th className="text-center py-2">삭제</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -393,11 +413,23 @@ export default function SpreadSettings() {
                                   "-"
                                 )}
                               </td>
+                              <td className="text-center py-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => deleteSpreadMutation.mutate(setting.id)}
+                                  disabled={deleteSpreadMutation.isPending}
+                                  data-testid={`delete-spread-${setting.id}`}
+                                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </td>
                             </tr>
                           ))
                         ) : (
                           <tr>
-                            <td colSpan={6} className="py-8 text-center text-gray-500">
+                            <td colSpan={7} className="py-8 text-center text-gray-500">
                               설정된 스프레드가 없습니다.
                             </td>
                           </tr>

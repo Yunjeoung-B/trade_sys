@@ -236,6 +236,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/spread-settings/:id", isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteSpreadSetting(id);
+      res.json({ message: "Spread setting deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete spread setting" });
+    }
+  });
+
   // Quote requests
   app.get("/api/quote-requests", isAuthenticated, async (req: any, res) => {
     try {

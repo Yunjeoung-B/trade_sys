@@ -56,6 +56,7 @@ export interface IStorage {
   getSpreadSettings(): Promise<SpreadSetting[]>;
   createSpreadSetting(setting: InsertSpreadSetting): Promise<SpreadSetting>;
   updateSpreadSetting(id: string, updates: Partial<InsertSpreadSetting>): Promise<SpreadSetting | undefined>;
+  deleteSpreadSetting(id: string): Promise<void>;
   getSpreadForUser(productType: string, currencyPairId: string, user: User): Promise<number>;
 
   // Quote requests
@@ -217,6 +218,10 @@ export class DatabaseStorage implements IStorage {
       .where(eq(spreadSettings.id, id))
       .returning();
     return setting;
+  }
+
+  async deleteSpreadSetting(id: string): Promise<void> {
+    await db.delete(spreadSettings).where(eq(spreadSettings.id, id));
   }
 
   async getSpreadForUser(productType: string, currencyPairId: string, user: User): Promise<number> {
