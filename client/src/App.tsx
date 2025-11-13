@@ -20,6 +20,7 @@ import QuoteApprovals from "@/pages/admin/QuoteApprovals";
 import UserManagement from "@/pages/admin/UserManagement";
 import TradeManagement from "@/pages/admin/TradeManagement";
 import BloombergAPI from "@/pages/admin/BloombergAPINew";
+import InfomaxAPI from "@/pages/admin/InfomaxAPI";
 import ExcelMonitoring from "@/pages/admin/ExcelMonitoring";
 
 function Router() {
@@ -68,6 +69,9 @@ function Router() {
           </Route>
           <Route path="/admin/bloomberg">
             {user?.role === "admin" ? <BloombergAPI /> : <NotFound />}
+          </Route>
+          <Route path="/admin/infomax">
+            {user?.role === "admin" ? <InfomaxAPI /> : <NotFound />}
           </Route>
           <Route path="/admin/excel">
             {user?.role === "admin" ? <ExcelMonitoring /> : <NotFound />}

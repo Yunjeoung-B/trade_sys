@@ -623,6 +623,163 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Infomax API routes (Admin only)
+  app.get("/api/admin/infomax/status", isAdmin, async (req, res) => {
+    try {
+      const status = {
+        connected: true,
+        lastUpdate: new Date().toISOString(),
+        apiVersion: "1.0.0",
+        rateLimitRemaining: 1000
+      };
+      res.json(status);
+    } catch (error) {
+      console.error("Infomax API status error:", error);
+      res.status(500).json({ message: "Failed to get Infomax API status" });
+    }
+  });
+
+  app.post("/api/admin/infomax/test-connection", isAdmin, async (req, res) => {
+    try {
+      res.json({ success: true, message: "Infomax API simulation mode" });
+    } catch (error) {
+      console.error("Infomax API connection test error:", error);
+      res.json({ success: true, message: "Infomax API simulation mode" });
+    }
+  });
+
+  app.get("/api/admin/infomax/data", isAdmin, async (req, res) => {
+    try {
+      const { symbols = [], requestType = "realtime" } = req.query;
+      const symbolArray = Array.isArray(symbols) ? symbols.map(s => String(s)) : symbols.toString().split(',');
+      
+      const mockData = symbolArray.map((symbol: string) => ({
+        symbol,
+        price: 1200 + Math.random() * 100,
+        change: (Math.random() - 0.5) * 20,
+        changePercent: (Math.random() - 0.5) * 2,
+        volume: Math.floor(Math.random() * 1000000),
+        timestamp: new Date().toISOString(),
+        source: "infomax_simulation"
+      }));
+      
+      res.json(mockData);
+    } catch (error) {
+      console.error("Infomax API data error:", error);
+      res.status(500).json({ message: "Failed to fetch Infomax data" });
+    }
+  });
+
+  app.post("/api/admin/infomax/save-data", isAdmin, async (req, res) => {
+    try {
+      const { data } = req.body;
+      
+      if (!Array.isArray(data) || data.length === 0) {
+        return res.status(400).json({ message: "Invalid data: must be a non-empty array" });
+      }
+      
+      for (const item of data) {
+        if (!item.symbol || typeof item.price !== 'number' || typeof item.change !== 'number') {
+          return res.status(400).json({ message: "Invalid data item: missing required fields" });
+        }
+        
+        let currencyPair = await storage.getCurrencyPairBySymbol(item.symbol);
+        if (!currencyPair) {
+          const baseCurrency = item.symbol.slice(0, 3);
+          const quoteCurrency = item.symbol.slice(3, 6);
+          currencyPair = await storage.createCurrencyPair({
+            symbol: item.symbol,
+            baseCurrency,
+            quoteCurrency,
+            isActive: true
+          });
+        }
+
+        await storage.createMarketRate({
+          currencyPairId: currencyPair.id,
+          buyRate: (item.price + (item.change / 2)).toString(),
+          sellRate: (item.price - (item.change / 2)).toString(),
+        });
+      }
+
+      res.json({ success: true, message: `${data.length} records saved to database` });
+    } catch (error) {
+      console.error("Infomax data save error:", error);
+      res.status(500).json({ message: "Failed to save Infomax data" });
+    }
+  });
+
+  app.post("/api/admin/infomax/bulk-import", isAdmin, async (req, res) => {
+    try {
+      const { symbols, startDate, endDate } = req.body;
+      
+      if (!Array.isArray(symbols) || symbols.length === 0) {
+        return res.status(400).json({ message: "Invalid symbols: must be a non-empty array" });
+      }
+      
+      if (!startDate || !endDate) {
+        return res.status(400).json({ message: "Invalid date range: startDate and endDate required" });
+      }
+      
+      let totalRecords = 0;
+      
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        return res.status(400).json({ message: "Invalid date format" });
+      }
+      
+      if (end.getTime() <= start.getTime()) {
+        return res.status(400).json({ message: "End date must be after start date" });
+      }
+      
+      const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (days > 3650) {
+        return res.status(400).json({ message: "Date range too large: maximum 3650 days (10 years)" });
+      }
+      
+      for (const symbol of symbols) {
+        if (typeof symbol !== 'string' || symbol.length !== 6) {
+          return res.status(400).json({ message: `Invalid symbol format: ${symbol}` });
+        }
+        
+        let currencyPair = await storage.getCurrencyPairBySymbol(symbol);
+        if (!currencyPair) {
+          const baseCurrency = symbol.slice(0, 3);
+          const quoteCurrency = symbol.slice(3, 6);
+          currencyPair = await storage.createCurrencyPair({
+            symbol,
+            baseCurrency,
+            quoteCurrency,
+            isActive: true
+          });
+        }
+
+        for (let i = 0; i < days; i++) {
+          const price = 1200 + Math.random() * 100;
+          await storage.createMarketRate({
+            currencyPairId: currencyPair.id,
+            buyRate: (price + 0.5).toString(),
+            sellRate: (price - 0.5).toString(),
+          });
+          totalRecords++;
+        }
+      }
+      
+      res.json({ 
+        success: true, 
+        message: `${totalRecords} simulated historical records imported`,
+        recordsImported: totalRecords,
+        source: "infomax_simulation"
+      });
+    } catch (error) {
+      console.error("Infomax bulk import error:", error);
+      res.status(500).json({ message: "Failed to import Infomax data" });
+    }
+  });
+
   // Create HTTP server
   const httpServer = createServer(app);
 

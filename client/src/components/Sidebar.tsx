@@ -33,6 +33,7 @@ const adminMenuItems = [
   { path: "/admin/users", label: "사용자 관리", icon: Users },
   { path: "/admin/trades", label: "거래 관리", icon: History },
   { path: "/admin/bloomberg", label: "Bloomberg API", icon: Database },
+  { path: "/admin/infomax", label: "Infomax API", icon: Database },
   { path: "/admin/excel", label: "Excel 실시간 연동", icon: FileSpreadsheet },
 ];
 
