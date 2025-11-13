@@ -55,6 +55,7 @@ export const marketRates = pgTable("market_rates", {
   currencyPairId: varchar("currency_pair_id").references(() => currencyPairs.id),
   buyRate: decimal("buy_rate", { precision: 12, scale: 4 }).notNull(),
   sellRate: decimal("sell_rate", { precision: 12, scale: 4 }).notNull(),
+  source: varchar("source").default("manual"), // infomax, bloomberg, manual
   timestamp: timestamp("timestamp").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

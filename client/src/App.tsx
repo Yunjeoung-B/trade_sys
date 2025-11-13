@@ -22,6 +22,7 @@ import TradeManagement from "@/pages/admin/TradeManagement";
 import BloombergAPI from "@/pages/admin/BloombergAPINew";
 import InfomaxAPI from "@/pages/admin/InfomaxAPI";
 import ExcelMonitoring from "@/pages/admin/ExcelMonitoring";
+import FXSpotMonitoring from "@/pages/admin/FXSpotMonitoring";
 
 function Router() {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -54,6 +55,9 @@ function Router() {
           {/* Admin routes - 관리자 권한 확인 */}
           <Route path="/admin">
             {user?.role === "admin" ? <AdminDashboard /> : <NotFound />}
+          </Route>
+          <Route path="/admin/fx-spot">
+            {user?.role === "admin" ? <FXSpotMonitoring /> : <NotFound />}
           </Route>
           <Route path="/admin/spreads">
             {user?.role === "admin" ? <SpreadSettings /> : <NotFound />}

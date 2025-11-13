@@ -122,6 +122,14 @@ class InfomaxService {
     }
   }
 
+  async fetchTickData(): Promise<InfomaxApiResponse> {
+    const params: InfomaxTickParams = {
+      data: 'order',
+    };
+    
+    return this.testConnection(params);
+  }
+
   getStatus() {
     const limiterStatus = infomaxRateLimiter.getStatus();
     

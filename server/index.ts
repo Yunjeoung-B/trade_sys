@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { infomaxPoller } from "./services/infomaxPoller";
 
 const app = express();
 app.use(express.json());
@@ -67,5 +68,20 @@ app.use((req, res, next) => {
     reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
+    
+    infomaxPoller.start();
+    log('Infomax poller started');
+  });
+
+  process.on('SIGTERM', () => {
+    log('SIGTERM received, stopping Infomax poller');
+    infomaxPoller.stop();
+    process.exit(0);
+  });
+
+  process.on('SIGINT', () => {
+    log('SIGINT received, stopping Infomax poller');
+    infomaxPoller.stop();
+    process.exit(0);
   });
 })();

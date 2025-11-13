@@ -51,6 +51,7 @@ export interface IStorage {
   createMarketRate(rate: InsertMarketRate): Promise<MarketRate>;
   updateMarketRate(rate: InsertMarketRate): Promise<MarketRate>;
   getMarketRateHistory(currencyPairId: string, hours: number): Promise<MarketRate[]>;
+  upsertLatestMarketRate(currencyPairId: string, buyRate: string, sellRate: string, source: string): Promise<MarketRate>;
 
   // Spread settings
   getSpreadSettings(): Promise<SpreadSetting[]>;
@@ -166,7 +167,7 @@ export class DatabaseStorage implements IStorage {
     return rate;
   }
 
-  async createMarketRate(rateData: InsertMarketRate): Promise<MarketRate> {
+  async updateMarketRate(rateData: InsertMarketRate): Promise<MarketRate> {
     const [rate] = await db.insert(marketRates).values({
       id: generateId(),
       ...rateData,
@@ -174,12 +175,43 @@ export class DatabaseStorage implements IStorage {
     return rate;
   }
 
-  async updateMarketRate(rateData: InsertMarketRate): Promise<MarketRate> {
-    const [rate] = await db.insert(marketRates).values({
-      id: generateId(),
-      ...rateData,
-    }).returning();
-    return rate;
+  async upsertLatestMarketRate(
+    currencyPairId: string,
+    buyRate: string,
+    sellRate: string,
+    source: string
+  ): Promise<MarketRate> {
+    const existing = await db
+      .select()
+      .from(marketRates)
+      .where(
+        and(
+          eq(marketRates.currencyPairId, currencyPairId),
+          eq(marketRates.source, source)
+        )
+      )
+      .orderBy(desc(marketRates.timestamp))
+      .limit(1);
+
+    if (existing.length > 0) {
+      const [rate] = await db
+        .update(marketRates)
+        .set({
+          buyRate,
+          sellRate,
+          updatedAt: new Date(),
+        })
+        .where(eq(marketRates.id, existing[0].id))
+        .returning();
+      return rate;
+    } else {
+      return this.createMarketRate({
+        currencyPairId,
+        buyRate,
+        sellRate,
+        source,
+      });
+    }
   }
 
   async getMarketRateHistory(currencyPairId: string, hours: number): Promise<MarketRate[]> {
