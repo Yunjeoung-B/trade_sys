@@ -149,6 +149,8 @@ export const insertSpreadSettingSchema = createInsertSchema(spreadSettings).omit
   id: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  baseSpread: z.union([z.string(), z.number()]).transform(val => String(val)),
 });
 
 export const insertQuoteRequestSchema = createInsertSchema(quoteRequests).omit({
