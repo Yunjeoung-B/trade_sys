@@ -35,7 +35,7 @@ export default function SpreadSettings() {
   const [currencyPairId, setCurrencyPairId] = useState("");
   const [groupType, setGroupType] = useState("");
   const [groupValue, setGroupValue] = useState("");
-  const [baseSpread, setBaseSpread] = useState("");
+  const [baseSpread, setBaseSpread] = useState("10");
   const [tenorSpreads, setTenorSpreads] = useState<Record<string, string>>({
     "ON": "3",      // ON&TN 3전
     "TN": "3",      // ON&TN 3전
@@ -104,19 +104,19 @@ export default function SpreadSettings() {
     setCurrencyPairId("");
     setGroupType("");
     setGroupValue("");
-    setBaseSpread("");
+    setBaseSpread("10");
     setTenorSpreads({
-      "ON": "",
-      "TN": "",
-      "SPOT": "",
-      "1W": "",
-      "2W": "",
-      "1M": "",
-      "2M": "",
-      "3M": "",
-      "6M": "",
-      "9M": "",
-      "12M": ""
+      "ON": "3",
+      "TN": "3",
+      "SPOT": "10",
+      "1W": "10",
+      "2W": "10",
+      "1M": "10",
+      "2M": "20",
+      "3M": "25",
+      "6M": "30",
+      "9M": "40",
+      "12M": "50"
     });
   };
 
