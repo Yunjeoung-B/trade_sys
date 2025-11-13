@@ -50,6 +50,12 @@ export default function SpreadSettings() {
     "12M": "50"
   });
 
+  const getDefaultBaseSpread = (type: string) => {
+    if (type === "Spot") return "50";
+    if (type === "MAR") return "10";
+    return "10";
+  };
+
   const [filterGroupType, setFilterGroupType] = useState("all");
   const [filterGroupValue, setFilterGroupValue] = useState("");
 
@@ -104,6 +110,11 @@ export default function SpreadSettings() {
     });
   };
 
+  const handleProductTypeChange = (type: string) => {
+    setProductType(type);
+    setBaseSpread(getDefaultBaseSpread(type));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -112,8 +123,8 @@ export default function SpreadSettings() {
       currencyPairId,
       groupType: groupType && groupType !== "all" ? groupType : null,
       groupValue: groupValue || null,
-      baseSpread: parseFloat(baseSpread),
-      tenorSpreads: (productType === "Swap" || productType === "Forward") && Object.keys(tenorSpreads).some(key => tenorSpreads[key]) 
+      baseSpread: productType === "Swap" ? 0 : parseFloat(baseSpread),
+      tenorSpreads: productType === "Swap" && Object.keys(tenorSpreads).some(key => tenorSpreads[key]) 
         ? Object.fromEntries(
             Object.entries(tenorSpreads)
               .filter(([_, value]) => value !== "")
@@ -186,13 +197,12 @@ export default function SpreadSettings() {
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
                     <Label>상품 유형</Label>
-                    <Select value={productType} onValueChange={setProductType}>
+                    <Select value={productType} onValueChange={handleProductTypeChange}>
                       <SelectTrigger data-testid="select-product-type">
                         <SelectValue placeholder="상품 유형 선택" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="Spot">Spot</SelectItem>
-                        <SelectItem value="Forward">Forward</SelectItem>
                         <SelectItem value="Swap">Swap</SelectItem>
                         <SelectItem value="MAR">MAR</SelectItem>
                       </SelectContent>
@@ -242,23 +252,27 @@ export default function SpreadSettings() {
                     </div>
                   )}
                   
-                  <div>
-                    <Label>기본 스프레드 (전)</Label>
-                    <Input
-                      data-testid="input-base-spread"
-                      type="number"
-                      step="1"
-                      value={baseSpread}
-                      onChange={(e) => setBaseSpread(e.target.value)}
-                      placeholder="예: 10"
-                      required
-                    />
-                    <div className="text-xs text-gray-500 mt-1">
-                      기본 스프레드 단위: 전 (1 pip = 100전)
+                  {productType !== "Swap" && (
+                    <div>
+                      <Label>기본 수수료 (전)</Label>
+                      <Input
+                        data-testid="input-base-spread"
+                        type="number"
+                        step="1"
+                        value={baseSpread}
+                        onChange={(e) => setBaseSpread(e.target.value)}
+                        placeholder={productType === "Spot" ? "50" : "10"}
+                        required
+                      />
+                      <div className="text-xs text-gray-500 mt-1">
+                        기본 수수료 단위: 전 (1 pip = 100전)
+                        {productType === "Spot" && " - Spot 기본값: 50전"}
+                        {productType === "MAR" && " - MAR 기본값: 10전"}
+                      </div>
                     </div>
-                  </div>
+                  )}
                   
-                  {(productType === "Swap" || productType === "Forward") && (
+                  {productType === "Swap" && (
                     <div>
                       <Label>만기별 가산 스프레드</Label>
                       <div className="text-xs text-gray-500 mb-2">
@@ -288,7 +302,7 @@ export default function SpreadSettings() {
                     type="submit"
                     data-testid="button-save-spread"
                     className="w-full gradient-bg hover:opacity-90"
-                    disabled={createSpreadMutation.isPending || !productType || !currencyPairId || !baseSpread}
+                    disabled={createSpreadMutation.isPending || !productType || !currencyPairId || (productType !== "Swap" && !baseSpread)}
                   >
                     {createSpreadMutation.isPending ? "저장 중..." : "스프레드 저장"}
                   </Button>
@@ -350,7 +364,7 @@ export default function SpreadSettings() {
                           <th className="text-left py-2">통화쌍</th>
                           <th className="text-left py-2">그룹</th>
                           <th className="text-left py-2">그룹값</th>
-                          <th className="text-right py-2">스프레드</th>
+                          <th className="text-right py-2">수수료</th>
                           <th className="text-left py-2 pl-2">만기별</th>
                         </tr>
                       </thead>
@@ -367,7 +381,7 @@ export default function SpreadSettings() {
                                 {setting.groupValue || "-"}
                               </td>
                               <td className="text-right">
-                                {parseFloat(setting.baseSpread).toFixed(1)}전
+                                {setting.productType === "Swap" ? "-" : `${parseFloat(setting.baseSpread).toFixed(1)}전`}
                               </td>
                               <td className="py-2 text-xs pl-2">
                                 {setting.tenorSpreads ? (
