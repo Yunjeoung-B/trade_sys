@@ -45,13 +45,23 @@ class InfomaxPoller {
     try {
       const result = await infomaxService.fetchTickData();
 
+      console.log('[Infomax Poller] API Response:', {
+        success: result.success,
+        simulationMode: result.simulationMode,
+        error: result.error,
+        dataType: result.data ? typeof result.data : 'undefined',
+        isArray: Array.isArray(result.data),
+        dataLength: Array.isArray(result.data) ? result.data.length : 'N/A',
+        sampleData: result.data ? JSON.stringify(result.data).substring(0, 200) : 'no data'
+      });
+
       if (!result.success || result.simulationMode) {
-        this.handleError('API returned error or simulation mode');
+        this.handleError(`API returned error or simulation mode: ${result.error || 'unknown'}`);
         return;
       }
 
       if (!result.data || !Array.isArray(result.data) || result.data.length === 0) {
-        console.log('No tick data received from Infomax API');
+        console.log('No tick data received from Infomax API - data is empty or not an array');
         return;
       }
 
