@@ -214,3 +214,28 @@ export const infomaxStatusSchema = z.object({
 });
 
 export type InfomaxApiStatus = z.infer<typeof infomaxStatusSchema>;
+
+// Infomax Tick Data Schema
+export const infomaxTickDataSchema = z.object({
+  broker: z.string(),
+  data: z.string(),
+  date: z.string(),
+  time: z.string(),
+  time_seq: z.number(),
+  bid_price: z.number(),
+  ask_price: z.number(),
+  mid_price: z.number(),
+  executing_price: z.number(),
+  i_mar: z.number(),
+});
+
+export type InfomaxTickData = z.infer<typeof infomaxTickDataSchema>;
+
+// Infomax API Response Schema
+export const infomaxApiResponseSchema = z.object({
+  success: z.boolean(),
+  results: z.array(infomaxTickDataSchema).optional(),
+  message: z.string().optional(),
+});
+
+export type InfomaxApiResponse = z.infer<typeof infomaxApiResponseSchema>;
