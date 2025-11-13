@@ -41,7 +41,6 @@ export default function SpreadSettings() {
   const [tenorSpreads, setTenorSpreads] = useState<Record<string, string>>({
     "ON": "3",
     "TN": "3",
-    "SPOT": "10",
     "1W": "10",
     "2W": "10",
     "1M": "10",
@@ -120,7 +119,6 @@ export default function SpreadSettings() {
     setTenorSpreads({
       "ON": "3",
       "TN": "3",
-      "SPOT": "10",
       "1W": "10",
       "2W": "10",
       "1M": "10",
@@ -462,7 +460,7 @@ export default function SpreadSettings() {
               </DialogHeader>
               <div className="mt-4">
                 {selectedTenorSpreads && (() => {
-                  const tenorOrder = ["SPOT", "ON", "TN", "1W", "2W", "1M", "2M", "3M", "6M", "9M", "12M"];
+                  const tenorOrder = ["ON", "TN", "1W", "2W", "1M", "2M", "3M", "6M", "9M", "12M"];
                   const sortedEntries = Object.entries(selectedTenorSpreads).sort((a, b) => {
                     const indexA = tenorOrder.indexOf(a[0]);
                     const indexB = tenorOrder.indexOf(b[0]);
