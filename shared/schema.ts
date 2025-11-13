@@ -199,3 +199,18 @@ export type InsertTrade = z.infer<typeof insertTradeSchema>;
 
 export type AutoApprovalSetting = typeof autoApprovalSettings.$inferSelect;
 export type InsertAutoApprovalSetting = z.infer<typeof insertAutoApprovalSettingSchema>;
+
+// Infomax API Status Schema
+export const infomaxStatusSchema = z.object({
+  connected: z.boolean(),
+  apiKeyConfigured: z.boolean(),
+  remainingMinute: z.number(),
+  remainingDaily: z.number(),
+  remainingDailyMB: z.string(),
+  usedMinute: z.number(),
+  usedDailyMB: z.string(),
+  lastCallAt: z.string().nullable(),
+  lastApiError: z.string().nullable(),
+});
+
+export type InfomaxApiStatus = z.infer<typeof infomaxStatusSchema>;
