@@ -70,7 +70,8 @@ export default function SpreadSettings() {
 
   const createSpreadMutation = useMutation({
     mutationFn: (data: any) => apiRequest("POST", "/api/spread-settings", data),
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("저장 성공:", data);
       toast({
         title: "성공",
         description: "스프레드 설정이 저장되었습니다.",
@@ -79,9 +80,10 @@ export default function SpreadSettings() {
       resetForm();
     },
     onError: (error: any) => {
+      console.error("저장 오류:", error);
       toast({
         title: "오류",
-        description: error?.error || "스프레드 설정 저장 중 오류가 발생했습니다.",
+        description: error?.error || error?.message || "스프레드 설정 저장 중 오류가 발생했습니다.",
         variant: "destructive",
       });
     },
@@ -132,6 +134,7 @@ export default function SpreadSettings() {
       isActive: true,
     };
 
+    console.log("스프레드 저장 데이터:", spreadData);
     createSpreadMutation.mutate(spreadData);
   };
 
