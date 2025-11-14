@@ -60,6 +60,7 @@ export interface IStorage {
   deleteSpreadSetting(id: string): Promise<void>;
   getSpreadForUser(productType: string, currencyPairId: string, user: User): Promise<number>;
   getCustomerRateForUser(productType: string, currencyPairId: string, user: User): Promise<{ buyRate: number; sellRate: number; spread: number; baseRate: MarketRate | null } | null>;
+  getCustomerRatesForUser(productType: string, user: User): Promise<Array<{ currencyPairId: string; currencyPairSymbol: string; buyRate: number; sellRate: number; spread: number; baseRate: MarketRate | null }>>;
 
   // Quote requests
   createQuoteRequest(request: InsertQuoteRequest): Promise<QuoteRequest>;
@@ -344,6 +345,30 @@ export class DatabaseStorage implements IStorage {
       spread: spreadBps,
       baseRate: baseRate,
     };
+  }
+
+  async getCustomerRatesForUser(
+    productType: string,
+    user: User
+  ): Promise<Array<{ currencyPairId: string; currencyPairSymbol: string; buyRate: number; sellRate: number; spread: number; baseRate: MarketRate | null }>> {
+    // Get all active currency pairs
+    const pairs = await this.getCurrencyPairs();
+    
+    // Parallelize customer rate fetching for better performance
+    const ratePromises = pairs.map(async (pair) => {
+      const customerRate = await this.getCustomerRateForUser(productType, pair.id, user);
+      
+      return {
+        currencyPairId: pair.id,
+        currencyPairSymbol: pair.symbol,
+        buyRate: customerRate?.buyRate || 0,
+        sellRate: customerRate?.sellRate || 0,
+        spread: customerRate?.spread || 0,
+        baseRate: customerRate?.baseRate || null,
+      };
+    });
+    
+    return Promise.all(ratePromises);
   }
 
   // Quote requests
