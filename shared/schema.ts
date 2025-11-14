@@ -181,6 +181,16 @@ export const insertTradeSchema = createInsertSchema(trades).omit({
   status: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  amount: z.union([z.string(), z.number()]).transform(val => String(val)),
+  rate: z.union([z.string(), z.number()]).transform(val => String(val)),
+  limitRate: z.union([z.string(), z.number(), z.null()]).transform(val => val === null ? null : String(val)).optional(),
+  settlementDate: z.union([z.string(), z.date()]).transform(val => 
+    typeof val === 'string' ? new Date(val) : val
+  ).optional(),
+  maturityDate: z.union([z.string(), z.date(), z.null()]).transform(val => 
+    val === null ? null : (typeof val === 'string' ? new Date(val) : val)
+  ).optional(),
 });
 
 export const insertAutoApprovalSettingSchema = createInsertSchema(autoApprovalSettings).omit({

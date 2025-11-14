@@ -539,12 +539,16 @@ export class DatabaseStorage implements IStorage {
     const count = await db.select({ count: sql`count(*)` }).from(trades);
     const tradeNumber = `FX${timestamp}${String(Number(count[0].count) + 1).padStart(4, "0")}`;
 
+    // Determine status based on orderType
+    const status = tradeData.orderType === "LIMIT" ? "pending" : "active";
+
     const [trade] = await db
       .insert(trades)
       .values({
         id: generateId(),
         ...tradeData,
         tradeNumber,
+        status,
       })
       .returning();
     return trade;
