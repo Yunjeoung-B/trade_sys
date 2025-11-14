@@ -47,6 +47,13 @@ UI Style: Gradient backgrounds (slate-800 → blue-900 → purple-900), rounded-
 ## Trading System Features
 - **Real-time Data**: WebSocket integration for live market rate updates with 5-second refresh intervals
 - **Product Types**: Support for FX SPOT (immediate execution), FX FORWARD (future-dated), FX SWAP (dual-leg), and MAR (time-restricted morning orders)
+- **Quote Request Workflow**: Gated pricing system for Forward exchange where transaction prices are hidden from customers until admin approval, preventing immediate price visibility
+  - Customer submits quote request with currency pair, direction, amount, and value date (status: REQUESTED)
+  - Admin reviews and approves quote requests, providing quoted rate with 30-minute expiry window (status: QUOTE_READY)
+  - Customer can execute trades from approved quotes before expiry (status: CONFIRMED)
+  - Server-side validation prevents execution of expired or invalid quotes (status: EXPIRED)
+  - Client-side revalidation before execution prevents race conditions
+  - Trade creation validates quote status to ensure atomic state transitions
 - **Approval Workflow**: Configurable approval requirements for Forward and Swap products with admin oversight
 - **Spread Management**: Multi-dimensional spread settings by product type, currency pair, settlement date, and user group level
 - **Customer Rate Calculation**: Comprehensive group-based spread application system where customer trading rates = Infomax base rates ± group spreads (buy = base + spread/100, sell = base - spread/100), with priority-based spread selection matching user's major/mid/sub groups across product types, currency pairs, and settlement dates
