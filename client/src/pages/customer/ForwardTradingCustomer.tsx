@@ -60,6 +60,10 @@ export default function ForwardTradingCustomer() {
 
   const selectedPairData = currencyPairs.find(p => p.symbol === selectedPair);
 
+  // Separate pending quotes by order type
+  const limitQuotes = pendingQuotes.filter(q => q.orderType === "LIMIT");
+  const marketPendingQuotes = pendingQuotes.filter(q => q.orderType !== "LIMIT");
+
   // Filter out expired quotes
   const activeQuotes = approvedQuotes.filter(q => {
     if (!q.expiresAt) return true;
@@ -574,15 +578,15 @@ export default function ForwardTradingCustomer() {
 
         {/* Right Panel: Pending & Approved Quotes */}
         <Card className="p-8 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border-0 text-gray-900">
-          {/* Pending Quotes Section */}
-          {pendingQuotes.length > 0 && (
+          {/* Market Pending Quotes Section */}
+          {marketPendingQuotes.length > 0 && (
             <div className="mb-6 pb-6 border-b border-gray-200">
               <h3 className="text-lg font-bold mb-4 text-gray-800 flex items-center">
                 <Clock className="w-5 h-5 mr-2 text-blue-600" />
-                가격 요청 현황 ({pendingQuotes.length}건)
+                가격 요청 현황 ({marketPendingQuotes.length}건)
               </h3>
               <div className="space-y-3 max-h-[300px] overflow-y-auto">
-                {pendingQuotes.map((quote) => {
+                {marketPendingQuotes.map((quote) => {
                   const pair = currencyPairs.find(p => p.id === quote.currencyPairId);
                   if (!pair) return null;
 
@@ -615,9 +619,73 @@ export default function ForwardTradingCustomer() {
                           <X className="w-4 h-4" />
                         </Button>
                       </div>
-                      {quote.orderType === "LIMIT" && quote.limitRate && (
-                        <div className="text-xs text-gray-600">
+                      <div className="text-xs text-gray-500 mt-1">
+                        승인 대기 중...
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Limit Orders Section */}
+          {limitQuotes.length > 0 && (
+            <div className="mb-6 pb-6 border-b border-gray-200">
+              <h3 className="text-lg font-bold mb-4 text-gray-800 flex items-center">
+                <Clock className="w-5 h-5 mr-2 text-purple-600" />
+                지정가 주문 현황 ({limitQuotes.length}건)
+              </h3>
+              <div className="space-y-3 max-h-[300px] overflow-y-auto">
+                {limitQuotes.map((quote) => {
+                  const pair = currencyPairs.find(p => p.id === quote.currencyPairId);
+                  if (!pair) return null;
+
+                  return (
+                    <div
+                      key={quote.id}
+                      className="p-3 rounded-xl border-2 border-purple-200 bg-purple-50"
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex-1">
+                          <div className="font-semibold text-gray-800 text-sm">
+                            {pair.symbol} {quote.direction === "BUY" ? "매수" : "매도"}
+                          </div>
+                          <div className="text-xs text-gray-600">
+                            {quote.amountCurrency === "BASE" ? pair.baseCurrency : pair.quoteCurrency}{" "}
+                            {formatCurrencyAmount(
+                              parseFloat(quote.amount),
+                              quote.amountCurrency === "BASE" ? pair.baseCurrency : pair.quoteCurrency
+                            )}
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => cancelQuoteMutation.mutate(quote.id)}
+                          disabled={cancelQuoteMutation.isPending}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-100 h-7 w-7 p-0"
+                          data-testid={`button-cancel-limit-quote-${quote.id}`}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      {quote.limitRate && (
+                        <div className="text-xs text-gray-700 font-medium mb-1">
                           지정환율: {parseFloat(quote.limitRate).toFixed(2)}
+                        </div>
+                      )}
+                      {quote.validityType && (
+                        <div className="text-xs text-gray-600">
+                          유효기간: {quote.validityType === "DAY" 
+                            ? "당일 오후 4시까지" 
+                            : `당일 ${quote.validUntilTime}까지`
+                          }
+                        </div>
+                      )}
+                      {quote.nearDate && (
+                        <div className="text-xs text-gray-600 mt-1">
+                          만기일: {format(new Date(quote.nearDate), "yyyy-MM-dd")}
                         </div>
                       )}
                       <div className="text-xs text-gray-500 mt-1">
