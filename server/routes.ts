@@ -203,6 +203,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/customer-rates/:productType", isAuthenticated, async (req, res) => {
     try {
       const { productType } = req.params;
+      const { tenor } = req.query;
       const user = req.user as any;
 
       if (!user) {
@@ -215,7 +216,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid product type" });
       }
 
-      const rates = await storage.getCustomerRatesForUser(productType, user);
+      const rates = await storage.getCustomerRatesForUser(productType, user, tenor as string | undefined);
       res.json(rates);
     } catch (error) {
       console.error("Error fetching bulk customer rates:", error);
@@ -227,13 +228,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/customer-rates/:productType/:currencyPairId", isAuthenticated, async (req, res) => {
     try {
       const { productType, currencyPairId } = req.params;
+      const { tenor } = req.query;
       const user = req.user as any;
 
       if (!user) {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      const rate = await storage.getCustomerRateForUser(productType, currencyPairId, user);
+      const rate = await storage.getCustomerRateForUser(productType, currencyPairId, user, tenor as string | undefined);
 
       if (!rate) {
         return res.status(404).json({ message: "No market rate available" });
