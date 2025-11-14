@@ -13,6 +13,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrencyAmount, calculateCurrencyAmount, formatInputValue, removeThousandSeparator } from "@/lib/currencyUtils";
 import type { CurrencyPair } from "@shared/schema";
+import { useCustomerRate } from "@/hooks/useCustomerRate";
 
 
 export default function SpotTrading() {
@@ -39,9 +40,19 @@ export default function SpotTrading() {
     queryKey: ["/api/currency-pairs"],
   });
 
-  const { data: marketRates = [] } = useQuery<any[]>({
-    queryKey: ["/api/market-rates"],
-  });
+  const selectedPairData = currencyPairs.find(p => p.symbol === selectedPair);
+
+  // Get customer rates with spread applied for selected pair
+  const {
+    buyRate: customerBuyRate,
+    sellRate: customerSellRate,
+    spread,
+    baseRate,
+    isLoading: isRateLoading,
+    isError: isRateError,
+    isStale,
+    dataUpdatedAt,
+  } = useCustomerRate("Spot", selectedPairData?.id);
 
   const mutation = useMutation({
     mutationFn: async (tradeData: any) => {
@@ -64,13 +75,27 @@ export default function SpotTrading() {
     },
   });
 
-  const selectedPairData = currencyPairs.find(p => p.symbol === selectedPair);
-  const currentRate = marketRates.find((r: any) => r.currencyPairId === selectedPairData?.id);
-
-  const buyRate = currentRate ? Number(currentRate.buyRate) : 1380.55;
-  const sellRate = currentRate ? Number(currentRate.sellRate) : 1382.95;
+  // Use customer rates with spread applied
+  const buyRate = customerBuyRate || 0;
+  const sellRate = customerSellRate || 0;
+  
+  // Check if rates are available (use != null to allow 0 as valid rate)
+  const hasValidRates = customerBuyRate != null && customerSellRate != null && !isRateError;
+  const lastUpdated = dataUpdatedAt ? new Date(dataUpdatedAt) : null;
+  
+  // Check if data is truly stale (more than 30 seconds old)
+  const isTrulyStale = lastUpdated && (Date.now() - lastUpdated.getTime() > 30000);
 
   const handleTrade = () => {
+    if (!hasValidRates) {
+      toast({
+        title: "환율 오류",
+        description: "현재 거래 가능한 환율이 없습니다. 잠시 후 다시 시도해주세요.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!selectedPairData || !amount) {
       toast({
         title: "입력 오류",
@@ -148,15 +173,32 @@ export default function SpotTrading() {
                 </Select>
               </div>
 
+              {/* Rate status banner */}
+              {isRateError && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+                  환율 정보를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.
+                </div>
+              )}
+              {isTrulyStale && lastUpdated && (
+                <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-xl text-sm text-yellow-700">
+                  마지막 업데이트: {lastUpdated.toLocaleTimeString('ko-KR')}, 재시도 중...
+                </div>
+              )}
+
               {/* Step 2: Rate display */}
               <div className="flex items-center mb-6">
                 <div className="flex-1 grid grid-cols-2 gap-4">
                   <div className="text-center">
                     <div className="text-sm text-gray-600 mb-1">SELL {baseCurrency}</div>
                     <div className="text-2xl font-bold text-blue-600">
-                      {sellRate.toFixed(2).split('.')[0]}.
-                      <span className="text-lg">{sellRate.toFixed(2).split('.')[1]}</span>
+                      {hasValidRates ? sellRate.toFixed(2).split('.')[0] : '--'}.
+                      <span className="text-lg">{hasValidRates ? sellRate.toFixed(2).split('.')[1] : '--'}</span>
                     </div>
+                    {hasValidRates && spread !== undefined && baseRate && (
+                      <div className="text-xs text-gray-500 mt-1" title={`기준환율: ${Number(baseRate.sellRate).toFixed(2)}`}>
+                        수수료 {spread}bps
+                      </div>
+                    )}
 
                     <Button 
                       variant="outline" 
@@ -180,9 +222,14 @@ export default function SpotTrading() {
                   <div className="text-center">
                     <div className="text-sm text-gray-600 mb-1">BUY {baseCurrency}</div>
                     <div className="text-2xl font-bold text-red-500">
-                      {buyRate.toFixed(2).split('.')[0]}.
-                      <span className="text-lg">{buyRate.toFixed(2).split('.')[1]}</span>
+                      {hasValidRates ? buyRate.toFixed(2).split('.')[0] : '--'}.
+                      <span className="text-lg">{hasValidRates ? buyRate.toFixed(2).split('.')[1] : '--'}</span>
                     </div>
+                    {hasValidRates && spread !== undefined && baseRate && (
+                      <div className="text-xs text-gray-500 mt-1" title={`기준환율: ${Number(baseRate.buyRate).toFixed(2)}`}>
+                        수수료 {spread}bps
+                      </div>
+                    )}
 
                     <Button 
                       variant="outline" 
@@ -428,15 +475,15 @@ export default function SpotTrading() {
                   현물환 {baseCurrency} {direction}/{quoteCurrency} {direction === "BUY" ? "SELL" : "BUY"} 주문
                 </div>
                 <div className="text-sm text-gray-600 mb-1">
-                  {direction === "BUY" ? "BUY" : "SELL"}: {baseCurrency} {amountCurrency === "BASE" ? 
+                  {direction === "BUY" ? "BUY" : "SELL"}: {baseCurrency} {hasValidRates && amountCurrency === "BASE" ? 
                     formatCurrencyAmount(parseFloat(removeThousandSeparator(amount || "0")), baseCurrency) : 
-                    formatCurrencyAmount(calculateCurrencyAmount(parseFloat(removeThousandSeparator(amount || "0")) / (direction === "BUY" ? buyRate : sellRate), baseCurrency), baseCurrency)
+                    hasValidRates ? formatCurrencyAmount(calculateCurrencyAmount(parseFloat(removeThousandSeparator(amount || "0")) / (direction === "BUY" ? buyRate : sellRate), baseCurrency), baseCurrency) : "--"
                   }
                 </div>
                 <div className="text-sm text-gray-600 mb-1">
-                  {direction === "BUY" ? "SELL" : "BUY"}: {quoteCurrency} {amountCurrency === "QUOTE" ? 
+                  {direction === "BUY" ? "SELL" : "BUY"}: {quoteCurrency} {hasValidRates && amountCurrency === "QUOTE" ? 
                     formatCurrencyAmount(parseFloat(removeThousandSeparator(amount || "0")), quoteCurrency) : 
-                    formatCurrencyAmount(calculateCurrencyAmount(parseFloat(removeThousandSeparator(amount || "0")) * (direction === "BUY" ? buyRate : sellRate), quoteCurrency), quoteCurrency)
+                    hasValidRates ? formatCurrencyAmount(calculateCurrencyAmount(parseFloat(removeThousandSeparator(amount || "0")) * (direction === "BUY" ? buyRate : sellRate), quoteCurrency), quoteCurrency) : "--"
                   }
                 </div>
                 {orderType === "LIMIT" && (
@@ -445,9 +492,9 @@ export default function SpotTrading() {
                   </div>
                 )}
                 <div className="text-sm text-gray-600 mb-1">
-                  거래환율: {orderType === "MARKET" 
+                  거래환율: {hasValidRates && orderType === "MARKET" 
                     ? (direction === "BUY" ? buyRate.toFixed(2) : sellRate.toFixed(2))
-                    : (limitRate || "미지정")
+                    : orderType === "LIMIT" ? (limitRate || "미지정") : "--"
                   }
                 </div>
                 <div className="text-sm text-gray-600 mb-1">
@@ -465,8 +512,9 @@ export default function SpotTrading() {
 
               <Button
                 onClick={handleTrade}
-                disabled={mutation.isPending || !amount}
+                disabled={mutation.isPending || !amount || !hasValidRates}
                 className="w-full py-4 text-lg font-semibold rounded-2xl text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
+                title={!hasValidRates ? "환율 정보를 불러오는 중입니다" : ""}
                 style={{ 
                   backgroundColor: direction === "BUY" ? '#FF6B6B' : '#4169E1',
                   boxShadow: direction === "BUY" 
