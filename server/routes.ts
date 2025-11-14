@@ -327,8 +327,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       const request = await storage.createQuoteRequest(requestData);
       res.json(request);
-    } catch (error) {
-      res.status(400).json({ message: "Invalid quote request data" });
+    } catch (error: any) {
+      console.error("Quote request creation error:", error);
+      
+      // Handle Zod validation errors
+      if (error.name === "ZodError") {
+        const firstError = error.errors[0];
+        return res.status(400).json({ 
+          message: `입력 오류: ${firstError.path.join('.')} - ${firstError.message}` 
+        });
+      }
+      
+      res.status(400).json({ 
+        message: error.message || "Invalid quote request data" 
+      });
     }
   });
 

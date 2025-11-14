@@ -74,10 +74,11 @@ export default function ForwardTradingCustomer() {
       setAmount("");
       queryClient.invalidateQueries({ queryKey: ["/api/quote-requests"] });
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error("Quote request error:", error);
       toast({
         title: "요청 실패",
-        description: "가격 요청 처리 중 오류가 발생했습니다.",
+        description: error?.message || "가격 요청 처리 중 오류가 발생했습니다.",
         variant: "destructive",
       });
     },
@@ -161,13 +162,14 @@ export default function ForwardTradingCustomer() {
       productType: "Forward",
       currencyPairId: selectedPairData.id,
       direction,
-      orderType,
       amount: parseFloat(removeThousandSeparator(amount)),
       amountCurrency,
-      limitRate: orderType === "LIMIT" ? parseFloat(limitRate) : undefined,
-      validityType: orderType === "LIMIT" ? validityType : undefined,
-      validUntilTime: orderType === "LIMIT" && validityType === "TIME" ? validUntilTime : undefined,
-      valueDate: valueDate.toISOString().split('T')[0],
+      orderType,
+      limitRate: orderType === "LIMIT" ? parseFloat(limitRate) : null,
+      validityType: orderType === "LIMIT" ? validityType : null,
+      validUntilTime: orderType === "LIMIT" && validityType === "TIME" ? validUntilTime : null,
+      nearDate: valueDate.toISOString(),
+      tenor: `${Math.ceil((valueDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))}D`,
     });
   };
 

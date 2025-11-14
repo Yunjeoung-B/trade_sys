@@ -82,8 +82,13 @@ export const quoteRequests = pgTable("quote_requests", {
   currencyPairId: varchar("currency_pair_id").references(() => currencyPairs.id),
   direction: varchar("direction").notNull(), // BUY, SELL
   amount: decimal("amount", { precision: 18, scale: 2 }).notNull(),
+  amountCurrency: varchar("amount_currency"), // BASE or QUOTE
+  orderType: varchar("order_type"), // MARKET or LIMIT
+  limitRate: decimal("limit_rate", { precision: 12, scale: 4 }), // for LIMIT orders
+  validityType: varchar("validity_type"), // DAY or TIME
+  validUntilTime: varchar("valid_until_time"), // HH:MM format
   tenor: varchar("tenor"), // 1M, 3M, 6M, 1Y, etc.
-  nearDate: timestamp("near_date"), // for swaps
+  nearDate: timestamp("near_date"), // for swaps and forwards (value date)
   farDate: timestamp("far_date"), // for swaps
   nearRate: decimal("near_rate", { precision: 12, scale: 4 }), // for swaps
   nearAmount: decimal("near_amount", { precision: 18, scale: 2 }), // for swaps
