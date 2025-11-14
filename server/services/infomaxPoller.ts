@@ -80,7 +80,12 @@ class InfomaxPoller {
         });
       }
 
-      const latestTick = result.data[0];
+      // Find the tick with the highest time_seq (most recent)
+      const latestTick = result.data.reduce((latest: any, current: any) => {
+        return (current.time_seq > latest.time_seq) ? current : latest;
+      }, result.data[0]);
+      
+      console.log(`[Infomax Poller] Latest tick: time_seq=${latestTick.time_seq}, time=${latestTick.time}, BUY=${latestTick.ask_price}, SELL=${latestTick.bid_price}`);
       
       if (latestTick.ask_price && latestTick.bid_price) {
         await this.storage.upsertLatestMarketRate(
