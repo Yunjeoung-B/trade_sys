@@ -58,9 +58,9 @@ export interface IStorage {
   createSpreadSetting(setting: InsertSpreadSetting): Promise<SpreadSetting>;
   updateSpreadSetting(id: string, updates: Partial<InsertSpreadSetting>): Promise<SpreadSetting | undefined>;
   deleteSpreadSetting(id: string): Promise<void>;
-  getSpreadForUser(productType: string, currencyPairId: string, user: User): Promise<number>;
-  getCustomerRateForUser(productType: string, currencyPairId: string, user: User): Promise<{ buyRate: number; sellRate: number; spread: number; baseRate: MarketRate | null } | null>;
-  getCustomerRatesForUser(productType: string, user: User): Promise<Array<{ currencyPairId: string; currencyPairSymbol: string; buyRate: number; sellRate: number; spread: number; baseRate: MarketRate | null }>>;
+  getSpreadForUser(productType: string, currencyPairId: string, user: User, tenor?: string): Promise<number>;
+  getCustomerRateForUser(productType: string, currencyPairId: string, user: User, tenor?: string): Promise<{ buyRate: number; sellRate: number; spread: number; baseRate: MarketRate | null } | null>;
+  getCustomerRatesForUser(productType: string, user: User, tenor?: string): Promise<Array<{ currencyPairId: string; currencyPairSymbol: string; buyRate: number; sellRate: number; spread: number; baseRate: MarketRate | null }>>;
 
   // Quote requests
   createQuoteRequest(request: InsertQuoteRequest): Promise<QuoteRequest>;
@@ -258,7 +258,7 @@ export class DatabaseStorage implements IStorage {
     await db.delete(spreadSettings).where(eq(spreadSettings.id, id));
   }
 
-  async getSpreadForUser(productType: string, currencyPairId: string, user: User): Promise<number> {
+  async getSpreadForUser(productType: string, currencyPairId: string, user: User, tenor?: string): Promise<number> {
     // Get all matching spread settings for this product and currency pair
     const settings = await db
       .select()
@@ -273,7 +273,7 @@ export class DatabaseStorage implements IStorage {
 
     // Find best matching spread using explicit priority
     // Priority: sub (3) > mid (2) > major (1) > default (0)
-    let bestMatch: { priority: number; spread: number } = { priority: -1, spread: 10.0 }; // default 10 bps
+    let bestMatch: { priority: number; setting: typeof settings[0] | null } = { priority: -1, setting: null };
 
     for (const setting of settings) {
       let priority = 0;
@@ -296,17 +296,37 @@ export class DatabaseStorage implements IStorage {
 
       // Update if this match has higher priority
       if (isMatch && priority > bestMatch.priority) {
-        bestMatch = { priority, spread: Number(setting.baseSpread) };
+        bestMatch = { priority, setting };
       }
     }
 
-    return bestMatch.spread;
+    // If no match found, return default spread
+    if (!bestMatch.setting) {
+      return 10.0; // default 10 bps
+    }
+
+    // If tenor is provided and tenorSpreads exists, try to find tenor-specific spread
+    if (tenor && bestMatch.setting.tenorSpreads) {
+      const tenorSpreadsObj = bestMatch.setting.tenorSpreads as Record<string, number>;
+      
+      // Normalize tenor key (e.g., "1w" -> "1W", "spot" -> "SPOT")
+      const normalizedTenor = tenor.toUpperCase();
+      
+      // Check if tenor-specific spread exists
+      if (tenorSpreadsObj[normalizedTenor] !== undefined) {
+        return Number(tenorSpreadsObj[normalizedTenor]);
+      }
+    }
+
+    // Fall back to base spread
+    return Number(bestMatch.setting.baseSpread);
   }
 
   async getCustomerRateForUser(
     productType: string, 
     currencyPairId: string, 
-    user: User
+    user: User,
+    tenor?: string
   ): Promise<{ buyRate: number; sellRate: number; spread: number; baseRate: MarketRate | null } | null> {
     // Get latest market rate from Infomax
     const marketRate = await db
@@ -327,8 +347,8 @@ export class DatabaseStorage implements IStorage {
 
     const baseRate = marketRate[0];
     
-    // Get spread for user's group (in basis points)
-    const spreadBps = await this.getSpreadForUser(productType, currencyPairId, user);
+    // Get spread for user's group (in basis points) with tenor-aware logic
+    const spreadBps = await this.getSpreadForUser(productType, currencyPairId, user, tenor);
     
     // Convert basis points to actual rate (divide by 100)
     const spreadRate = spreadBps / 100;
@@ -349,14 +369,15 @@ export class DatabaseStorage implements IStorage {
 
   async getCustomerRatesForUser(
     productType: string,
-    user: User
+    user: User,
+    tenor?: string
   ): Promise<Array<{ currencyPairId: string; currencyPairSymbol: string; buyRate: number; sellRate: number; spread: number; baseRate: MarketRate | null }>> {
     // Get all active currency pairs
     const pairs = await this.getCurrencyPairs();
     
     // Parallelize customer rate fetching for better performance
     const ratePromises = pairs.map(async (pair) => {
-      const customerRate = await this.getCustomerRateForUser(productType, pair.id, user);
+      const customerRate = await this.getCustomerRateForUser(productType, pair.id, user, tenor);
       
       return {
         currencyPairId: pair.id,
