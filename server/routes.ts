@@ -198,6 +198,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Customer rates with spread applied (for client users)
+  app.get("/api/customer-rates/:productType/:currencyPairId", isAuthenticated, async (req, res) => {
+    try {
+      const { productType, currencyPairId } = req.params;
+      const user = req.user as any;
+
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const rate = await storage.getCustomerRateForUser(productType, currencyPairId, user);
+
+      if (!rate) {
+        return res.status(404).json({ message: "No market rate available" });
+      }
+
+      res.json(rate);
+    } catch (error) {
+      console.error("Error fetching customer rate:", error);
+      res.status(500).json({ message: "Failed to fetch customer rate" });
+    }
+  });
+
   // Spread settings
   app.get("/api/spread-settings", isAdmin, async (req, res) => {
     try {

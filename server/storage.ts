@@ -59,6 +59,7 @@ export interface IStorage {
   updateSpreadSetting(id: string, updates: Partial<InsertSpreadSetting>): Promise<SpreadSetting | undefined>;
   deleteSpreadSetting(id: string): Promise<void>;
   getSpreadForUser(productType: string, currencyPairId: string, user: User): Promise<number>;
+  getCustomerRateForUser(productType: string, currencyPairId: string, user: User): Promise<{ buyRate: number; sellRate: number; spread: number; baseRate: MarketRate | null } | null>;
 
   // Quote requests
   createQuoteRequest(request: InsertQuoteRequest): Promise<QuoteRequest>;
@@ -257,7 +258,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getSpreadForUser(productType: string, currencyPairId: string, user: User): Promise<number> {
-    // Get most specific spread setting for user
+    // Get all matching spread settings for this product and currency pair
     const settings = await db
       .select()
       .from(spreadSettings)
@@ -269,22 +270,80 @@ export class DatabaseStorage implements IStorage {
         )
       );
 
-    // Find best matching spread (most specific group match)
-    let bestSpread = 2.0; // default
+    // Find best matching spread using explicit priority
+    // Priority: sub (3) > mid (2) > major (1) > default (0)
+    let bestMatch: { priority: number; spread: number } = { priority: -1, spread: 10.0 }; // default 10 bps
+
     for (const setting of settings) {
-      if (!setting.groupType) {
-        bestSpread = Number(setting.baseSpread);
-      } else if (setting.groupType === "major" && setting.groupValue === user.majorGroup) {
-        bestSpread = Number(setting.baseSpread);
-      } else if (setting.groupType === "mid" && setting.groupValue === user.midGroup) {
-        bestSpread = Number(setting.baseSpread);
+      let priority = 0;
+      let isMatch = false;
+
+      if (!setting.groupType || !setting.groupValue) {
+        // Default spread for everyone
+        priority = 0;
+        isMatch = true;
       } else if (setting.groupType === "sub" && setting.groupValue === user.subGroup) {
-        bestSpread = Number(setting.baseSpread);
-        break; // Most specific, use this
+        priority = 3;
+        isMatch = true;
+      } else if (setting.groupType === "mid" && setting.groupValue === user.midGroup) {
+        priority = 2;
+        isMatch = true;
+      } else if (setting.groupType === "major" && setting.groupValue === user.majorGroup) {
+        priority = 1;
+        isMatch = true;
+      }
+
+      // Update if this match has higher priority
+      if (isMatch && priority > bestMatch.priority) {
+        bestMatch = { priority, spread: Number(setting.baseSpread) };
       }
     }
 
-    return bestSpread;
+    return bestMatch.spread;
+  }
+
+  async getCustomerRateForUser(
+    productType: string, 
+    currencyPairId: string, 
+    user: User
+  ): Promise<{ buyRate: number; sellRate: number; spread: number; baseRate: MarketRate | null } | null> {
+    // Get latest market rate from Infomax
+    const marketRate = await db
+      .select()
+      .from(marketRates)
+      .where(
+        and(
+          eq(marketRates.currencyPairId, currencyPairId),
+          eq(marketRates.source, 'infomax')
+        )
+      )
+      .orderBy(desc(marketRates.updatedAt))
+      .limit(1);
+
+    if (!marketRate || marketRate.length === 0) {
+      return null;
+    }
+
+    const baseRate = marketRate[0];
+    
+    // Get spread for user's group (in basis points)
+    const spreadBps = await this.getSpreadForUser(productType, currencyPairId, user);
+    
+    // Convert basis points to actual rate (divide by 100)
+    const spreadRate = spreadBps / 100;
+
+    // Calculate customer rates
+    // Customer BUY rate (customer buying foreign currency) = base buy rate + spread
+    // Customer SELL rate (customer selling foreign currency) = base sell rate - spread
+    const customerBuyRate = Number(baseRate.buyRate) + spreadRate;
+    const customerSellRate = Number(baseRate.sellRate) - spreadRate;
+
+    return {
+      buyRate: customerBuyRate,
+      sellRate: customerSellRate,
+      spread: spreadBps,
+      baseRate: baseRate,
+    };
   }
 
   // Quote requests
