@@ -4,7 +4,6 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -27,8 +26,6 @@ export default function MARTradingCustomer() {
   const {
     buyRate: customerBuyRate,
     sellRate: customerSellRate,
-    spread,
-    baseRate,
     isLoading: isRateLoading,
     isError: isRateError,
     dataUpdatedAt,
@@ -40,10 +37,6 @@ export default function MARTradingCustomer() {
 
   const buyRate = customerBuyRate || 0;
   const sellRate = customerSellRate || 0;
-
-  const marBaseRate = baseRate ? (Number(baseRate.buyRate) + Number(baseRate.sellRate)) / 2 : 0;
-  const sellSpread = hasValidRates && marBaseRate ? sellRate - marBaseRate : 0;
-  const buySpread = hasValidRates && marBaseRate ? buyRate - marBaseRate : 0;
 
   const mutation = useMutation({
     mutationFn: async (tradeData: any) => {
@@ -125,162 +118,7 @@ export default function MARTradingCustomer() {
         <p className="text-slate-200">오전 9시 이전에 주문하는 평균환율 거래</p>
       </div>
 
-      <Tabs defaultValue="customer" className="max-w-6xl mx-auto">
-        <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-6">
-          <TabsTrigger value="customer" data-testid="tab-customer-view">고객 뷰</TabsTrigger>
-          <TabsTrigger value="trader" data-testid="tab-trader-view">트레이더 뷰</TabsTrigger>
-        </TabsList>
-
-        {/* 고객 뷰 - 간단한 인터페이스 */}
-        <TabsContent value="customer">
-          <div className="max-w-md mx-auto">
-            <Card className="p-8 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border-0 text-gray-900">
-              {/* 통화쌍 고정 */}
-              <div className="flex items-center justify-between mb-6">
-                <span className="text-lg font-semibold text-gray-700">통화쌍</span>
-                <div className="text-lg font-medium text-gray-900">USD/KRW</div>
-              </div>
-
-              {/* 환율 표시 */}
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <div 
-                  className={cn(
-                    "p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200",
-                    direction === "SELL" 
-                      ? "bg-blue-50 border-blue-500 shadow-lg" 
-                      : "bg-gray-50 border-gray-200 hover:border-gray-300"
-                  )}
-                  onClick={() => setDirection("SELL")}
-                  data-testid="button-sell-direction"
-                >
-                  <div className="text-sm text-gray-600 mb-2">매도 (Sell)</div>
-                  <div className="text-3xl font-bold text-blue-600">
-                    {hasValidRates ? sellRate.toFixed(2) : '--'}
-                  </div>
-                </div>
-                <div 
-                  className={cn(
-                    "p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200",
-                    direction === "BUY" 
-                      ? "bg-red-50 border-red-500 shadow-lg" 
-                      : "bg-gray-50 border-gray-200 hover:border-gray-300"
-                  )}
-                  onClick={() => setDirection("BUY")}
-                  data-testid="button-buy-direction"
-                >
-                  <div className="text-sm text-gray-600 mb-2">매수 (Buy)</div>
-                  <div className="text-3xl font-bold text-red-500">
-                    {hasValidRates ? buyRate.toFixed(2) : '--'}
-                  </div>
-                </div>
-              </div>
-
-              {/* 금액 입력 */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  거래 금액
-                </label>
-                <div className="flex gap-2 mb-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className={cn(
-                      "rounded-xl flex-1",
-                      amountCurrency === "BASE" && "bg-teal-500 text-white border-teal-500"
-                    )}
-                    onClick={() => setAmountCurrency("BASE")}
-                    data-testid="button-currency-usd"
-                  >
-                    USD
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className={cn(
-                      "rounded-xl flex-1",
-                      amountCurrency === "QUOTE" && "bg-teal-500 text-white border-teal-500"
-                    )}
-                    onClick={() => setAmountCurrency("QUOTE")}
-                    data-testid="button-currency-krw"
-                  >
-                    KRW
-                  </Button>
-                </div>
-                <Input
-                  type="text"
-                  placeholder="금액을 입력하세요"
-                  value={amount}
-                  onChange={(e) => setAmount(formatInputValue(e.target.value, amountCurrency === "BASE" ? "USD" : "KRW"))}
-                  className="text-lg rounded-xl"
-                  data-testid="input-amount"
-                />
-              </div>
-
-              {/* 거래 내역 요약 */}
-              {amount && hasValidRates && (
-                <div className="mb-6 p-4 bg-gray-50 rounded-2xl">
-                  <div className="text-sm font-medium text-gray-700 mb-2">거래 내역</div>
-                  <div className="space-y-1 text-sm text-gray-600">
-                    <div className="flex justify-between">
-                      <span>{direction === "BUY" ? "매수" : "매도"}:</span>
-                      <span className="font-medium">
-                        {amountCurrency === "BASE" 
-                          ? `USD ${formatCurrencyAmount(parseFloat(removeThousandSeparator(amount)), "USD")}`
-                          : `USD ${formatCurrencyAmount(parseFloat(removeThousandSeparator(amount)) / (direction === "BUY" ? buyRate : sellRate), "USD")}`
-                        }
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>MAR 환율:</span>
-                      <span className="font-medium">{(direction === "BUY" ? buyRate : sellRate).toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>총 금액:</span>
-                      <span className="font-medium">
-                        {amountCurrency === "QUOTE"
-                          ? `KRW ${formatCurrencyAmount(parseFloat(removeThousandSeparator(amount)), "KRW")}`
-                          : `KRW ${formatCurrencyAmount(parseFloat(removeThousandSeparator(amount)) * (direction === "BUY" ? buyRate : sellRate), "KRW")}`
-                        }
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* 거래 시간 안내 */}
-              <div className="mb-6 p-3 bg-yellow-50 border border-yellow-200 rounded-xl text-sm text-yellow-800">
-                <div className="font-medium mb-1">⏰ 거래 가능 시간</div>
-                <div>오전 9:00 이전까지 주문 가능합니다</div>
-                <div className="text-xs mt-1">현재: {new Date().toLocaleTimeString('ko-KR')}</div>
-              </div>
-
-              {/* 거래 실행 버튼 */}
-              <Button
-                onClick={handleTrade}
-                disabled={mutation.isPending || !amount || !hasValidRates}
-                className="w-full py-6 text-xl font-bold rounded-2xl text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
-                style={{ 
-                  backgroundColor: direction === "BUY" ? '#FF6B6B' : '#4169E1',
-                  boxShadow: direction === "BUY" 
-                    ? '0 0 20px rgba(255, 107, 107, 0.6)' 
-                    : '0 0 20px rgba(65, 105, 225, 0.6)'
-                }}
-                data-testid="button-execute-trade"
-              >
-                {mutation.isPending ? "처리 중..." : `${direction === "BUY" ? "매수" : "매도"} 주문`}
-              </Button>
-
-              {/* MAR 안내 */}
-              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-700">
-                MAR는 당일 장마감 후 결정되는 환율로서, 익영업일 서울외국환중개에 고시됩니다.
-              </div>
-            </Card>
-          </div>
-        </TabsContent>
-
-        {/* 트레이더 뷰 - 상세 인터페이스 */}
-        <TabsContent value="trader">
-          <div className="max-w-md mx-auto">
+      <div className="max-w-md mx-auto">
             <Card className="p-8 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border-0 text-gray-900">
               {/* Error/Stale banners */}
               {isRateError && (
@@ -307,13 +145,13 @@ export default function MARTradingCustomer() {
                 </Select>
               </div>
 
-              {/* Step 2: Rate display - MAR 스프레드 */}
+              {/* Step 2: Rate display */}
               <div className="flex items-center mb-6">
                 <div className="flex-1 grid grid-cols-2 gap-4">
                   <div className="text-center">
                     <div className="text-sm text-gray-600 mb-1">SELL USD</div>
                     <div className="text-2xl font-bold text-[#1c5bcb]">
-                      {hasValidRates ? sellSpread.toFixed(2) : "--"}
+                      {hasValidRates ? sellRate.toFixed(2) : "--"}
                     </div>
                     <Button 
                       variant="outline" 
@@ -338,7 +176,7 @@ export default function MARTradingCustomer() {
                   <div className="text-center">
                     <div className="text-sm text-gray-600 mb-1">BUY USD</div>
                     <div className="text-2xl font-bold text-[#f45da7]">
-                      {hasValidRates ? `+${buySpread.toFixed(2)}` : "--"}
+                      {hasValidRates ? buyRate.toFixed(2) : "--"}
                     </div>
                     <Button 
                       variant="outline" 
@@ -363,11 +201,11 @@ export default function MARTradingCustomer() {
                 </div>
               </div>
 
-              {/* Step 2.5: MAR 기준환율 표시 */}
+              {/* Step 2.5: MAR 환율 표시 */}
               <div className="flex items-center justify-between mb-4 bg-gray-50 p-3 rounded-xl">
                 <span className="text-sm text-gray-600">환율</span>
                 <span className="text-lg font-semibold text-gray-800">
-                  MAR {direction === "BUY" ? `+${buySpread.toFixed(2)}` : `${sellSpread.toFixed(2)}`}
+                  MAR {direction === "BUY" ? buyRate.toFixed(2) : sellRate.toFixed(2)}
                 </span>
               </div>
 
@@ -435,7 +273,7 @@ export default function MARTradingCustomer() {
                   거래금액: {amountCurrency === "BASE" ? "USD" : "KRW"} {amount ? formatCurrencyAmount(parseFloat(removeThousandSeparator(amount)), amountCurrency === "BASE" ? "USD" : "KRW") : "미입력"}
                 </div>
                 <div className="text-sm text-gray-600">
-                  적용환율: MAR {direction === "BUY" ? `+${buySpread.toFixed(2)}` : `${sellSpread.toFixed(2)}`}
+                  적용환율: MAR {direction === "BUY" ? buyRate.toFixed(2) : sellRate.toFixed(2)}
                 </div>
               </div>
 
@@ -475,8 +313,6 @@ export default function MARTradingCustomer() {
               </div>
             </div>
           </div>
-        </TabsContent>
-      </Tabs>
     </div>
   );
 }

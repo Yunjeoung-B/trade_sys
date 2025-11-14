@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CalendarIcon } from "lucide-react";
 import { format, addDays } from "date-fns";
 import { apiRequest } from "@/lib/queryClient";
@@ -56,8 +55,6 @@ export default function ForwardTradingCustomer() {
   const {
     buyRate: customerBuyRate,
     sellRate: customerSellRate,
-    spread,
-    baseRate,
     isLoading: isRateLoading,
     isError: isRateError,
     dataUpdatedAt,
@@ -152,185 +149,7 @@ export default function ForwardTradingCustomer() {
         <p className="text-slate-200">미래 특정일에 거래할 환율을 지금 확정합니다</p>
       </div>
 
-      <Tabs defaultValue="customer" className="max-w-6xl mx-auto">
-        <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-6">
-          <TabsTrigger value="customer" data-testid="tab-customer-view">고객 뷰</TabsTrigger>
-          <TabsTrigger value="trader" data-testid="tab-trader-view">트레이더 뷰</TabsTrigger>
-        </TabsList>
-
-        {/* 고객 뷰 - 간단한 인터페이스 */}
-        <TabsContent value="customer">
-          <div className="max-w-md mx-auto">
-            <Card className="p-8 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border-0 text-gray-900">
-          {/* 통화쌍 선택 */}
-          <div className="flex items-center justify-between mb-6">
-            <span className="text-lg font-semibold text-gray-700">통화쌍</span>
-            <Select value={selectedPair} onValueChange={setSelectedPair}>
-              <SelectTrigger className="w-40 bg-gray-50 border-gray-200 rounded-xl shadow-sm text-lg font-medium">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {currencyPairs.map((pair) => (
-                  <SelectItem key={pair.id} value={pair.symbol}>
-                    {pair.symbol}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* 환율 표시 */}
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <div 
-              className={cn(
-                "p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200",
-                direction === "SELL" 
-                  ? "bg-blue-50 border-blue-500 shadow-lg" 
-                  : "bg-gray-50 border-gray-200 hover:border-gray-300"
-              )}
-              onClick={() => setDirection("SELL")}
-              data-testid="button-sell-direction"
-            >
-              <div className="text-sm text-gray-600 mb-2">매도 (Sell)</div>
-              <div className="text-3xl font-bold text-blue-600">
-                {hasValidRates ? sellRate.toFixed(2) : '--'}
-              </div>
-            </div>
-            <div 
-              className={cn(
-                "p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200",
-                direction === "BUY" 
-                  ? "bg-red-50 border-red-500 shadow-lg" 
-                  : "bg-gray-50 border-gray-200 hover:border-gray-300"
-              )}
-              onClick={() => setDirection("BUY")}
-              data-testid="button-buy-direction"
-            >
-              <div className="text-sm text-gray-600 mb-2">매수 (Buy)</div>
-              <div className="text-3xl font-bold text-red-500">
-                {hasValidRates ? buyRate.toFixed(2) : '--'}
-              </div>
-            </div>
-          </div>
-
-          {/* 만기일 선택 */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">만기일 (Value Date)</label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start text-left font-normal rounded-xl"
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {format(valueDate, "yyyy-MM-dd")}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={valueDate}
-                  onSelect={(date) => date && setValueDate(date)}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-
-          {/* 금액 입력 */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              거래 금액
-            </label>
-            <div className="flex gap-2 mb-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className={cn(
-                  "rounded-xl flex-1",
-                  amountCurrency === "BASE" && "bg-teal-500 text-white border-teal-500"
-                )}
-                onClick={() => setAmountCurrency("BASE")}
-                data-testid="button-currency-base"
-              >
-                {baseCurrency}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className={cn(
-                  "rounded-xl flex-1",
-                  amountCurrency === "QUOTE" && "bg-teal-500 text-white border-teal-500"
-                )}
-                onClick={() => setAmountCurrency("QUOTE")}
-                data-testid="button-currency-quote"
-              >
-                {quoteCurrency}
-              </Button>
-            </div>
-            <Input
-              type="text"
-              placeholder="금액을 입력하세요"
-              value={amount}
-              onChange={(e) => setAmount(formatInputValue(e.target.value, amountCurrency === "BASE" ? baseCurrency : quoteCurrency))}
-              className="text-lg rounded-xl"
-              data-testid="input-amount"
-            />
-          </div>
-
-          {/* 거래 내역 요약 */}
-          {amount && hasValidRates && (
-            <div className="mb-6 p-4 bg-gray-50 rounded-2xl">
-              <div className="text-sm font-medium text-gray-700 mb-2">거래 내역</div>
-              <div className="space-y-1 text-sm text-gray-600">
-                <div className="flex justify-between">
-                  <span>{direction === "BUY" ? "매수" : "매도"}:</span>
-                  <span className="font-medium">
-                    {amountCurrency === "BASE" 
-                      ? `${baseCurrency} ${formatCurrencyAmount(parseFloat(removeThousandSeparator(amount)), baseCurrency)}`
-                      : `${baseCurrency} ${formatCurrencyAmount(parseFloat(removeThousandSeparator(amount)) / (direction === "BUY" ? buyRate : sellRate), baseCurrency)}`
-                    }
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>선물환율:</span>
-                  <span className="font-medium">{(direction === "BUY" ? buyRate : sellRate).toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>만기일:</span>
-                  <span className="font-medium">{format(valueDate, "yyyy-MM-dd")}</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 승인 안내 */}
-          <div className="mb-6 p-3 bg-blue-50 border border-blue-200 rounded-xl text-sm text-blue-700">
-            선물환 거래는 관리자 승인 후 체결됩니다
-          </div>
-
-          {/* 가격 요청 버튼 */}
-              <Button
-                onClick={handleRequest}
-                disabled={mutation.isPending || !amount || !hasValidRates}
-                className="w-full py-6 text-xl font-bold rounded-2xl text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
-                style={{ 
-                  backgroundColor: direction === "BUY" ? '#FF6B6B' : '#4169E1',
-                  boxShadow: direction === "BUY" 
-                    ? '0 0 20px rgba(255, 107, 107, 0.6)' 
-                    : '0 0 20px rgba(65, 105, 225, 0.6)'
-                }}
-                data-testid="button-request-quote"
-              >
-                {mutation.isPending ? "처리 중..." : "가격 요청"}
-              </Button>
-            </Card>
-          </div>
-        </TabsContent>
-
-        {/* 트레이더 뷰 - 상세 인터페이스 */}
-        <TabsContent value="trader">
-          <div className="max-w-md mx-auto">
+      <div className="max-w-md mx-auto">
             <Card className="p-8 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border-0 text-gray-900">
               {/* Step 1: 통화쌍 선택 */}
               <div className="flex items-center justify-between mb-4">
@@ -370,11 +189,6 @@ export default function ForwardTradingCustomer() {
                       {hasValidRates ? sellRate.toFixed(2).split('.')[0] : '--'}.
                       <span className="text-lg">{hasValidRates ? sellRate.toFixed(2).split('.')[1] : '--'}</span>
                     </div>
-                    {hasValidRates && spread !== undefined && baseRate && (
-                      <div className="text-xs text-gray-500 mt-1" title={`기준환율: ${Number(baseRate.sellRate).toFixed(2)}`}>
-                        수수료 {spread}bps
-                      </div>
-                    )}
                     {hasValidRates && (
                       <div className="text-xs text-gray-400 mt-1">
                         SWAP: {swapPointsSell.toFixed(2)}
@@ -407,11 +221,6 @@ export default function ForwardTradingCustomer() {
                       {hasValidRates ? buyRate.toFixed(2).split('.')[0] : '--'}.
                       <span className="text-lg">{hasValidRates ? buyRate.toFixed(2).split('.')[1] : '--'}</span>
                     </div>
-                    {hasValidRates && spread !== undefined && baseRate && (
-                      <div className="text-xs text-gray-500 mt-1" title={`기준환율: ${Number(baseRate.buyRate).toFixed(2)}`}>
-                        수수료 {spread}bps
-                      </div>
-                    )}
                     {hasValidRates && (
                       <div className="text-xs text-gray-400 mt-1">
                         SWAP: {swapPointsBuy.toFixed(2)}
@@ -680,12 +489,6 @@ export default function ForwardTradingCustomer() {
                       <span>선물환율:</span>
                       <span className="font-medium">{(direction === "BUY" ? buyRate : sellRate).toFixed(2)}</span>
                     </div>
-                    {spread !== undefined && (
-                      <div className="flex justify-between">
-                        <span>수수료 (Spread):</span>
-                        <span className="font-medium">{spread}bps</span>
-                      </div>
-                    )}
                     <div className="flex justify-between">
                       <span>스왑포인트:</span>
                       <span className="font-medium">{(direction === "BUY" ? swapPointsBuy : swapPointsSell).toFixed(2)}</span>
@@ -720,8 +523,6 @@ export default function ForwardTradingCustomer() {
               </Button>
             </Card>
           </div>
-        </TabsContent>
-      </Tabs>
     </div>
   );
 }

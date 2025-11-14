@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CalendarIcon } from "lucide-react";
 import { format, addDays } from "date-fns";
 import { apiRequest } from "@/lib/queryClient";
@@ -53,8 +52,6 @@ export default function SwapTradingCustomer() {
   const {
     buyRate: customerBuyRate,
     sellRate: customerSellRate,
-    spread,
-    baseRate,
     isLoading: isRateLoading,
     isError: isRateError,
     dataUpdatedAt,
@@ -124,210 +121,7 @@ export default function SwapTradingCustomer() {
         <p className="text-slate-200">두 개의 반대 방향 거래를 동시에 체결합니다</p>
       </div>
 
-      <Tabs defaultValue="customer" className="max-w-6xl mx-auto">
-        <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-6">
-          <TabsTrigger value="customer" data-testid="tab-customer-view">고객 뷰</TabsTrigger>
-          <TabsTrigger value="trader" data-testid="tab-trader-view">트레이더 뷰</TabsTrigger>
-        </TabsList>
-
-        {/* 고객 뷰 - 간단한 인터페이스 (수수료 정보 숨김) */}
-        <TabsContent value="customer">
-          <div className="max-w-md mx-auto">
-            <Card className="p-8 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border-0 text-gray-900">
-          {/* 통화쌍 선택 */}
-          <div className="flex items-center justify-between mb-6">
-            <span className="text-lg font-semibold text-gray-700">통화쌍</span>
-            <Select value={selectedPair} onValueChange={setSelectedPair}>
-              <SelectTrigger className="w-40 bg-gray-50 border-gray-200 rounded-xl shadow-sm text-lg font-medium" data-testid="select-currency-pair">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {currencyPairs.map((pair) => (
-                  <SelectItem key={pair.id} value={pair.symbol}>
-                    {pair.symbol}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* 환율 표시 */}
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <div 
-              className={cn(
-                "p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200",
-                direction === "BUY_SELL_USD" 
-                  ? "bg-blue-50 border-blue-500 shadow-lg" 
-                  : "bg-gray-50 border-gray-200 hover:border-gray-300"
-              )}
-              onClick={() => setDirection("BUY_SELL_USD")}
-              data-testid="button-buy-sell-direction"
-            >
-              <div className="text-sm text-gray-600 mb-2">Buy & Sell</div>
-              <div className="text-2xl font-bold text-blue-600">
-                {hasValidRates ? buyRate.toFixed(2) : '--'}
-              </div>
-              <div className="text-xs text-gray-500 mt-1">선물매수/현물매도</div>
-            </div>
-            <div 
-              className={cn(
-                "p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200",
-                direction === "SELL_BUY_USD" 
-                  ? "bg-red-50 border-red-500 shadow-lg" 
-                  : "bg-gray-50 border-gray-200 hover:border-gray-300"
-              )}
-              onClick={() => setDirection("SELL_BUY_USD")}
-              data-testid="button-sell-buy-direction"
-            >
-              <div className="text-sm text-gray-600 mb-2">Sell & Buy</div>
-              <div className="text-2xl font-bold text-red-500">
-                {hasValidRates ? sellRate.toFixed(2) : '--'}
-              </div>
-              <div className="text-xs text-gray-500 mt-1">선물매도/현물매수</div>
-            </div>
-          </div>
-
-          {/* 날짜 선택 */}
-          <div className="mb-6 grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Near Date</label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start text-left font-normal rounded-xl"
-                    data-testid="button-near-date"
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {format(nearDate, "yyyy-MM-dd")}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={nearDate}
-                    onSelect={(date) => date && setNearDate(date)}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Far Date</label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start text-left font-normal rounded-xl"
-                    data-testid="button-far-date"
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {format(farDate, "yyyy-MM-dd")}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={farDate}
-                    onSelect={(date) => date && setFarDate(date)}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
-
-          {/* 금액 입력 */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              거래 금액
-            </label>
-            <div className="flex gap-2 mb-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className={cn(
-                  "rounded-xl flex-1",
-                  nearAmountCurrency === "USD" && "bg-teal-500 text-white border-teal-500"
-                )}
-                onClick={() => setNearAmountCurrency("USD")}
-                data-testid="button-currency-usd"
-              >
-                USD
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className={cn(
-                  "rounded-xl flex-1",
-                  nearAmountCurrency === "KRW" && "bg-teal-500 text-white border-teal-500"
-                )}
-                onClick={() => setNearAmountCurrency("KRW")}
-                data-testid="button-currency-krw"
-              >
-                KRW
-              </Button>
-            </div>
-            <Input
-              type="text"
-              placeholder="금액을 입력하세요"
-              value={nearAmount}
-              onChange={(e) => setNearAmount(formatInputValue(e.target.value, nearAmountCurrency))}
-              className="text-lg rounded-xl"
-              data-testid="input-amount"
-            />
-          </div>
-
-          {/* 거래 내역 요약 */}
-          {nearAmount && hasValidRates && (
-            <div className="mb-6 p-4 bg-gray-50 rounded-2xl">
-              <div className="text-sm font-medium text-gray-700 mb-2">거래 내역</div>
-              <div className="space-y-1 text-sm text-gray-600">
-                <div className="flex justify-between">
-                  <span>Near Leg:</span>
-                  <span className="font-medium">{format(nearDate, "yyyy-MM-dd")}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Far Leg:</span>
-                  <span className="font-medium">{format(farDate, "yyyy-MM-dd")}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>거래금액:</span>
-                  <span className="font-medium">
-                    {nearAmountCurrency} {formatCurrencyAmount(parseFloat(removeThousandSeparator(nearAmount)), nearAmountCurrency)}
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 승인 안내 */}
-          <div className="mb-6 p-3 bg-blue-50 border border-blue-200 rounded-xl text-sm text-blue-700">
-            스왑 거래는 관리자 승인 후 체결됩니다
-          </div>
-
-          {/* 가격 요청 버튼 */}
-          <Button
-            onClick={handleRequest}
-            disabled={mutation.isPending || !nearAmount || !hasValidRates}
-            className="w-full py-6 text-xl font-bold rounded-2xl text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
-            style={{ 
-              backgroundColor: direction === "BUY_SELL_USD" ? '#4169E1' : '#FF6B6B',
-              boxShadow: direction === "BUY_SELL_USD" 
-                ? '0 0 20px rgba(65, 105, 225, 0.6)' 
-                : '0 0 20px rgba(255, 107, 107, 0.6)'
-            }}
-            data-testid="button-request-quote"
-          >
-            {mutation.isPending ? "처리 중..." : "가격 요청"}
-          </Button>
-        </Card>
-          </div>
-        </TabsContent>
-
-        {/* 트레이더 뷰 - 수수료 정보 표시 */}
-        <TabsContent value="trader">
-          <div className="max-w-md mx-auto">
+      <div className="max-w-md mx-auto">
             <Card className="p-8 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border-0 text-gray-900">
               {/* 통화쌍 선택 */}
               <div className="flex items-center justify-between mb-6">
@@ -346,24 +140,6 @@ export default function SwapTradingCustomer() {
                 </Select>
               </div>
 
-              {/* 수수료 정보 표시 */}
-              {hasValidRates && spread != null && baseRate != null && (
-                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-xl">
-                  <div className="text-xs text-blue-700 space-y-1">
-                    <div className="flex justify-between">
-                      <span>기준환율:</span>
-                      <span className="font-medium" data-testid="text-base-rate">
-                        {((Number(baseRate.buyRate) + Number(baseRate.sellRate)) / 2).toFixed(2)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>스프레드:</span>
-                      <span className="font-medium" data-testid="text-spread">{spread}bps</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
               {/* 환율 표시 */}
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div 
@@ -381,11 +157,6 @@ export default function SwapTradingCustomer() {
                     {hasValidRates ? buyRate.toFixed(2) : '--'}
                   </div>
                   <div className="text-xs text-gray-500 mt-1">선물매수/현물매도</div>
-                  {hasValidRates && spread != null && (
-                    <div className="text-xs text-blue-600 mt-2 font-medium">
-                      수수료: {spread.toFixed(2)}%
-                    </div>
-                  )}
                 </div>
                 <div 
                   className={cn(
@@ -402,11 +173,6 @@ export default function SwapTradingCustomer() {
                     {hasValidRates ? sellRate.toFixed(2) : '--'}
                   </div>
                   <div className="text-xs text-gray-500 mt-1">선물매도/현물매수</div>
-                  {hasValidRates && spread != null && (
-                    <div className="text-xs text-red-600 mt-2 font-medium">
-                      수수료: {spread.toFixed(2)}%
-                    </div>
-                  )}
                 </div>
               </div>
 
@@ -520,12 +286,6 @@ export default function SwapTradingCustomer() {
                         {nearAmountCurrency} {formatCurrencyAmount(parseFloat(removeThousandSeparator(nearAmount)), nearAmountCurrency)}
                       </span>
                     </div>
-                    {spread != null && (
-                      <div className="flex justify-between border-t pt-1 mt-2">
-                        <span>수수료:</span>
-                        <span className="font-medium text-blue-600">{spread.toFixed(2)}%</span>
-                      </div>
-                    )}
                   </div>
                 </div>
               )}
@@ -552,8 +312,6 @@ export default function SwapTradingCustomer() {
               </Button>
             </Card>
           </div>
-        </TabsContent>
-      </Tabs>
     </div>
   );
 }
