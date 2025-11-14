@@ -25,7 +25,19 @@ export default function ExchangeRates() {
     return "Spot";
   };
 
+  // Convert settlementDate to tenor format for API
+  const getTenor = (): string | undefined => {
+    if (activeTab !== "spot-fwd" || settlementDate === "spot") {
+      return undefined; // No tenor for Spot, MAR, or Swap
+    }
+    
+    // Convert settlementDate to uppercase tenor format
+    // e.g., "1w" → "1W", "1m" → "1M", "3m" → "3M"
+    return settlementDate.toUpperCase();
+  };
+
   const productType = getProductType();
+  const tenor = getTenor();
   
   const { 
     customerRates, 
@@ -33,7 +45,7 @@ export default function ExchangeRates() {
     isError, 
     dataUpdatedAt, 
     refetch: refetchRates 
-  } = useCustomerRates(productType);
+  } = useCustomerRates(productType, tenor);
 
   // Filter out rates with no base rate (no market data available)
   const validRates = useMemo(() => {
