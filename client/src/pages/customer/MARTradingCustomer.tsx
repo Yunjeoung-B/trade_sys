@@ -141,7 +141,7 @@ export default function MARTradingCustomer() {
                 <div className="text-lg font-medium text-gray-900">USD/KRW</div>
               </div>
 
-              {/* 환율 표시 - MAR 스프레드 */}
+              {/* 환율 표시 */}
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div 
                   className={cn(
@@ -155,7 +155,7 @@ export default function MARTradingCustomer() {
                 >
                   <div className="text-sm text-gray-600 mb-2">매도 (Sell)</div>
                   <div className="text-3xl font-bold text-blue-600">
-                    {hasValidRates ? sellSpread.toFixed(2) : '--'}
+                    {hasValidRates ? sellRate.toFixed(2) : '--'}
                   </div>
                 </div>
                 <div 
@@ -170,7 +170,7 @@ export default function MARTradingCustomer() {
                 >
                   <div className="text-sm text-gray-600 mb-2">매수 (Buy)</div>
                   <div className="text-3xl font-bold text-red-500">
-                    {hasValidRates ? buySpread.toFixed(2) : '--'}
+                    {hasValidRates ? buyRate.toFixed(2) : '--'}
                   </div>
                 </div>
               </div>
