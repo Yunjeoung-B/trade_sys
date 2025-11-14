@@ -83,8 +83,8 @@ export default function SpotTrading() {
   const hasValidRates = customerBuyRate != null && customerSellRate != null && !isRateError;
   const lastUpdated = dataUpdatedAt ? new Date(dataUpdatedAt) : null;
   
-  // Check if data is truly stale (more than 30 seconds old)
-  const isTrulyStale = lastUpdated && (Date.now() - lastUpdated.getTime() > 30000);
+  // Check if data is truly stale (more than 30 seconds old, and we have received at least one update)
+  const isTrulyStale = dataUpdatedAt && dataUpdatedAt > 0 && lastUpdated && (Date.now() - lastUpdated.getTime() > 30000);
 
   const handleTrade = () => {
     if (!hasValidRates) {

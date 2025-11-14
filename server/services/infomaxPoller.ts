@@ -70,10 +70,11 @@ class InfomaxPoller {
         return;
       }
 
-      let currencyPair = await this.storage.getCurrencyPairBySymbol('USDKRW');
+      // Use standard USD/KRW format for consistency with frontend
+      let currencyPair = await this.storage.getCurrencyPairBySymbol('USD/KRW');
       if (!currencyPair) {
         currencyPair = await this.storage.createCurrencyPair({
-          symbol: 'USDKRW',
+          symbol: 'USD/KRW',
           baseCurrency: 'USD',
           quoteCurrency: 'KRW',
           isActive: true,

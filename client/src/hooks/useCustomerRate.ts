@@ -29,6 +29,17 @@ export function useCustomerRate(
 
   const query = useQuery<CustomerRate | null>({
     queryKey: ["/api/customer-rates", productType, currencyPairId],
+    queryFn: async () => {
+      if (!currencyPairId) return null;
+      const response = await fetch(`/api/customer-rates/${productType}/${currencyPairId}`, {
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        if (response.status === 404) return null;
+        throw new Error('Failed to fetch customer rates');
+      }
+      return response.json();
+    },
     enabled: enabled && !!currencyPairId,
     refetchInterval,
     refetchIntervalInBackground: true,

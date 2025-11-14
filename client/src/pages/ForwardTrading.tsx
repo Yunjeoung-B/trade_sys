@@ -13,6 +13,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrencyAmount, formatInputValue, removeThousandSeparator } from "@/lib/currencyUtils";
 import type { CurrencyPair } from "@shared/schema";
+import { useCustomerRate } from "@/hooks/useCustomerRate";
 
 
 export default function ForwardTrading() {
@@ -47,9 +48,18 @@ export default function ForwardTrading() {
     queryKey: ["/api/currency-pairs"],
   });
 
-  const { data: marketRates = [] } = useQuery<any[]>({
-    queryKey: ["/api/market-rates"],
-  });
+  const selectedPairData = currencyPairs.find(p => p.symbol === selectedPair);
+  
+  // Use customer rates for forward trading
+  const {
+    buyRate: customerBuyRate,
+    sellRate: customerSellRate,
+    spread,
+    baseRate,
+    isLoading: isRateLoading,
+    isError: isRateError,
+    dataUpdatedAt,
+  } = useCustomerRate("Forward", selectedPairData?.id);
 
   const mutation = useMutation({
     mutationFn: async (requestData: any) => {
@@ -72,13 +82,11 @@ export default function ForwardTrading() {
     },
   });
 
-  const selectedPairData = currencyPairs.find(p => p.symbol === selectedPair);
-  const currentRate = marketRates.find((r: any) => r.currencyPairId === selectedPairData?.id);
+  // Check if rates are available (use != null to allow 0 as valid rate)
+  const hasValidRates = customerBuyRate != null && customerSellRate != null && !isRateError;
+  const lastUpdated = dataUpdatedAt ? new Date(dataUpdatedAt) : null;
+  const isTrulyStale = dataUpdatedAt && dataUpdatedAt > 0 && lastUpdated && (Date.now() - lastUpdated.getTime() > 30000);
 
-  // SPOT 레이트 (현물환과 동일)
-  const spotBuyRate = currentRate ? Number(currentRate.buyRate) : 1394.55;
-  const spotSellRate = currentRate ? Number(currentRate.sellRate) : 1382.95;
-  
   // SWAP POINT 계산 (만기일까지의 기간에 따라)
   const calculateSwapPoints = (spotRate: number, valueDate: Date) => {
     if (!valueDate) return 0;
@@ -88,18 +96,39 @@ export default function ForwardTrading() {
     return daysToMaturity * 0.05; // 예시: 일당 0.05 포인트
   };
   
-  const swapPointsBuy = calculateSwapPoints(spotBuyRate, valueDate);
-  const swapPointsSell = calculateSwapPoints(spotSellRate, valueDate);
+  const spotBuyRate = customerBuyRate || 0;
+  const spotSellRate = customerSellRate || 0;
+  
+  const swapPointsBuy = hasValidRates ? calculateSwapPoints(spotBuyRate, valueDate) : 0;
+  const swapPointsSell = hasValidRates ? calculateSwapPoints(spotSellRate, valueDate) : 0;
   
   // 선물환 레이트 = SPOT + SWAP POINTS
   const buyRate = spotBuyRate + swapPointsBuy;
   const sellRate = spotSellRate + swapPointsSell;
 
   const handleTrade = () => {
-    if (!selectedPairData || !amount) {
+    if (!amount) {
       toast({
         title: "입력 오류",
-        description: "통화쌍과 금액을 입력해주세요.",
+        description: "금액을 입력해주세요.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!selectedPairData?.id) {
+      toast({
+        title: "통화쌍 오류",
+        description: "통화쌍 정보를 불러올 수 없습니다.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!hasValidRates) {
+      toast({
+        title: "환율 정보 없음",
+        description: "환율 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.",
         variant: "destructive",
       });
       return;

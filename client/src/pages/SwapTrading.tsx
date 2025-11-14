@@ -13,6 +13,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrencyAmount, formatInputValue, removeThousandSeparator } from "@/lib/currencyUtils";
 import type { CurrencyPair } from "@shared/schema";
+import { useCustomerRate } from "@/hooks/useCustomerRate";
 
 
 export default function SwapTrading() {
@@ -43,9 +44,18 @@ export default function SwapTrading() {
     queryKey: ["/api/currency-pairs"],
   });
 
-  const { data: marketRates = [] } = useQuery<any[]>({
-    queryKey: ["/api/market-rates"],
-  });
+  const selectedPairData = currencyPairs.find(p => p.symbol === selectedPair);
+  
+  // Use customer rates for swap trading
+  const {
+    buyRate: customerBuyRate,
+    sellRate: customerSellRate,
+    spread,
+    baseRate,
+    isLoading: isRateLoading,
+    isError: isRateError,
+    dataUpdatedAt,
+  } = useCustomerRate("Swap", selectedPairData?.id);
 
   const mutation = useMutation({
     mutationFn: async (requestData: any) => {
@@ -69,11 +79,13 @@ export default function SwapTrading() {
     },
   });
 
-  const selectedPairData = currencyPairs.find(p => p.symbol === selectedPair);
-  const currentRate = marketRates.find((r: any) => r.currencyPairId === selectedPairData?.id);
+  // Check if rates are available
+  const hasValidRates = customerBuyRate != null && customerSellRate != null && !isRateError;
+  const lastUpdated = dataUpdatedAt ? new Date(dataUpdatedAt) : null;
+  const isTrulyStale = dataUpdatedAt && dataUpdatedAt > 0 && lastUpdated && (Date.now() - lastUpdated.getTime() > 30000);
 
-  const buyRate = currentRate ? Number(currentRate.buyRate) : 1392.00;
-  const sellRate = currentRate ? Number(currentRate.sellRate) : 1390.40;
+  const buyRate = customerBuyRate || 0;
+  const sellRate = customerSellRate || 0;
   
   // 관리자 제공 가격 (시뮬레이션)
   const swapPoints = adminPriceProvided ? 14 : null;
@@ -81,10 +93,28 @@ export default function SwapTrading() {
   const farRate = adminPriceProvided ? (nearRate ? nearRate + (swapPoints || 0) : null) : null;
 
   const handleSwapRequest = () => {
-    if (!selectedPairData || !nearAmount || !farAmount) {
+    if (!nearAmount || !farAmount) {
       toast({
         title: "입력 오류",
-        description: "통화쌍과 NEAR/FAR 거래금액을 모두 입력해주세요.",
+        description: "NEAR/FAR 거래금액을 모두 입력해주세요.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!selectedPairData?.id) {
+      toast({
+        title: "통화쌍 오류",
+        description: "통화쌍 정보를 불러올 수 없습니다.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!hasValidRates) {
+      toast({
+        title: "환율 정보 없음",
+        description: "환율 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.",
         variant: "destructive",
       });
       return;

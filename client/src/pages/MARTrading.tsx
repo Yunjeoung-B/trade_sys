@@ -8,6 +8,8 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { formatCurrencyAmount, calculateCurrencyAmount, formatInputValue, removeThousandSeparator } from "@/lib/currencyUtils";
+import { useCustomerRate } from "@/hooks/useCustomerRate";
+import type { CurrencyPair } from "@shared/schema";
 
 
 export default function MARTrading() {
@@ -17,10 +19,35 @@ export default function MARTrading() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // MAR 환율은 기준환율 대비 -0.10/+0.10으로 표시
-  const marRate = 1250; // MAR 기준환율
-  const sellSpread = -0.10; // SELL시 -0.10
-  const buySpread = +0.10;  // BUY시 +0.10
+  // Get USD/KRW currency pair
+  const { data: currencyPairs = [] } = useQuery<CurrencyPair[]>({
+    queryKey: ["/api/currency-pairs"],
+  });
+  const usdKrwPair = currencyPairs.find(p => p.symbol === "USD/KRW");
+
+  // Use customer rates for MAR trading
+  const {
+    buyRate: customerBuyRate,
+    sellRate: customerSellRate,
+    spread,
+    baseRate,
+    isLoading: isRateLoading,
+    isError: isRateError,
+    dataUpdatedAt,
+  } = useCustomerRate("MAR", usdKrwPair?.id);
+
+  // Check if rates are available
+  const hasValidRates = customerBuyRate != null && customerSellRate != null && !isRateError;
+  const lastUpdated = dataUpdatedAt ? new Date(dataUpdatedAt) : null;
+  const isTrulyStale = dataUpdatedAt && dataUpdatedAt > 0 && lastUpdated && (Date.now() - lastUpdated.getTime() > 30000);
+
+  const buyRate = customerBuyRate || 0;
+  const sellRate = customerSellRate || 0;
+  
+  // MAR displays spread relative to base rate
+  const marBaseRate = baseRate ? (Number(baseRate.buyRate) + Number(baseRate.sellRate)) / 2 : 0;
+  const sellSpread = hasValidRates && marBaseRate ? sellRate - marBaseRate : 0;
+  const buySpread = hasValidRates && marBaseRate ? buyRate - marBaseRate : 0;
 
   const mutation = useMutation({
     mutationFn: async (tradeData: any) => {
@@ -67,13 +94,31 @@ export default function MARTrading() {
       return;
     }
 
+    if (!hasValidRates) {
+      toast({
+        title: "환율 정보 없음",
+        description: "환율 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!usdKrwPair?.id) {
+      toast({
+        title: "통화쌍 오류",
+        description: "통화쌍 정보를 불러올 수 없습니다.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     mutation.mutate({
       productType: "MAR",
-      currencyPairId: "usd-krw", // USD/KRW 고정
+      currencyPairId: usdKrwPair.id,
       direction,
       amount: parseFloat(removeThousandSeparator(amount)),
       amountCurrency,
-      rate: marRate + (direction === "BUY" ? buySpread : sellSpread),
+      rate: direction === "BUY" ? buyRate : sellRate,
       settlementDate: new Date(),
     });
   };
@@ -82,6 +127,18 @@ export default function MARTrading() {
     <div className="p-6">
       <div className="max-w-md mx-auto">
         <Card className="p-8 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border-0 text-gray-900">
+          {/* Error/Stale banners */}
+          {isRateError && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+              환율 정보를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.
+            </div>
+          )}
+          {isTrulyStale && lastUpdated && (
+            <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-xl text-sm text-yellow-700">
+              마지막 업데이트: {lastUpdated.toLocaleTimeString('ko-KR')}, 재시도 중...
+            </div>
+          )}
+
           {/* Step 1: 통화쌍 선택 */}
           <div className="flex items-center justify-between mb-4">
             <span className="text-sm text-gray-600">MAR</span>
@@ -101,7 +158,7 @@ export default function MARTrading() {
               <div className="text-center">
                 <div className="text-sm text-gray-600 mb-1">SELL USD</div>
                 <div className="text-2xl font-bold text-[#1c5bcb]">
-                  {sellSpread.toFixed(2)}
+                  {hasValidRates ? sellSpread.toFixed(2) : "--"}
                 </div>
                 <Button 
                   variant="outline" 
@@ -125,7 +182,7 @@ export default function MARTrading() {
               <div className="text-center">
                 <div className="text-sm text-gray-600 mb-1">BUY USD</div>
                 <div className="text-2xl font-bold text-[#f45da7]">
-                  +{buySpread.toFixed(2)}
+                  {hasValidRates ? `+${buySpread.toFixed(2)}` : "--"}
                 </div>
                 <Button 
                   variant="outline" 
@@ -225,8 +282,9 @@ export default function MARTrading() {
           {/* Step 4: Submit button */}
           <Button
             onClick={handleTrade}
-            disabled={mutation.isPending || !amount}
+            disabled={mutation.isPending || !amount || !hasValidRates}
             className="w-full py-4 text-lg font-semibold rounded-2xl text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
+            title={!hasValidRates ? "환율 정보를 불러오는 중입니다" : ""}
             style={{ 
               backgroundColor: direction === "BUY" ? '#FF6B6B' : '#4169E1',
               boxShadow: direction === "BUY" 
