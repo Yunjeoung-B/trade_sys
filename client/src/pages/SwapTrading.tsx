@@ -46,7 +46,23 @@ export default function SwapTrading() {
 
   const selectedPairData = currencyPairs.find(p => p.symbol === selectedPair);
   
-  // Use customer rates for swap trading
+  // Convert farDate (main maturity) to tenor for spread lookup
+  const getTenorFromDate = (date: Date): string | undefined => {
+    const today = new Date();
+    const daysToMaturity = Math.ceil((date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (daysToMaturity <= 10) return "1W";
+    if (daysToMaturity <= 45) return "1M";
+    if (daysToMaturity <= 75) return "2M";
+    if (daysToMaturity <= 105) return "3M";
+    if (daysToMaturity <= 270) return "6M";
+    if (daysToMaturity <= 315) return "9M";
+    return "12M";
+  };
+  
+  const tenor = getTenorFromDate(farDate); // Use far leg for tenor
+  
+  // Use customer rates for swap trading with tenor-specific spread
   const {
     buyRate: customerBuyRate,
     sellRate: customerSellRate,
@@ -55,7 +71,7 @@ export default function SwapTrading() {
     isLoading: isRateLoading,
     isError: isRateError,
     dataUpdatedAt,
-  } = useCustomerRate("Swap", selectedPairData?.id);
+  } = useCustomerRate("Swap", selectedPairData?.id, tenor);
 
   const mutation = useMutation({
     mutationFn: async (requestData: any) => {

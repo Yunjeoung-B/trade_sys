@@ -42,7 +42,7 @@ export default function SpotTrading() {
 
   const selectedPairData = currencyPairs.find(p => p.symbol === selectedPair);
 
-  // Get customer rates with spread applied for selected pair
+  // Get customer rates with spread applied for selected pair (no tenor for Spot)
   const {
     buyRate: customerBuyRate,
     sellRate: customerSellRate,
@@ -52,7 +52,7 @@ export default function SpotTrading() {
     isError: isRateError,
     isStale,
     dataUpdatedAt,
-  } = useCustomerRate("Spot", selectedPairData?.id);
+  } = useCustomerRate("Spot", selectedPairData?.id, undefined);
 
   const mutation = useMutation({
     mutationFn: async (tradeData: any) => {

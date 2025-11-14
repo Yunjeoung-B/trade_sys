@@ -25,7 +25,7 @@ export default function MARTrading() {
   });
   const usdKrwPair = currencyPairs.find(p => p.symbol === "USD/KRW");
 
-  // Use customer rates for MAR trading
+  // Use customer rates for MAR trading (no tenor for MAR)
   const {
     buyRate: customerBuyRate,
     sellRate: customerSellRate,
@@ -34,7 +34,7 @@ export default function MARTrading() {
     isLoading: isRateLoading,
     isError: isRateError,
     dataUpdatedAt,
-  } = useCustomerRate("MAR", usdKrwPair?.id);
+  } = useCustomerRate("MAR", usdKrwPair?.id, undefined);
 
   // Check if rates are available
   const hasValidRates = customerBuyRate != null && customerSellRate != null && !isRateError;
