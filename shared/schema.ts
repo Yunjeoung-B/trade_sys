@@ -114,10 +114,15 @@ export const trades = pgTable("trades", {
   currencyPairId: varchar("currency_pair_id").references(() => currencyPairs.id),
   direction: varchar("direction").notNull(),
   amount: decimal("amount", { precision: 18, scale: 2 }).notNull(),
+  amountCurrency: varchar("amount_currency"), // BASE or QUOTE
+  orderType: varchar("order_type"), // MARKET or LIMIT
+  limitRate: decimal("limit_rate", { precision: 12, scale: 4 }), // for LIMIT orders
+  validityType: varchar("validity_type"), // DAY or TIME
+  validUntilTime: varchar("valid_until_time"), // HH:MM format or ISO timestamp
   rate: decimal("rate", { precision: 12, scale: 4 }).notNull(),
   settlementDate: timestamp("settlement_date"),
   maturityDate: timestamp("maturity_date"),
-  status: varchar("status").default("active"), // active, settled, cancelled
+  status: varchar("status").default("active"), // pending, active, settled, cancelled
   quoteRequestId: varchar("quote_request_id").references(() => quoteRequests.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

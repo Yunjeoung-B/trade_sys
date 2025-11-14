@@ -6,13 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Clock, X } from "lucide-react";
 import { format } from "date-fns";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { formatCurrencyAmount, calculateCurrencyAmount, formatInputValue, removeThousandSeparator } from "@/lib/currencyUtils";
-import type { CurrencyPair } from "@shared/schema";
+import type { CurrencyPair, Trade } from "@shared/schema";
 import { useCustomerRate } from "@/hooks/useCustomerRate";
 
 export default function SpotTradingCustomer() {
@@ -51,22 +51,51 @@ export default function SpotTradingCustomer() {
   const lastUpdated = dataUpdatedAt ? new Date(dataUpdatedAt) : null;
   const isTrulyStale = dataUpdatedAt && dataUpdatedAt > 0 && lastUpdated && (Date.now() - lastUpdated.getTime() > 30000);
 
+  const { data: pendingTrades = [] } = useQuery<Trade[]>({
+    queryKey: ["/api/trades/pending"],
+  });
+
   const mutation = useMutation({
     mutationFn: async (tradeData: any) => {
       return apiRequest("POST", "/api/trades", tradeData);
     },
     onSuccess: () => {
+      const isLimitOrder = orderType === "LIMIT";
       toast({
-        title: "거래 성공",
-        description: "현물환 거래가 성공적으로 체결되었습니다.",
+        title: isLimitOrder ? "지정가 주문 등록" : "거래 성공",
+        description: isLimitOrder 
+          ? "지정가 주문이 등록되었습니다. 조건 충족 시 자동으로 체결됩니다."
+          : "현물환 거래가 성공적으로 체결되었습니다.",
       });
       setAmount("");
+      setLimitRate("");
       queryClient.invalidateQueries({ queryKey: ["/api/trades"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/trades/pending"] });
     },
     onError: () => {
       toast({
         title: "거래 실패",
         description: "거래 처리 중 오류가 발생했습니다.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const cancelMutation = useMutation({
+    mutationFn: async (tradeId: string) => {
+      return apiRequest("POST", `/api/trades/${tradeId}/cancel`, {});
+    },
+    onSuccess: () => {
+      toast({
+        title: "주문 취소 완료",
+        description: "지정가 주문이 취소되었습니다.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/trades/pending"] });
+    },
+    onError: () => {
+      toast({
+        title: "취소 실패",
+        description: "주문 취소 중 오류가 발생했습니다.",
         variant: "destructive",
       });
     },
@@ -126,11 +155,12 @@ export default function SpotTradingCustomer() {
       orderType,
       amount: parseFloat(removeThousandSeparator(amount)),
       amountCurrency,
+      limitRate: orderType === "LIMIT" ? parseFloat(limitRate) : undefined,
       rate: tradeRate,
       settlementDate: valueDate,
-      validUntil: validUntilDateTime,
-      validityType,
-      validUntilTime: validityType === "TIME" ? validUntilTime : undefined,
+      status: orderType === "MARKET" ? "active" : "pending",
+      validityType: orderType === "LIMIT" ? validityType : undefined,
+      validUntilTime: orderType === "LIMIT" ? (validityType === "TIME" ? validUntilTime : validUntilDateTime?.toISOString()) : undefined,
     });
   };
 
@@ -141,8 +171,9 @@ export default function SpotTradingCustomer() {
         <p className="text-slate-200">간편하게 실시간 환율로 즉시 거래하세요</p>
       </div>
 
-      <div className="max-w-md mx-auto">
-            <Card className="p-8 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border-0 text-gray-900">
+      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Left Panel: Trading Form */}
+        <Card className="p-8 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border-0 text-gray-900">
               {/* Step 1: 통화쌍 선택 */}
               <div className="flex items-center justify-between mb-4">
                 <span className="text-sm text-gray-600">현물환</span>
@@ -510,8 +541,108 @@ export default function SpotTradingCustomer() {
                   : orderType === "MARKET" ? "즉시 거래실행" : "즉시 지정가주문"
                 }
               </Button>
-            </Card>
-          </div>
+        </Card>
+
+        {/* Right Panel: Pending Limit Orders */}
+        <Card className="p-8 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border-0 text-gray-900">
+          <h3 className="text-lg font-bold mb-4 text-gray-800 flex items-center">
+            <Clock className="w-5 h-5 mr-2 text-blue-600" />
+            지정가 주문 현황 ({pendingTrades.length}건)
+          </h3>
+
+          {pendingTrades.length === 0 ? (
+            <div className="text-center py-12 text-gray-500">
+              <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p className="text-sm">진행 중인 지정가 주문이 없습니다</p>
+              <p className="text-xs mt-2">지정가 주문을 등록하면 여기에 표시됩니다</p>
+            </div>
+          ) : (
+            <div className="space-y-4 max-h-[600px] overflow-y-auto">
+              {pendingTrades.map((trade) => {
+                const pair = currencyPairs.find(p => p.id === trade.currencyPairId);
+                if (!pair) return null;
+
+                const validUntil = trade.validUntilTime ? new Date(trade.validUntilTime) : null;
+                const isExpired = validUntil ? validUntil <= new Date() : false;
+
+                return (
+                  <div
+                    key={trade.id}
+                    className={cn(
+                      "p-4 rounded-xl border-2 transition-all",
+                      isExpired 
+                        ? "border-red-300 bg-red-50" 
+                        : "border-blue-200 bg-blue-50"
+                    )}
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex-1">
+                        <div className="font-semibold text-gray-800">
+                          {pair.symbol} {trade.direction === "BUY" ? "매수" : "매도"}
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          주문번호: {trade.tradeNumber}
+                        </div>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => cancelMutation.mutate(trade.id)}
+                        disabled={cancelMutation.isPending || isExpired}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-100"
+                        data-testid={`button-cancel-trade-${trade.id}`}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+
+                    <div className="space-y-1 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">주문금액:</span>
+                        <span className="font-medium text-gray-800">
+                          {trade.amountCurrency === "BASE" ? pair.baseCurrency : pair.quoteCurrency}{" "}
+                          {formatCurrencyAmount(
+                            parseFloat(trade.amount),
+                            trade.amountCurrency === "BASE" ? pair.baseCurrency : pair.quoteCurrency
+                          )}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">지정환율:</span>
+                        <span className="font-medium text-blue-600">
+                          {parseFloat(trade.limitRate || trade.rate).toFixed(2)}
+                        </span>
+                      </div>
+                      {validUntil && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">유효기간:</span>
+                          <span className={cn(
+                            "text-xs",
+                            isExpired ? "text-red-600 font-medium" : "text-gray-600"
+                          )}>
+                            {trade.validityType === "DAY" 
+                              ? "당일 오후 4시까지"
+                              : validUntil.toLocaleString('ko-KR', { 
+                                  hour: '2-digit', 
+                                  minute: '2-digit' 
+                                })
+                            }
+                          </span>
+                        </div>
+                      )}
+                      {isExpired && (
+                        <div className="text-xs text-red-600 font-medium mt-2">
+                          유효기간 만료
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </Card>
+      </div>
     </div>
   );
 }

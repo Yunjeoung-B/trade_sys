@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, CheckCircle, Clock } from "lucide-react";
+import { CalendarIcon, CheckCircle, Clock, X } from "lucide-react";
 import { format, addDays } from "date-fns";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -48,6 +48,13 @@ export default function ForwardTradingCustomer() {
   const { data: approvedQuotes = [] } = useQuery<QuoteRequest[]>({
     queryKey: ["/api/quote-requests", "QUOTE_READY"],
     queryFn: () => fetch("/api/quote-requests?status=QUOTE_READY").then(res => res.json()),
+    refetchInterval: 5000, // Refresh every 5 seconds
+  });
+
+  // Fetch pending quote requests (REQUESTED)
+  const { data: pendingQuotes = [] } = useQuery<QuoteRequest[]>({
+    queryKey: ["/api/quote-requests", "REQUESTED"],
+    queryFn: () => fetch("/api/quote-requests?status=REQUESTED").then(res => res.json()),
     refetchInterval: 5000, // Refresh every 5 seconds
   });
 
@@ -134,6 +141,26 @@ export default function ForwardTradingCustomer() {
       toast({
         title: "거래 실패",
         description: error?.message || "거래 체결 중 오류가 발생했습니다.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const cancelQuoteMutation = useMutation({
+    mutationFn: async (quoteId: string) => {
+      return apiRequest("POST", `/api/quote-requests/${quoteId}/cancel`, {});
+    },
+    onSuccess: () => {
+      toast({
+        title: "요청 취소 완료",
+        description: "가격 요청이 취소되었습니다.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/quote-requests", "REQUESTED"] });
+    },
+    onError: () => {
+      toast({
+        title: "취소 실패",
+        description: "요청 취소 중 오류가 발생했습니다.",
         variant: "destructive",
       });
     },
@@ -545,8 +572,65 @@ export default function ForwardTradingCustomer() {
           </Button>
         </Card>
 
-        {/* Right Panel: Approved Quotes */}
+        {/* Right Panel: Pending & Approved Quotes */}
         <Card className="p-8 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border-0 text-gray-900">
+          {/* Pending Quotes Section */}
+          {pendingQuotes.length > 0 && (
+            <div className="mb-6 pb-6 border-b border-gray-200">
+              <h3 className="text-lg font-bold mb-4 text-gray-800 flex items-center">
+                <Clock className="w-5 h-5 mr-2 text-blue-600" />
+                가격 요청 현황 ({pendingQuotes.length}건)
+              </h3>
+              <div className="space-y-3 max-h-[300px] overflow-y-auto">
+                {pendingQuotes.map((quote) => {
+                  const pair = currencyPairs.find(p => p.id === quote.currencyPairId);
+                  if (!pair) return null;
+
+                  return (
+                    <div
+                      key={quote.id}
+                      className="p-3 rounded-xl border-2 border-yellow-200 bg-yellow-50"
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex-1">
+                          <div className="font-semibold text-gray-800 text-sm">
+                            {pair.symbol} {quote.direction === "BUY" ? "매수" : "매도"}
+                          </div>
+                          <div className="text-xs text-gray-600">
+                            {quote.amountCurrency === "BASE" ? pair.baseCurrency : pair.quoteCurrency}{" "}
+                            {formatCurrencyAmount(
+                              parseFloat(quote.amount),
+                              quote.amountCurrency === "BASE" ? pair.baseCurrency : pair.quoteCurrency
+                            )}
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => cancelQuoteMutation.mutate(quote.id)}
+                          disabled={cancelQuoteMutation.isPending}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-100 h-7 w-7 p-0"
+                          data-testid={`button-cancel-quote-${quote.id}`}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      {quote.orderType === "LIMIT" && quote.limitRate && (
+                        <div className="text-xs text-gray-600">
+                          지정환율: {parseFloat(quote.limitRate).toFixed(2)}
+                        </div>
+                      )}
+                      <div className="text-xs text-gray-500 mt-1">
+                        승인 대기 중...
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Approved Quotes Section */}
           <h3 className="text-lg font-bold mb-4 text-gray-800 flex items-center">
             <CheckCircle className="w-5 h-5 mr-2 text-green-600" />
             승인된 견적 ({activeQuotes.length}건)

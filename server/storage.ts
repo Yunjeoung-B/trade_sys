@@ -70,12 +70,15 @@ export interface IStorage {
   getUserQuoteRequests(userId: string): Promise<QuoteRequest[]>;
   getUserQuoteRequestsByStatus(userId: string, status: string): Promise<QuoteRequest[]>;
   confirmQuoteRequest(id: string): Promise<QuoteRequest | undefined>;
+  cancelQuoteRequest(id: string, userId: string): Promise<QuoteRequest | undefined>;
 
   // Trades
   createTrade(trade: InsertTrade): Promise<Trade>;
   getUserActiveTrades(userId: string): Promise<Trade[]>;
+  getUserPendingTrades(userId: string): Promise<Trade[]>;
   getAllActiveTrades(): Promise<Trade[]>;
   updateTradeStatus(id: string, status: string): Promise<Trade | undefined>;
+  cancelTrade(id: string, userId: string): Promise<Trade | undefined>;
 
   // Auto approval settings
   getAutoApprovalSetting(userId: string): Promise<AutoApprovalSetting | undefined>;
@@ -502,6 +505,33 @@ export class DatabaseStorage implements IStorage {
     return request;
   }
 
+  async cancelQuoteRequest(id: string, userId: string): Promise<QuoteRequest | undefined> {
+    // Verify ownership before canceling
+    const [existingQuote] = await db
+      .select()
+      .from(quoteRequests)
+      .where(and(eq(quoteRequests.id, id), eq(quoteRequests.userId, userId)));
+
+    if (!existingQuote) {
+      return undefined;
+    }
+
+    // Only allow canceling REQUESTED status quotes
+    if (existingQuote.status !== "REQUESTED") {
+      throw new Error("Only pending quote requests can be cancelled");
+    }
+
+    const [request] = await db
+      .update(quoteRequests)
+      .set({
+        status: "CANCELLED",
+        updatedAt: new Date(),
+      })
+      .where(eq(quoteRequests.id, id))
+      .returning();
+    return request;
+  }
+
   // Trades
   async createTrade(tradeData: InsertTrade): Promise<Trade> {
     // Generate trade number
@@ -528,6 +558,14 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(trades.createdAt));
   }
 
+  async getUserPendingTrades(userId: string): Promise<Trade[]> {
+    return await db
+      .select()
+      .from(trades)
+      .where(and(eq(trades.userId, userId), eq(trades.status, "pending")))
+      .orderBy(desc(trades.createdAt));
+  }
+
   async getAllActiveTrades(): Promise<Trade[]> {
     return await db
       .select()
@@ -540,6 +578,33 @@ export class DatabaseStorage implements IStorage {
     const [trade] = await db
       .update(trades)
       .set({ status, updatedAt: new Date() })
+      .where(eq(trades.id, id))
+      .returning();
+    return trade;
+  }
+
+  async cancelTrade(id: string, userId: string): Promise<Trade | undefined> {
+    // Verify ownership before canceling
+    const [existingTrade] = await db
+      .select()
+      .from(trades)
+      .where(and(eq(trades.id, id), eq(trades.userId, userId)));
+
+    if (!existingTrade) {
+      return undefined;
+    }
+
+    // Only allow canceling pending status trades
+    if (existingTrade.status !== "pending") {
+      throw new Error("Only pending trades can be cancelled");
+    }
+
+    const [trade] = await db
+      .update(trades)
+      .set({
+        status: "cancelled",
+        updatedAt: new Date(),
+      })
       .where(eq(trades.id, id))
       .returning();
     return trade;

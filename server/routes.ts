@@ -392,6 +392,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/quote-requests/:id/cancel", isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const request = await storage.cancelQuoteRequest(id, req.user.id);
+      if (!request) {
+        return res.status(404).json({ message: "Quote request not found or you don't have permission to cancel it" });
+      }
+      res.json(request);
+    } catch (error: any) {
+      if (error.message === "Only pending quote requests can be cancelled") {
+        return res.status(409).json({ message: "Only pending quote requests can be cancelled" });
+      }
+      console.error("Cancel quote error:", error);
+      res.status(500).json({ message: "Failed to cancel quote request" });
+    }
+  });
+
   // Trades
   app.get("/api/trades", isAuthenticated, async (req: any, res) => {
     try {
@@ -441,6 +458,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Trade creation error:", error);
       res.status(400).json({ message: "Invalid trade data" });
+    }
+  });
+
+  app.get("/api/trades/pending", isAuthenticated, async (req: any, res) => {
+    try {
+      const pendingTrades = await storage.getUserPendingTrades(req.user.id);
+      res.json(pendingTrades);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch pending trades" });
+    }
+  });
+
+  app.post("/api/trades/:id/cancel", isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const trade = await storage.cancelTrade(id, req.user.id);
+      if (!trade) {
+        return res.status(404).json({ message: "Trade not found or you don't have permission to cancel it" });
+      }
+      res.json(trade);
+    } catch (error: any) {
+      if (error.message === "Only pending trades can be cancelled") {
+        return res.status(409).json({ message: "Only pending trades can be cancelled" });
+      }
+      console.error("Cancel trade error:", error);
+      res.status(500).json({ message: "Failed to cancel trade" });
     }
   });
 
