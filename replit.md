@@ -49,11 +49,15 @@ UI Style: Gradient backgrounds (slate-800 → blue-900 → purple-900), rounded-
 - **Product Types**: Support for FX SPOT (immediate execution), FX FORWARD (future-dated), FX SWAP (dual-leg), and MAR (time-restricted morning orders)
 - **Approval Workflow**: Configurable approval requirements for Forward and Swap products with admin oversight
 - **Spread Management**: Multi-dimensional spread settings by product type, currency pair, settlement date, and user group level
+- **Customer Rate Calculation**: Comprehensive group-based spread application system where customer trading rates = Infomax base rates ± group spreads (buy = base + spread/100, sell = base - spread/100), with priority-based spread selection matching user's major/mid/sub groups across product types, currency pairs, and settlement dates
+- **Real-time Rate Integration**: All four trading pages (Spot, Forward, Swap, MAR) integrated with useCustomerRate hook for live customer rate display with 10-second polling interval, stale detection (30s threshold), error handling, and automatic refetching when currency pairs change
+- **Trading Page Validation**: Complete safety guards across all trading flows including hasValidRates checks preventing trades when rates unavailable, currency pair ID validation before mutations, disabled buttons during rate loading, and comprehensive error messages for missing data scenarios
 - **Time Restrictions**: Business logic for MAR trading cutoff (9:00 AM) with real-time validation
 - **UI Enhancement**: Consistent gradient-based design across all trading pages with modern button styling and rounded input fields
 - **Standardized Order Input**: All trading pages now use consistent layout with currency selection buttons above order amount input field, matching MAR trading design
 - **Bloomberg API Dashboard**: Comprehensive admin interface for Bloomberg API management with connection testing, real-time data display, and bulk import capabilities
 - **HTTP Polling System**: WebSocket 연결 문제 해결을 위해 HTTP 폴링 기반 실시간 데이터 시스템으로 변경 (2초 간격 업데이트)
+- **Infomax API Integration**: Real-time market data from Infomax API (https://infomaxy.einfomax.co.kr/api/usdkrw/tick) with data=order parameter and broker=SMB configuration, 10-second background polling, automatic rate limiting compliance, and graceful error handling
 
 ## Business Logic Architecture
 - **Quote Calculation**: Layered pricing model combining source rates with group-specific spreads, product spreads, currency spreads, and tenor spreads
@@ -71,6 +75,7 @@ UI Style: Gradient backgrounds (slate-800 → blue-900 → purple-900), rounded-
 ## Market Data Services
 - **Bloomberg API**: Real-time and historical FX market data via Python blpapi library with automatic fallback to simulation mode
 - **Python Integration**: Child process execution for Bloomberg API calls with error handling and graceful degradation
+- **Infomax API**: Real-time USD/KRW market data via REST API with order data (ask_price as BUY rate, bid_price as SELL rate), 10-second background polling service with rate limiting compliance, automatic retry logic, and persistent storage in PostgreSQL market_rates table
 
 ## UI Framework & Components
 - **Radix UI**: Comprehensive set of unstyled, accessible UI primitives including dialogs, dropdowns, forms, and navigation components
