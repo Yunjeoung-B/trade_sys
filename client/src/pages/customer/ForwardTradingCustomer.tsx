@@ -155,7 +155,7 @@ export default function ForwardTradingCustomer() {
         title: "요청 취소 완료",
         description: "가격 요청이 취소되었습니다.",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/quote-requests", "REQUESTED"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/quote-requests"] });
     },
     onError: () => {
       toast({

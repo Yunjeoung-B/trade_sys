@@ -90,7 +90,7 @@ export default function SpotTradingCustomer() {
         title: "주문 취소 완료",
         description: "지정가 주문이 취소되었습니다.",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/trades/pending"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/trades"] });
     },
     onError: () => {
       toast({
