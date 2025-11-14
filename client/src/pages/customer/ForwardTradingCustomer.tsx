@@ -424,7 +424,7 @@ export default function ForwardTradingCustomer() {
 
                 <div className="text-xs text-gray-500 mt-2">
                   {validityType === "DAY" 
-                    ? "당일 마감까지 유효" 
+                    ? "당일 오후 4시까지 유효" 
                     : `당일 ${validUntilTime}까지 유효`
                   }
                 </div>
