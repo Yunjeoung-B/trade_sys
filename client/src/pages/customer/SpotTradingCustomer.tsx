@@ -113,8 +113,9 @@ export default function SpotTradingCustomer() {
         validUntilDateTime = new Date(today);
         validUntilDateTime.setHours(hours, minutes, 0, 0);
       } else {
+        // 당일 마감: 오후 4시까지
         validUntilDateTime = new Date(today);
-        validUntilDateTime.setHours(23, 59, 59, 999);
+        validUntilDateTime.setHours(16, 0, 0, 0);
       }
     }
 
@@ -356,7 +357,7 @@ export default function SpotTradingCustomer() {
 
                     <div className="text-xs text-gray-500 mt-2">
                       {validityType === "DAY" 
-                        ? "당일 마감까지 유효" 
+                        ? "당일 오후 4시까지 유효" 
                         : `당일 ${validUntilTime}까지 유효`
                       }
                     </div>
@@ -484,7 +485,7 @@ export default function SpotTradingCustomer() {
                 {orderType === "LIMIT" && (
                   <div className="text-xs text-gray-500">
                     유효기간: {validityType === "DAY" 
-                      ? "당일 마감까지" 
+                      ? "당일 오후 4시까지" 
                       : `당일 ${validUntilTime}까지`
                     }
                   </div>
