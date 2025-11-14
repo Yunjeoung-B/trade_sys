@@ -505,7 +505,10 @@ export default function SpotTradingCustomer() {
                 }}
                 data-testid="button-trader-execute"
               >
-                {mutation.isPending ? "처리중..." : "즉시 거래 실행"}
+                {mutation.isPending 
+                  ? "처리중..." 
+                  : orderType === "MARKET" ? "즉시 거래실행" : "즉시 지정가주문"
+                }
               </Button>
             </Card>
           </div>
