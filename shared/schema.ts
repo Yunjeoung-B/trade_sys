@@ -240,3 +240,23 @@ export const infomaxApiResponseSchema = z.object({
 });
 
 export type InfomaxApiResponse = z.infer<typeof infomaxApiResponseSchema>;
+
+// Bulk Customer Rate Schema
+export const customerRateItemSchema = z.object({
+  currencyPairId: z.string(),
+  currencyPairSymbol: z.string(),
+  buyRate: z.number(),
+  sellRate: z.number(),
+  spread: z.number(),
+  baseRate: z.object({
+    id: z.string(),
+    currencyPairId: z.string(),
+    buyRate: z.string(),
+    sellRate: z.string(),
+    source: z.string(),
+    timestamp: z.date(),
+    updatedAt: z.date(),
+  }).nullable(),
+});
+
+export type CustomerRateItem = z.infer<typeof customerRateItemSchema>;

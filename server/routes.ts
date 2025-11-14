@@ -199,6 +199,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Customer rates with spread applied (for client users)
+  // Bulk API - get all currency pairs' customer rates for a product type
+  app.get("/api/customer-rates/:productType", isAuthenticated, async (req, res) => {
+    try {
+      const { productType } = req.params;
+      const user = req.user as any;
+
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      // Validate product type
+      const validProductTypes = ["Spot", "Forward", "Swap", "MAR"];
+      if (!validProductTypes.includes(productType)) {
+        return res.status(400).json({ message: "Invalid product type" });
+      }
+
+      const rates = await storage.getCustomerRatesForUser(productType, user);
+      res.json(rates);
+    } catch (error) {
+      console.error("Error fetching bulk customer rates:", error);
+      res.status(500).json({ message: "Failed to fetch customer rates" });
+    }
+  });
+
+  // Single currency pair API
   app.get("/api/customer-rates/:productType/:currencyPairId", isAuthenticated, async (req, res) => {
     try {
       const { productType, currencyPairId } = req.params;

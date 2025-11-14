@@ -1,27 +1,44 @@
-import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RefreshCw, TrendingUp, TrendingDown, Clock, Activity, Calendar } from "lucide-react";
-import { useState, useEffect } from "react";
-import type { CurrencyPair } from "@shared/schema";
+import { useState, useEffect, useMemo } from "react";
 import { addDays, format } from "date-fns";
+import { useCustomerRates } from "@/hooks/useCustomerRates";
 
 export default function ExchangeRates() {
   const [lastUpdate, setLastUpdate] = useState(new Date());
   const [settlementDate, setSettlementDate] = useState<string>("spot");
   const [activeTab, setActiveTab] = useState("spot-fwd");
   
-  const { data: currencyPairs = [], refetch: refetchPairs } = useQuery<CurrencyPair[]>({
-    queryKey: ["/api/currency-pairs"],
-  });
+  // Get productType based on activeTab and settlementDate
+  const getProductType = () => {
+    if (activeTab === "spot-fwd") {
+      return settlementDate === "spot" ? "Spot" : "Forward";
+    } else if (activeTab === "mar") {
+      return "MAR";
+    } else if (activeTab === "swap") {
+      return "Swap";
+    }
+    return "Spot";
+  };
 
-  const { data: marketRates = [], refetch: refetchRates } = useQuery<any[]>({
-    queryKey: ["/api/market-rates"],
-    refetchInterval: 10000,
-  });
+  const productType = getProductType();
+  
+  const { 
+    customerRates, 
+    isLoading, 
+    isError, 
+    dataUpdatedAt, 
+    refetch: refetchRates 
+  } = useCustomerRates(productType);
+
+  // Filter out rates with no base rate (no market data available)
+  const validRates = useMemo(() => {
+    return customerRates.filter(rate => rate.baseRate !== null && (rate.buyRate > 0 || rate.sellRate > 0));
+  }, [customerRates]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -31,7 +48,6 @@ export default function ExchangeRates() {
   }, []);
 
   const handleRefresh = () => {
-    refetchPairs();
     refetchRates();
     setLastUpdate(new Date());
   };
@@ -52,30 +68,59 @@ export default function ExchangeRates() {
     return <Activity className="w-4 h-4 text-gray-400" />;
   };
 
-  const renderRateCards = (productType: string) => {
+  const renderRateCards = () => {
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-slate-400">환율 정보를 불러오는 중...</div>
+        </div>
+      );
+    }
+
+    if (isError) {
+      return (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-red-400">환율 정보를 불러올 수 없습니다.</div>
+        </div>
+      );
+    }
+
+    if (customerRates.length === 0) {
+      return (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-slate-400">등록된 통화쌍이 없습니다.</div>
+        </div>
+      );
+    }
+
+    if (validRates.length === 0) {
+      return (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-yellow-400">현재 시장 환율 데이터를 가져올 수 없습니다. 잠시 후 다시 시도해주세요.</div>
+        </div>
+      );
+    }
+
     return (
       <>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          {marketRates.slice(0, 4).map((rate: any) => {
-            const pair = currencyPairs.find(p => p.id === rate.currencyPairId);
-            if (!pair) return null;
-            
-            const buyRate = Number(rate.buyRate);
-            const sellRate = Number(rate.sellRate);
+          {validRates.slice(0, 4).map((rate) => {
+            const buyRate = rate.buyRate;
+            const sellRate = rate.sellRate;
             const midRate = (buyRate + sellRate) / 2;
             
             return (
-              <Card key={rate.id} className="bg-slate-800 border-slate-700">
+              <Card key={rate.currencyPairId} className="bg-slate-800 border-slate-700">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="font-semibold text-lg text-white">{pair.symbol}</span>
+                    <span className="font-semibold text-lg text-white">{rate.currencyPairSymbol}</span>
                     {getTrendIcon(midRate)}
                   </div>
                   <div className="text-2xl font-bold text-teal-400 mb-1">
                     {midRate.toFixed(2)}
                   </div>
                   <div className="text-sm text-slate-400">
-                    스프레드: {(buyRate - sellRate).toFixed(2)}
+                    고객 수수료: {rate.spread.toFixed(2)} bps
                   </div>
                 </CardContent>
               </Card>
@@ -84,35 +129,34 @@ export default function ExchangeRates() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          {currencyPairs.map((pair) => {
-            const rate = marketRates.find((r: any) => r.currencyPairId === pair.id);
-            const buyRate = rate ? Number(rate.buyRate) : 0;
-            const sellRate = rate ? Number(rate.sellRate) : 0;
+          {validRates.map((rate) => {
+            const buyRate = rate.buyRate;
+            const sellRate = rate.sellRate;
             const spread = buyRate - sellRate;
             const spreadPercent = sellRate > 0 ? (spread / sellRate) * 100 : 0;
             const midRate = (buyRate + sellRate) / 2;
 
             const getStatusBadge = () => {
-              if (!rate) return <Badge variant="destructive">오프라인</Badge>;
+              if (!rate.baseRate) return <Badge variant="destructive">오프라인</Badge>;
               if (spreadPercent > 1) return <Badge variant="destructive">높은 스프레드</Badge>;
               if (spreadPercent > 0.5) return <Badge variant="secondary">보통</Badge>;
               return <Badge className="bg-green-500 text-white">활성</Badge>;
             };
 
             return (
-              <Card key={pair.id} className="bg-slate-800 border-slate-700 hover:shadow-lg transition-shadow">
+              <Card key={rate.currencyPairId} className="bg-slate-800 border-slate-700 hover:shadow-lg transition-shadow">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-lg text-white">
                       <div className="flex items-center space-x-2">
-                        <span>{pair.symbol}</span>
+                        <span>{rate.currencyPairSymbol}</span>
                         {getTrendIcon(midRate)}
                       </div>
                     </CardTitle>
                     {getStatusBadge()}
                   </div>
                   <div className="text-sm text-slate-400">
-                    {pair.baseCurrency} → {pair.quoteCurrency}
+                    고객 거래환율 (수수료 {rate.spread.toFixed(2)} bps 적용)
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -142,10 +186,10 @@ export default function ExchangeRates() {
                   </div>
 
                   <div className="text-xs text-slate-400 text-center pt-2 border-t border-slate-700">
-                    {rate ? (
+                    {rate.baseRate ? (
                       <div className="flex items-center justify-center space-x-2">
                         <Activity className="w-3 h-3" />
-                        <span>업데이트: {new Date(rate.updatedAt).toLocaleString('ko-KR')}</span>
+                        <span>업데이트: {new Date(rate.baseRate.updatedAt).toLocaleString('ko-KR')}</span>
                       </div>
                     ) : (
                       <span className="text-red-400">데이터 없음</span>
@@ -230,7 +274,7 @@ export default function ExchangeRates() {
               </SelectContent>
             </Select>
           </div>
-          {renderRateCards(settlementDate === "spot" ? "Spot" : "Forward")}
+          {renderRateCards()}
         </TabsContent>
 
         <TabsContent value="mar" className="space-y-6">
@@ -240,7 +284,7 @@ export default function ExchangeRates() {
               <span className="text-yellow-400 font-medium">MAR 거래 시간: 오전 9시까지</span>
             </div>
           </div>
-          {renderRateCards("MAR")}
+          {renderRateCards()}
         </TabsContent>
 
         <TabsContent value="swap" className="space-y-6">
@@ -250,7 +294,7 @@ export default function ExchangeRates() {
               <span className="text-purple-400 font-medium">SWAP 거래 환율</span>
             </div>
           </div>
-          {renderRateCards("Swap")}
+          {renderRateCards()}
         </TabsContent>
       </Tabs>
 
@@ -259,10 +303,10 @@ export default function ExchangeRates() {
           <div className="flex items-center space-x-4">
             <span className="font-medium text-white">환율 정보</span>
             <span className="text-slate-400">• 10초마다 자동 업데이트</span>
-            <span className="text-slate-400">• 실시간 시세 반영</span>
+            <span className="text-slate-400">• 고객 거래환율 (그룹별 수수료 적용)</span>
           </div>
           <div className="text-slate-400">
-            총 {currencyPairs.length}개 통화쌍
+            총 {validRates.length}개 통화쌍 (환율 데이터 있음)
           </div>
         </div>
       </div>
