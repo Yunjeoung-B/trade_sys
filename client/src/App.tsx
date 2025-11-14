@@ -14,6 +14,8 @@ import SwapTrading from "@/pages/SwapTrading";
 import MARTrading from "@/pages/MARTrading";
 import ExchangeRates from "@/pages/ExchangeRates";
 import TradeStatus from "@/pages/TradeStatus";
+import SpotTradingCustomer from "@/pages/customer/SpotTradingCustomer";
+import MARTradingCustomer from "@/pages/customer/MARTradingCustomer";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import SpreadSettings from "@/pages/admin/SpreadSettings";
 import QuoteApprovals from "@/pages/admin/QuoteApprovals";
@@ -45,6 +47,12 @@ function Router() {
       ) : (
         <Layout>
           <Route path="/" component={SpotTrading} />
+          
+          {/* 고객용 거래 화면 */}
+          <Route path="/customer/spot" component={SpotTradingCustomer} />
+          <Route path="/customer/mar" component={MARTradingCustomer} />
+          
+          {/* 트레이더용 거래 화면 */}
           <Route path="/spot" component={SpotTrading} />
           <Route path="/forward" component={ForwardTrading} />
           <Route path="/swap" component={SwapTrading} />

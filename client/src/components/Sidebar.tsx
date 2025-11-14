@@ -16,7 +16,13 @@ import {
   Database,
   FileSpreadsheet,
   LineChart,
+  Smartphone,
 } from "lucide-react";
+
+const customerMenuItems = [
+  { path: "/customer/spot", label: "현물환 거래", icon: ArrowLeftRight },
+  { path: "/customer/mar", label: "MAR 거래", icon: TrendingUp },
+];
 
 const clientMenuItems = [
   { path: "/spot", label: "현물환 거래 (Spot)", icon: ArrowLeftRight },
@@ -50,7 +56,45 @@ export default function Sidebar() {
   return (
     <div className="w-64 bg-slate-800/50 backdrop-blur-sm h-screen overflow-y-auto border-r border-slate-700/50">
       <div className="p-4">
+        {/* 고객 거래 섹션 */}
+        <div className="mb-6">
+          <div className="flex items-center gap-2 px-4 py-2 mb-2">
+            <Smartphone className="h-4 w-4 text-teal-400" />
+            <h3 className="text-xs font-semibold text-teal-400 uppercase tracking-wider">고객 거래</h3>
+          </div>
+          <div className="space-y-2">
+            {customerMenuItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = location === item.path;
+              
+              return (
+                <Button
+                  key={item.path}
+                  variant="ghost"
+                  className={cn(
+                    "w-full justify-start text-left px-4 py-3 rounded-xl transition-all duration-200",
+                    isActive
+                      ? "bg-gradient-to-r from-teal-500/20 to-blue-500/20 text-white border border-teal-400/30 shadow-lg"
+                      : "text-slate-300 hover:text-white hover:bg-white/10"
+                  )}
+                  onClick={() => setLocation(item.path)}
+                  data-testid={`nav-${item.path}`}
+                >
+                  <Icon className="mr-3 h-4 w-4" />
+                  {item.label}
+                </Button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 기존 메뉴 */}
         <div className="space-y-2">
+          <div className="px-4 py-2 mb-2">
+            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              {user.role === "admin" ? "관리자 메뉴" : "트레이더 메뉴"}
+            </h3>
+          </div>
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = location === item.path;
@@ -66,6 +110,7 @@ export default function Sidebar() {
                     : "text-slate-300 hover:text-white hover:bg-white/10"
                 )}
                 onClick={() => setLocation(item.path)}
+                data-testid={`nav-${item.path}`}
               >
                 <Icon className="mr-3 h-4 w-4" />
                 {item.label}
