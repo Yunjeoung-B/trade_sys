@@ -8,6 +8,7 @@ interface UseCustomerRatesOptions {
 
 export function useCustomerRates(
   productType: string | undefined,
+  tenor?: string,
   options?: UseCustomerRatesOptions
 ) {
   const {
@@ -16,10 +17,17 @@ export function useCustomerRates(
   } = options || {};
 
   const query = useQuery<CustomerRateItem[]>({
-    queryKey: ["/api/customer-rates", productType],
+    queryKey: ["/api/customer-rates", productType, tenor],
     queryFn: async () => {
       if (!productType) return [];
-      const response = await fetch(`/api/customer-rates/${productType}`, {
+      
+      // Build URL with optional tenor query parameter
+      const url = new URL(`/api/customer-rates/${productType}`, window.location.origin);
+      if (tenor) {
+        url.searchParams.set('tenor', tenor);
+      }
+      
+      const response = await fetch(url.toString(), {
         credentials: 'include',
       });
       if (!response.ok) {
