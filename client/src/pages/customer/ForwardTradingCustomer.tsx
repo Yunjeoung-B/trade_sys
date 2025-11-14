@@ -538,7 +538,7 @@ export default function ForwardTradingCustomer() {
             }}
             data-testid="button-trader-request-quote"
           >
-            {quoteRequestMutation.isPending ? "처리 중..." : "가격 요청"}
+            {quoteRequestMutation.isPending ? "처리 중..." : "지정가 주문으로 가격요청"}
           </Button>
         </Card>
 
