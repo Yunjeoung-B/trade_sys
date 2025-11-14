@@ -177,7 +177,7 @@ export default function QuoteApprovals() {
     return user?.username || userId;
   };
 
-  const pendingRequests = quoteRequests?.filter(req => req.status === "pending") || [];
+  const pendingRequests = quoteRequests?.filter(req => req.status === "REQUESTED") || [];
 
   return (
     <div className="p-6">

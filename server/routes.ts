@@ -299,12 +299,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Quote requests
   app.get("/api/quote-requests", isAuthenticated, async (req: any, res) => {
     try {
+      const { status } = req.query;
+      
       if (req.user.role === "admin") {
         const requests = await storage.getPendingQuoteRequests();
         res.json(requests);
       } else {
-        const requests = await storage.getUserQuoteRequests(req.user.id);
-        res.json(requests);
+        // If status filter is provided, use filtered query
+        if (status) {
+          const requests = await storage.getUserQuoteRequestsByStatus(req.user.id, status as string);
+          res.json(requests);
+        } else {
+          const requests = await storage.getUserQuoteRequests(req.user.id);
+          res.json(requests);
+        }
       }
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch quote requests" });
@@ -351,6 +359,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/quote-requests/:id/confirm", isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const request = await storage.confirmQuoteRequest(id);
+      if (!request) {
+        return res.status(404).json({ message: "Quote request not found" });
+      }
+      res.json(request);
+    } catch (error: any) {
+      // Handle specific error cases
+      if (error.message === "Quote has expired") {
+        return res.status(409).json({ message: "Quote has expired and cannot be executed" });
+      }
+      if (error.message === "Quote is not in QUOTE_READY status") {
+        return res.status(409).json({ message: "Quote is not available for execution" });
+      }
+      console.error("Confirm quote error:", error);
+      res.status(500).json({ message: "Failed to confirm quote request" });
+    }
+  });
+
   // Trades
   app.get("/api/trades", isAuthenticated, async (req: any, res) => {
     try {
@@ -372,9 +401,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...req.body,
         userId: req.user.id,
       });
+      
+      // If this trade is associated with a quote request, verify the quote is in valid status
+      if (tradeData.quoteRequestId) {
+        const quoteRequests = await storage.getUserQuoteRequests(req.user.id);
+        const quote = quoteRequests.find(q => q.id === tradeData.quoteRequestId);
+        
+        if (!quote) {
+          return res.status(404).json({ message: "Quote request not found" });
+        }
+        
+        // Only allow trades from CONFIRMED or QUOTE_READY quotes
+        if (quote.status !== "CONFIRMED" && quote.status !== "QUOTE_READY") {
+          return res.status(409).json({ 
+            message: `Cannot create trade from quote with status: ${quote.status}` 
+          });
+        }
+        
+        // Check if quote has expired
+        if (quote.expiresAt && new Date(quote.expiresAt) <= new Date()) {
+          return res.status(409).json({ message: "Quote has expired" });
+        }
+      }
+      
       const trade = await storage.createTrade(tradeData);
       res.json(trade);
     } catch (error) {
+      console.error("Trade creation error:", error);
       res.status(400).json({ message: "Invalid trade data" });
     }
   });
