@@ -152,11 +152,11 @@ export default function SwapTradingCustomer() {
                   onClick={() => setDirection("BUY_SELL_USD")}
                   data-testid="button-buy-sell-direction-trader"
                 >
-                  <div className="text-sm text-gray-600 mb-2">Buy & Sell</div>
+                  <div className="text-sm text-gray-600 mb-2">{selectedPair.split('/')[0]} Buy & Sell</div>
                   <div className="text-2xl font-bold text-blue-600">
                     {hasValidRates ? buyRate.toFixed(2) : '--'}
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">선물매수/현물매도</div>
+                  <div className="text-xs text-gray-500 mt-1">현물매수/선물매도</div>
                 </div>
                 <div 
                   className={cn(
@@ -168,11 +168,11 @@ export default function SwapTradingCustomer() {
                   onClick={() => setDirection("SELL_BUY_USD")}
                   data-testid="button-sell-buy-direction-trader"
                 >
-                  <div className="text-sm text-gray-600 mb-2">Sell & Buy</div>
+                  <div className="text-sm text-gray-600 mb-2">{selectedPair.split('/')[0]} Sell & Buy</div>
                   <div className="text-2xl font-bold text-red-500">
                     {hasValidRates ? sellRate.toFixed(2) : '--'}
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">선물매도/현물매수</div>
+                  <div className="text-xs text-gray-500 mt-1">현물매도/선물매수</div>
                 </div>
               </div>
 
