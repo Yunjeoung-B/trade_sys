@@ -21,6 +21,8 @@ import {
 
 const customerMenuItems = [
   { path: "/customer/spot", label: "현물환 거래", icon: ArrowLeftRight },
+  { path: "/customer/forward", label: "선물환 거래", icon: Calendar },
+  { path: "/customer/swap", label: "스왑 거래", icon: RefreshCw },
   { path: "/customer/mar", label: "MAR 거래", icon: TrendingUp },
 ];
 

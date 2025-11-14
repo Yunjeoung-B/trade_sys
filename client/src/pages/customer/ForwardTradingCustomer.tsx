@@ -3,132 +3,140 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
+import { format, addDays } from "date-fns";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { formatCurrencyAmount, formatInputValue, removeThousandSeparator } from "@/lib/currencyUtils";
-import { useCustomerRate } from "@/hooks/useCustomerRate";
 import type { CurrencyPair } from "@shared/schema";
+import { useCustomerRate } from "@/hooks/useCustomerRate";
 
-export default function MARTradingCustomer() {
+export default function ForwardTradingCustomer() {
+  const [selectedPair, setSelectedPair] = useState("USD/KRW");
   const [direction, setDirection] = useState<"BUY" | "SELL">("BUY");
   const [amount, setAmount] = useState("");
   const [amountCurrency, setAmountCurrency] = useState<"BASE" | "QUOTE">("BASE");
+  const [valueDate, setValueDate] = useState<Date>(addDays(new Date(), 7));
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  const [baseCurrency, quoteCurrency] = selectedPair.split('/');
 
   const { data: currencyPairs = [] } = useQuery<CurrencyPair[]>({
     queryKey: ["/api/currency-pairs"],
   });
-  const usdKrwPair = currencyPairs.find(p => p.symbol === "USD/KRW");
+
+  const selectedPairData = currencyPairs.find(p => p.symbol === selectedPair);
+
+  // Convert valueDate to tenor for spread lookup
+  const getTenorFromDate = (date: Date): string | undefined => {
+    const today = new Date();
+    const daysToMaturity = Math.ceil((date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (daysToMaturity <= 10) return "1W";
+    if (daysToMaturity <= 45) return "1M";
+    if (daysToMaturity <= 75) return "2M";
+    if (daysToMaturity <= 105) return "3M";
+    if (daysToMaturity <= 270) return "6M";
+    if (daysToMaturity <= 315) return "9M";
+    return "12M";
+  };
+
+  const tenor = getTenorFromDate(valueDate);
 
   const {
     buyRate: customerBuyRate,
     sellRate: customerSellRate,
-    spread,
-    baseRate,
     isLoading: isRateLoading,
     isError: isRateError,
     dataUpdatedAt,
-  } = useCustomerRate("MAR", usdKrwPair?.id, undefined);
+  } = useCustomerRate("Forward", selectedPairData?.id, tenor);
 
-  const hasValidRates = customerBuyRate != null && customerSellRate != null && !isRateError;
   const buyRate = customerBuyRate || 0;
   const sellRate = customerSellRate || 0;
-
-  const marBaseRate = baseRate ? (Number(baseRate.buyRate) + Number(baseRate.sellRate)) / 2 : 0;
-  const sellSpread = hasValidRates && marBaseRate ? sellRate - marBaseRate : 0;
-  const buySpread = hasValidRates && marBaseRate ? buyRate - marBaseRate : 0;
+  const hasValidRates = customerBuyRate != null && customerSellRate != null && !isRateError;
 
   const mutation = useMutation({
-    mutationFn: async (tradeData: any) => {
-      return apiRequest("POST", "/api/trades", tradeData);
+    mutationFn: async (requestData: any) => {
+      return apiRequest("POST", "/api/quote-requests", requestData);
     },
     onSuccess: () => {
       toast({
-        title: "MAR 거래 성공",
-        description: "MAR 거래가 성공적으로 체결되었습니다.",
+        title: "선물환 가격 요청 성공",
+        description: "선물환 가격 요청이 제출되었습니다. 승인을 기다려주세요.",
       });
       setAmount("");
-      queryClient.invalidateQueries({ queryKey: ["/api/trades"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/quote-requests"] });
     },
     onError: () => {
       toast({
-        title: "거래 실패",
-        description: "거래 처리 중 오류가 발생했습니다.",
+        title: "요청 실패",
+        description: "가격 요청 처리 중 오류가 발생했습니다.",
         variant: "destructive",
       });
     },
   });
 
-  const handleTrade = () => {
-    if (!amount) {
-      toast({
-        title: "입력 오류",
-        description: "금액을 입력해주세요.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const now = new Date();
-    const cutoffTime = new Date();
-    cutoffTime.setHours(9, 0, 0, 0);
-
-    if (now > cutoffTime) {
-      toast({
-        title: "거래 시간 종료",
-        description: "MAR 거래는 오전 9시 이전에만 가능합니다.",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const handleRequest = () => {
     if (!hasValidRates) {
       toast({
-        title: "환율 정보 없음",
-        description: "환율 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.",
+        title: "환율 오류",
+        description: "현재 거래 가능한 환율이 없습니다. 잠시 후 다시 시도해주세요.",
         variant: "destructive",
       });
       return;
     }
 
-    if (!usdKrwPair?.id) {
+    if (!selectedPairData || !amount) {
       toast({
-        title: "통화쌍 오류",
-        description: "통화쌍 정보를 불러올 수 없습니다.",
+        title: "입력 오류",
+        description: "통화쌍과 금액을 입력해주세요.",
         variant: "destructive",
       });
       return;
     }
 
     mutation.mutate({
-      productType: "MAR",
-      currencyPairId: usdKrwPair.id,
+      productType: "Forward",
+      currencyPairId: selectedPairData.id,
       direction,
       amount: parseFloat(removeThousandSeparator(amount)),
       amountCurrency,
-      rate: direction === "BUY" ? buyRate : sellRate,
-      settlementDate: new Date(),
+      valueDate,
     });
   };
 
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-white mb-2">MAR 거래 (Market Average Rate)</h2>
-        <p className="text-slate-200">오전 9시 이전에 주문하는 평균환율 거래</p>
+        <h2 className="text-2xl font-bold text-white mb-2">선물환 거래 (FX FORWARD)</h2>
+        <p className="text-slate-200">미래 특정일에 거래할 환율을 지금 확정합니다</p>
       </div>
 
       <div className="max-w-md mx-auto">
         <Card className="p-8 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border-0 text-gray-900">
-          {/* 통화쌍 고정 */}
+          {/* 통화쌍 선택 */}
           <div className="flex items-center justify-between mb-6">
             <span className="text-lg font-semibold text-gray-700">통화쌍</span>
-            <div className="text-lg font-medium text-gray-900">USD/KRW</div>
+            <Select value={selectedPair} onValueChange={setSelectedPair}>
+              <SelectTrigger className="w-40 bg-gray-50 border-gray-200 rounded-xl shadow-sm text-lg font-medium">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {currencyPairs.map((pair) => (
+                  <SelectItem key={pair.id} value={pair.symbol}>
+                    {pair.symbol}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
-          {/* 환율 표시 - MAR 스프레드 */}
+          {/* 환율 표시 */}
           <div className="grid grid-cols-2 gap-4 mb-6">
             <div 
               className={cn(
@@ -142,7 +150,7 @@ export default function MARTradingCustomer() {
             >
               <div className="text-sm text-gray-600 mb-2">매도 (Sell)</div>
               <div className="text-3xl font-bold text-blue-600">
-                {hasValidRates ? sellSpread.toFixed(2) : '--'}
+                {hasValidRates ? sellRate.toFixed(2) : '--'}
               </div>
             </div>
             <div 
@@ -157,9 +165,33 @@ export default function MARTradingCustomer() {
             >
               <div className="text-sm text-gray-600 mb-2">매수 (Buy)</div>
               <div className="text-3xl font-bold text-red-500">
-                {hasValidRates ? buySpread.toFixed(2) : '--'}
+                {hasValidRates ? buyRate.toFixed(2) : '--'}
               </div>
             </div>
+          </div>
+
+          {/* 만기일 선택 */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">만기일 (Value Date)</label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-left font-normal rounded-xl"
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {format(valueDate, "yyyy-MM-dd")}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={valueDate}
+                  onSelect={(date) => date && setValueDate(date)}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
           </div>
 
           {/* 금액 입력 */}
@@ -176,9 +208,9 @@ export default function MARTradingCustomer() {
                   amountCurrency === "BASE" && "bg-teal-500 text-white border-teal-500"
                 )}
                 onClick={() => setAmountCurrency("BASE")}
-                data-testid="button-currency-usd"
+                data-testid="button-currency-base"
               >
-                USD
+                {baseCurrency}
               </Button>
               <Button
                 variant="outline"
@@ -188,16 +220,16 @@ export default function MARTradingCustomer() {
                   amountCurrency === "QUOTE" && "bg-teal-500 text-white border-teal-500"
                 )}
                 onClick={() => setAmountCurrency("QUOTE")}
-                data-testid="button-currency-krw"
+                data-testid="button-currency-quote"
               >
-                KRW
+                {quoteCurrency}
               </Button>
             </div>
             <Input
               type="text"
               placeholder="금액을 입력하세요"
               value={amount}
-              onChange={(e) => setAmount(formatInputValue(e.target.value, amountCurrency === "BASE" ? "USD" : "KRW"))}
+              onChange={(e) => setAmount(formatInputValue(e.target.value, amountCurrency === "BASE" ? baseCurrency : quoteCurrency))}
               className="text-lg rounded-xl"
               data-testid="input-amount"
             />
@@ -212,38 +244,31 @@ export default function MARTradingCustomer() {
                   <span>{direction === "BUY" ? "매수" : "매도"}:</span>
                   <span className="font-medium">
                     {amountCurrency === "BASE" 
-                      ? `USD ${formatCurrencyAmount(parseFloat(removeThousandSeparator(amount)), "USD")}`
-                      : `USD ${formatCurrencyAmount(parseFloat(removeThousandSeparator(amount)) / (direction === "BUY" ? buyRate : sellRate), "USD")}`
+                      ? `${baseCurrency} ${formatCurrencyAmount(parseFloat(removeThousandSeparator(amount)), baseCurrency)}`
+                      : `${baseCurrency} ${formatCurrencyAmount(parseFloat(removeThousandSeparator(amount)) / (direction === "BUY" ? buyRate : sellRate), baseCurrency)}`
                     }
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>MAR 환율:</span>
+                  <span>선물환율:</span>
                   <span className="font-medium">{(direction === "BUY" ? buyRate : sellRate).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>총 금액:</span>
-                  <span className="font-medium">
-                    {amountCurrency === "QUOTE"
-                      ? `KRW ${formatCurrencyAmount(parseFloat(removeThousandSeparator(amount)), "KRW")}`
-                      : `KRW ${formatCurrencyAmount(parseFloat(removeThousandSeparator(amount)) * (direction === "BUY" ? buyRate : sellRate), "KRW")}`
-                    }
-                  </span>
+                  <span>만기일:</span>
+                  <span className="font-medium">{format(valueDate, "yyyy-MM-dd")}</span>
                 </div>
               </div>
             </div>
           )}
 
-          {/* 거래 시간 안내 */}
-          <div className="mb-6 p-3 bg-yellow-50 border border-yellow-200 rounded-xl text-sm text-yellow-800">
-            <div className="font-medium mb-1">⏰ 거래 가능 시간</div>
-            <div>오전 9:00 이전까지 주문 가능합니다</div>
-            <div className="text-xs mt-1">현재: {new Date().toLocaleTimeString('ko-KR')}</div>
+          {/* 승인 안내 */}
+          <div className="mb-6 p-3 bg-blue-50 border border-blue-200 rounded-xl text-sm text-blue-700">
+            선물환 거래는 관리자 승인 후 체결됩니다
           </div>
 
-          {/* 거래 실행 버튼 */}
+          {/* 가격 요청 버튼 */}
           <Button
-            onClick={handleTrade}
+            onClick={handleRequest}
             disabled={mutation.isPending || !amount || !hasValidRates}
             className="w-full py-6 text-xl font-bold rounded-2xl text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
             style={{ 
@@ -252,15 +277,10 @@ export default function MARTradingCustomer() {
                 ? '0 0 20px rgba(255, 107, 107, 0.6)' 
                 : '0 0 20px rgba(65, 105, 225, 0.6)'
             }}
-            data-testid="button-execute-trade"
+            data-testid="button-request-quote"
           >
-            {mutation.isPending ? "처리 중..." : `${direction === "BUY" ? "매수" : "매도"} 주문`}
+            {mutation.isPending ? "처리 중..." : "가격 요청"}
           </Button>
-
-          {/* MAR 안내 */}
-          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-700">
-            MAR는 당일 장마감 후 결정되는 환율로서, 익영업일 서울외국환중개에 고시됩니다.
-          </div>
         </Card>
       </div>
     </div>

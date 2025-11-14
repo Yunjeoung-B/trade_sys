@@ -136,11 +136,6 @@ export default function SpotTradingCustomer() {
               <div className="text-3xl font-bold text-blue-600">
                 {hasValidRates ? sellRate.toFixed(2) : '--'}
               </div>
-              {hasValidRates && spread !== undefined && (
-                <div className="text-xs text-gray-500 mt-1">
-                  수수료 {spread}bps
-                </div>
-              )}
             </div>
             <div 
               className={cn(
@@ -156,11 +151,6 @@ export default function SpotTradingCustomer() {
               <div className="text-3xl font-bold text-red-500">
                 {hasValidRates ? buyRate.toFixed(2) : '--'}
               </div>
-              {hasValidRates && spread !== undefined && (
-                <div className="text-xs text-gray-500 mt-1">
-                  수수료 {spread}bps
-                </div>
-              )}
             </div>
           </div>
 
