@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { CalendarIcon, ChevronDown, ChevronUp, X } from "lucide-react";
 import { format, addDays } from "date-fns";
 import { apiRequest } from "@/lib/queryClient";
@@ -26,8 +28,20 @@ export default function SwapTradingCustomer() {
   const [farAmount, setFarAmount] = useState("");
   const [farAmountCurrency, setFarAmountCurrency] = useState<"USD" | "KRW">("USD");
   const [quoteStatusOpen, setQuoteStatusOpen] = useState(true);
+  const [showInfoDialog, setShowInfoDialog] = useState(false);
+  const [dialogType, setDialogType] = useState<"intro" | "quote_request">("intro");
+  const [dontShowAgain, setDontShowAgain] = useState(false);
   const { toast} = useToast();
   const queryClient = useQueryClient();
+
+  // Show info dialog on first visit
+  useEffect(() => {
+    const hasSeenIntro = localStorage.getItem("swap-trading-intro-seen");
+    if (!hasSeenIntro) {
+      setDialogType("intro");
+      setShowInfoDialog(true);
+    }
+  }, []);
 
   const [baseCurrency, quoteCurrency] = selectedPair.split('/');
 
@@ -155,7 +169,7 @@ export default function SwapTradingCustomer() {
     },
   });
 
-  const handleRequest = () => {
+  const handleQuoteRequest = () => {
     // Prevent duplicate submission
     if (quoteRequestMutation.isPending) {
       return;
@@ -179,6 +193,14 @@ export default function SwapTradingCustomer() {
       });
       return;
     }
+
+    // Show info dialog before submitting
+    setDialogType("quote_request");
+    setShowInfoDialog(true);
+  };
+
+  const submitQuoteRequest = () => {
+    if (!selectedPairData) return;
 
     const nearAmountNum = parseFloat(removeThousandSeparator(nearAmount));
     const farAmountNum = separateAmounts 
@@ -560,7 +582,7 @@ export default function SwapTradingCustomer() {
 
               {/* 가격 요청 버튼 */}
               <Button
-                onClick={handleRequest}
+                onClick={handleQuoteRequest}
                 disabled={quoteRequestMutation.isPending || !nearAmount}
                 className="w-full py-6 text-xl font-bold rounded-2xl text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
                 style={{ 
@@ -731,6 +753,71 @@ export default function SwapTradingCustomer() {
           </Collapsible>
         </Card>
       </div>
+
+      {/* Info Dialog */}
+      <Dialog open={showInfoDialog} onOpenChange={setShowInfoDialog}>
+        <DialogContent className="sm:max-w-lg bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-gray-900 mb-2">스왑 가격 요청</DialogTitle>
+            <DialogDescription className="text-gray-800 space-y-3 pt-2 text-base">
+              <div className="bg-white/80 backdrop-blur-sm p-4 rounded-xl border border-blue-100 space-y-2">
+                <p className="font-medium">• 스왑 거래를 위해서는 CHOIICE FX에 가격을 요청해야 합니다.</p>
+                <p className="font-medium">• 요청 현황은 오른쪽 패널에서 확인 가능합니다.</p>
+                <p className="font-medium">• 관리자 승인되면 가격 요청 건이 <span className="text-green-600 font-bold">"가격확인가능"</span> 보드로 이동합니다.</p>
+                <p className="font-medium">• 승인 후 거래 가능한 스왑 포인트가 표시됩니다.</p>
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center space-x-2 mt-4 px-1">
+            <Checkbox
+              id="dont-show-again"
+              checked={dontShowAgain}
+              onCheckedChange={(checked) => setDontShowAgain(checked === true)}
+              data-testid="checkbox-dont-show-again"
+            />
+            <label
+              htmlFor="dont-show-again"
+              className="text-sm font-medium text-gray-700 cursor-pointer"
+            >
+              다시 보지 않기
+            </label>
+          </div>
+          <div className="flex gap-3 mt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (dontShowAgain) {
+                  localStorage.setItem("swap-trading-intro-seen", "true");
+                }
+                setShowInfoDialog(false);
+                setDontShowAgain(false);
+              }}
+              className="flex-1 bg-white hover:bg-gray-50 text-black"
+              data-testid="button-cancel-quote-info"
+            >
+              취소
+            </Button>
+            <Button
+              onClick={() => {
+                if (dontShowAgain) {
+                  localStorage.setItem("swap-trading-intro-seen", "true");
+                }
+                setShowInfoDialog(false);
+                setDontShowAgain(false);
+                // Only submit quote request if this is a quote request dialog, not intro
+                if (dialogType === "quote_request") {
+                  submitQuoteRequest();
+                }
+              }}
+              disabled={dialogType === "quote_request" && quoteRequestMutation.isPending}
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold"
+              data-testid="button-confirm-quote-info"
+            >
+              {dialogType === "quote_request" && quoteRequestMutation.isPending ? "처리 중..." : "확인"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
