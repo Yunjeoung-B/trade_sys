@@ -41,6 +41,7 @@ export default function ForwardTradingCustomer() {
   const [quoteStatusOpen, setQuoteStatusOpen] = useState(true);
   const [limitOrderOpen, setLimitOrderOpen] = useState(true);
   const [showInfoDialog, setShowInfoDialog] = useState(false);
+  const [dialogType, setDialogType] = useState<"intro" | "quote_request">("intro");
   const [dontShowAgain, setDontShowAgain] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -49,6 +50,7 @@ export default function ForwardTradingCustomer() {
   useEffect(() => {
     const hasSeenIntro = localStorage.getItem("forward-trading-intro-seen");
     if (!hasSeenIntro) {
+      setDialogType("intro");
       setShowInfoDialog(true);
     }
   }, []);
@@ -231,6 +233,7 @@ export default function ForwardTradingCustomer() {
 
     // Show info dialog for MARKET orders
     if (orderType === "MARKET") {
+      setDialogType("quote_request");
       setShowInfoDialog(true);
       return;
     }
@@ -1057,13 +1060,16 @@ export default function ForwardTradingCustomer() {
                 }
                 setShowInfoDialog(false);
                 setDontShowAgain(false);
-                submitQuoteRequest();
+                // Only submit quote request if this is a quote request dialog, not intro
+                if (dialogType === "quote_request") {
+                  submitQuoteRequest();
+                }
               }}
-              disabled={quoteRequestMutation.isPending}
+              disabled={dialogType === "quote_request" && quoteRequestMutation.isPending}
               className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold"
               data-testid="button-confirm-quote-info"
             >
-              {quoteRequestMutation.isPending ? "처리 중..." : "확인"}
+              {dialogType === "quote_request" && quoteRequestMutation.isPending ? "처리 중..." : "확인"}
             </Button>
           </div>
         </DialogContent>
