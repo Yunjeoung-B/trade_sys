@@ -183,6 +183,9 @@ export default function SwapTradingCustomer() {
       ? parseFloat(removeThousandSeparator(farAmount))
       : nearAmountNum;
     
+    const nearCurrency = nearAmountCurrency;
+    const farCurrency = separateAmounts ? farAmountCurrency : nearAmountCurrency;
+    
     quoteRequestMutation.mutate({
       productType: "Swap",
       currencyPairId: selectedPairData.id,
@@ -190,9 +193,11 @@ export default function SwapTradingCustomer() {
       nearDate,
       farDate,
       amount: nearAmountNum,
-      amountCurrency: nearAmountCurrency,
+      amountCurrency: nearCurrency,
       nearAmount: nearAmountNum,
+      nearAmountCurrency: nearCurrency,
       farAmount: farAmountNum,
+      farAmountCurrency: farCurrency,
     });
   };
 
@@ -642,20 +647,20 @@ export default function SwapTradingCustomer() {
                       <div className="flex justify-between">
                         <span className="text-gray-600">Near Amount:</span>
                         <span className="font-medium text-gray-800">
-                          {quote.amountCurrency || "USD"}{" "}
+                          {quote.nearAmountCurrency || quote.amountCurrency || "USD"}{" "}
                           {formatCurrencyAmount(
                             parseFloat(quote.nearAmount || "0"),
-                            quote.amountCurrency || "USD"
+                            quote.nearAmountCurrency || quote.amountCurrency || "USD"
                           )}
                         </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Far Amount:</span>
                         <span className="font-medium text-gray-800">
-                          {quote.amountCurrency || "USD"}{" "}
+                          {quote.farAmountCurrency || quote.amountCurrency || "USD"}{" "}
                           {formatCurrencyAmount(
                             parseFloat(quote.farAmount || "0"),
-                            quote.amountCurrency || "USD"
+                            quote.farAmountCurrency || quote.amountCurrency || "USD"
                           )}
                         </span>
                       </div>

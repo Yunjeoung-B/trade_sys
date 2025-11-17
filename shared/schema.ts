@@ -92,7 +92,9 @@ export const quoteRequests = pgTable("quote_requests", {
   farDate: timestamp("far_date"), // for swaps
   nearRate: decimal("near_rate", { precision: 12, scale: 4 }), // for swaps
   nearAmount: decimal("near_amount", { precision: 18, scale: 2 }), // for swaps
+  nearAmountCurrency: varchar("near_amount_currency"), // for swaps with separate currencies
   farAmount: decimal("far_amount", { precision: 18, scale: 2 }), // for swaps
+  farAmountCurrency: varchar("far_amount_currency"), // for swaps with separate currencies
   hedgeCompleted: boolean("hedge_completed").default(false),
   nearSpread: decimal("near_spread", { precision: 8, scale: 4 }),
   farSpread: decimal("far_spread", { precision: 8, scale: 4 }),
