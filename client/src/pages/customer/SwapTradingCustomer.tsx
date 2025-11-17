@@ -146,6 +146,11 @@ export default function SwapTradingCustomer() {
   });
 
   const handleRequest = () => {
+    // Prevent duplicate submission
+    if (quoteRequestMutation.isPending) {
+      return;
+    }
+
     if (!selectedPairData || !nearAmount) {
       toast({
         title: "입력 오류",
