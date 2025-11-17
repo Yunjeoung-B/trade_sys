@@ -55,8 +55,13 @@ export default function SwapTradingCustomer() {
   const swapApprovedQuotes = approvedQuotes.filter(q => q.productType === "Swap");
   const swapConfirmedQuotes = confirmedQuotes.filter(q => q.productType === "Swap");
 
-  // All Swap quotes combined
-  const allSwapQuotes = [...swapPendingQuotes, ...swapApprovedQuotes, ...swapConfirmedQuotes];
+  // All Swap quotes combined with deduplication
+  const allSwapQuotesArray = [...swapPendingQuotes, ...swapApprovedQuotes, ...swapConfirmedQuotes];
+  const quoteMap = new Map();
+  allSwapQuotesArray.forEach(quote => {
+    quoteMap.set(quote.id, quote);
+  });
+  const allSwapQuotes = Array.from(quoteMap.values());
 
   const quoteRequestMutation = useMutation({
     mutationFn: async (requestData: any) => {
