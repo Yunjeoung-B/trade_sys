@@ -499,6 +499,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get unique group values for a specific group type
+  app.get("/api/users/group-values/:groupType", isAdmin, async (req, res) => {
+    try {
+      const { groupType } = req.params;
+      const users = await storage.getAllUsers();
+      
+      let groupValues: string[] = [];
+      
+      if (groupType === "major") {
+        groupValues = Array.from(new Set(users.map(u => u.majorGroup).filter(Boolean))) as string[];
+      } else if (groupType === "mid") {
+        groupValues = Array.from(new Set(users.map(u => u.midGroup).filter(Boolean))) as string[];
+      } else if (groupType === "sub") {
+        groupValues = Array.from(new Set(users.map(u => u.subGroup).filter(Boolean))) as string[];
+      }
+      
+      res.json(groupValues.sort());
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch group values" });
+    }
+  });
+
   app.post("/api/users", isAdmin, async (req, res) => {
     try {
       const userData = insertUserSchema.parse(req.body);

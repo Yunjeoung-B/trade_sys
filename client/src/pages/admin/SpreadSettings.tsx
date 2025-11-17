@@ -71,6 +71,11 @@ export default function SpreadSettings() {
     queryKey: ["/api/currency-pairs"],
   });
 
+  const { data: availableGroupValues = [] } = useQuery<string[]>({
+    queryKey: ["/api/users/group-values", groupType],
+    enabled: !!groupType && groupType !== "all",
+  });
+
   const createSpreadMutation = useMutation({
     mutationFn: (data: any) => apiRequest("POST", "/api/spread-settings", data),
     onSuccess: (data) => {
@@ -133,6 +138,11 @@ export default function SpreadSettings() {
   const handleProductTypeChange = (type: string) => {
     setProductType(type);
     setBaseSpread(getDefaultBaseSpread(type));
+  };
+
+  const handleGroupTypeChange = (type: string) => {
+    setGroupType(type);
+    setGroupValue(""); // Reset group value when group type changes
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -244,7 +254,7 @@ export default function SpreadSettings() {
                   
                   <div>
                     <Label>고객 그룹 유형</Label>
-                    <Select value={groupType} onValueChange={setGroupType}>
+                    <Select value={groupType} onValueChange={handleGroupTypeChange}>
                       <SelectTrigger data-testid="select-group-type">
                         <SelectValue placeholder="그룹 유형 선택 (선택사항)" />
                       </SelectTrigger>
@@ -260,12 +270,24 @@ export default function SpreadSettings() {
                   {groupType && groupType !== "all" && (
                     <div>
                       <Label>그룹 값</Label>
-                      <Input
-                        data-testid="input-group-value"
-                        value={groupValue}
-                        onChange={(e) => setGroupValue(e.target.value)}
-                        placeholder="그룹 식별자 입력"
-                      />
+                      <Select value={groupValue} onValueChange={setGroupValue}>
+                        <SelectTrigger data-testid="select-group-value">
+                          <SelectValue placeholder="그룹 값 선택" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableGroupValues.length === 0 ? (
+                            <div className="py-2 px-4 text-sm text-gray-500">
+                              사용 가능한 그룹 값이 없습니다
+                            </div>
+                          ) : (
+                            availableGroupValues.map((value) => (
+                              <SelectItem key={value} value={value}>
+                                {value}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
                     </div>
                   )}
                   
