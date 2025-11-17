@@ -6,12 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Clock, X } from "lucide-react";
+import { CalendarIcon, Clock, X, ChevronDown, ChevronUp } from "lucide-react";
 import { format, addDays } from "date-fns";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { formatCurrencyAmount, formatInputValue, removeThousandSeparator } from "@/lib/currencyUtils";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import type { CurrencyPair, QuoteRequest } from "@shared/schema";
 
 export default function ForwardTradingCustomer() {
@@ -35,6 +36,8 @@ export default function ForwardTradingCustomer() {
   const [validUntilTime, setValidUntilTime] = useState("15:30");
   const [valueDate, setValueDate] = useState<Date>(addDays(new Date(), 7));
   const [selectedQuoteId, setSelectedQuoteId] = useState<string | null>(null);
+  const [quoteStatusOpen, setQuoteStatusOpen] = useState(true);
+  const [limitOrderOpen, setLimitOrderOpen] = useState(true);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -56,17 +59,35 @@ export default function ForwardTradingCustomer() {
     refetchInterval: 5000, // Refresh every 5 seconds
   });
 
+  // Fetch confirmed quotes (CONFIRMED)
+  const { data: confirmedQuotes = [] } = useQuery<QuoteRequest[]>({
+    queryKey: ["/api/quote-requests?status=CONFIRMED"],
+    refetchInterval: 5000,
+  });
+
   const selectedPairData = currencyPairs.find(p => p.symbol === selectedPair);
 
+  // Filter Forward quotes
+  const forwardPendingQuotes = pendingQuotes.filter(q => q.productType === "Forward");
+  const forwardApprovedQuotes = approvedQuotes.filter(q => q.productType === "Forward");
+  const forwardConfirmedQuotes = confirmedQuotes.filter(q => q.productType === "Forward");
+
   // Separate pending quotes by order type
-  const pendingLimitQuotes = pendingQuotes.filter(q => q.orderType === "LIMIT");
-  const marketPendingQuotes = pendingQuotes.filter(q => q.orderType !== "LIMIT");
+  const pendingLimitQuotes = forwardPendingQuotes.filter(q => q.orderType === "LIMIT");
+  const marketPendingQuotes = forwardPendingQuotes.filter(q => q.orderType !== "LIMIT");
 
   // Get approved limit quotes
-  const approvedLimitQuotes = approvedQuotes.filter(q => q.orderType === "LIMIT");
+  const approvedLimitQuotes = forwardApprovedQuotes.filter(q => q.orderType === "LIMIT");
 
   // Combine all limit quotes (both REQUESTED and QUOTE_READY)
   const allLimitQuotes = [...pendingLimitQuotes, ...approvedLimitQuotes];
+
+  // Market order quotes (REQUESTED, QUOTE_READY, CONFIRMED)
+  const marketQuotes = {
+    requested: marketPendingQuotes,
+    quoteReady: forwardApprovedQuotes.filter(q => q.orderType !== "LIMIT"),
+    confirmed: forwardConfirmedQuotes.filter(q => q.orderType !== "LIMIT"),
+  };
 
   // Filter out expired quotes
   const activeQuotes = approvedQuotes.filter(q => {
@@ -632,158 +653,318 @@ export default function ForwardTradingCustomer() {
           </Button>
         </Card>
 
-        {/* Right Panel: Limit Orders */}
-        <Card className="p-8 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border-0 text-gray-900">
-          <h3 className="text-lg font-bold mb-4 text-gray-800 flex items-center">
-            <Clock className="w-5 h-5 mr-2 text-blue-600" />
-            지정가 주문 현황 ({allLimitQuotes.length}건)
-          </h3>
-
-          {allLimitQuotes.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p className="text-sm">진행 중인 지정가 주문이 없습니다</p>
-              <p className="text-xs mt-2">지정가 주문을 등록하면 여기에 표시됩니다</p>
-            </div>
-          ) : (
-            <div className="space-y-4 max-h-[600px] overflow-y-auto">
-              {allLimitQuotes.map((quote) => {
-                const pair = currencyPairs.find(p => p.id === quote.currencyPairId);
-                if (!pair) return null;
-
-                // Handle validity expiration
-                let validUntil: Date | null = null;
-                let isExpired = false;
-
-                if (quote.validUntilTime) {
-                  if (quote.validUntilTime.includes('T') || quote.validUntilTime.includes('Z')) {
-                    validUntil = new Date(quote.validUntilTime);
-                    if (!isNaN(validUntil.getTime())) {
-                      isExpired = validUntil <= new Date();
-                    } else {
-                      validUntil = null;
-                    }
-                  } else if (quote.validityType === "TIME") {
-                    const parts = quote.validUntilTime.split(':');
-                    if (parts.length === 2) {
-                      const hours = parseInt(parts[0], 10);
-                      const minutes = parseInt(parts[1], 10);
-                      if (!isNaN(hours) && !isNaN(minutes)) {
-                        const today = new Date();
-                        validUntil = new Date(today.getFullYear(), today.getMonth(), today.getDate(), hours, minutes, 0);
-                        isExpired = validUntil <= new Date();
-                      }
-                    }
-                  }
-                }
-
-                if (!validUntil && quote.validityType === "DAY") {
-                  const today = new Date();
-                  validUntil = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 16, 0, 0);
-                  isExpired = validUntil <= new Date();
-                }
-
-                return (
-                  <div
-                    key={quote.id}
-                    className={cn(
-                      "p-4 rounded-xl border-2 transition-all",
-                      isExpired 
-                        ? "border-red-300 bg-red-50" 
-                        : quote.status === "QUOTE_READY"
-                          ? "border-green-300 bg-green-50"
-                          : "border-blue-200 bg-blue-50"
-                    )}
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <div className="font-semibold text-gray-800">
-                            {pair.symbol} {quote.direction === "BUY" ? "매수" : "매도"}
-                          </div>
-                          <span className={cn(
-                            "px-2 py-0.5 rounded-full text-xs font-bold",
-                            quote.status === "QUOTE_READY" 
-                              ? "bg-green-600 text-white" 
-                              : "bg-gray-500 text-white"
-                          )}>
-                            {quote.status === "QUOTE_READY" ? "체결완료" : "체결전"}
-                          </span>
-                        </div>
-                        <div className="text-sm text-gray-600">
-                          주문번호: {quote.id}
-                        </div>
+        {/* Right Panel: Status Boards */}
+        <div className="space-y-4">
+          {/* Quote Status Board */}
+          <Card className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border-0 text-gray-900">
+            <Collapsible open={quoteStatusOpen} onOpenChange={setQuoteStatusOpen}>
+              <CollapsibleTrigger className="w-full p-6 flex items-center justify-between hover:bg-gray-50 transition-colors rounded-t-3xl">
+                <h3 className="text-lg font-bold text-gray-800 flex items-center">
+                  <Clock className="w-5 h-5 mr-2 text-blue-600" />
+                  가격 요청 현황 ({marketQuotes.requested.length + marketQuotes.quoteReady.length + marketQuotes.confirmed.length}건)
+                </h3>
+                {quoteStatusOpen ? <ChevronUp className="w-5 h-5 text-gray-600" /> : <ChevronDown className="w-5 h-5 text-gray-600" />}
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="px-6 pb-6">
+                  {/* Requested */}
+                  {marketQuotes.requested.length > 0 && (
+                    <div className="mb-4">
+                      <div className="text-sm font-semibold text-gray-600 mb-2 flex items-center">
+                        <div className="w-2 h-2 rounded-full bg-yellow-500 mr-2"></div>
+                        가격요청 ({marketQuotes.requested.length}건)
                       </div>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => cancelQuoteMutation.mutate(quote.id)}
-                        disabled={cancelQuoteMutation.isPending || isExpired || quote.status === "QUOTE_READY"}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-100"
-                        data-testid={`button-cancel-limit-quote-${quote.id}`}
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
+                      <div className="space-y-2 max-h-48 overflow-y-auto">
+                        {marketQuotes.requested.map((quote) => {
+                          const pair = currencyPairs.find(p => p.id === quote.currencyPairId);
+                          if (!pair) return null;
+                          return (
+                            <div key={quote.id} className="p-3 rounded-xl bg-yellow-50 border border-yellow-200">
+                              <div className="flex justify-between items-start">
+                                <div className="flex-1">
+                                  <div className="font-semibold text-gray-800 text-sm">
+                                    {pair.symbol} {quote.direction === "BUY" ? "매수" : "매도"}
+                                  </div>
+                                  <div className="text-xs text-gray-600">
+                                    {quote.amountCurrency || "USD"} {formatCurrencyAmount(parseFloat(quote.amount), quote.amountCurrency || "USD")}
+                                  </div>
+                                </div>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => cancelQuoteMutation.mutate(quote.id)}
+                                  disabled={cancelQuoteMutation.isPending}
+                                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                  data-testid={`button-cancel-quote-${quote.id}`}
+                                >
+                                  <X className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
+                  )}
 
-                    <div className="space-y-1 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">주문금액:</span>
-                        <span className="font-medium text-gray-800">
-                          {quote.amountCurrency === "BASE" ? pair.baseCurrency : pair.quoteCurrency}{" "}
-                          {formatCurrencyAmount(
-                            parseFloat(quote.amount),
-                            quote.amountCurrency === "BASE" ? pair.baseCurrency : pair.quoteCurrency
-                          )}
-                        </span>
+                  {/* Quote Ready */}
+                  {marketQuotes.quoteReady.length > 0 && (
+                    <div className="mb-4">
+                      <div className="text-sm font-semibold text-gray-600 mb-2 flex items-center">
+                        <div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
+                        가격확인가능 ({marketQuotes.quoteReady.length}건)
                       </div>
-                      {quote.limitRate && (
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">지정환율:</span>
-                          <span className="font-medium text-blue-600">
-                            {parseFloat(quote.limitRate).toFixed(2)}
-                          </span>
-                        </div>
-                      )}
-                      {(quote.validityType === "DAY" || (quote.validityType === "TIME" && validUntil)) && (
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">유효기간:</span>
-                          <span className={cn(
-                            "text-xs",
-                            isExpired ? "text-red-600 font-medium" : "text-gray-600"
-                          )}>
-                            {quote.validityType === "DAY" 
-                              ? "당일 오후 4시까지"
-                              : quote.validUntilTime && !quote.validUntilTime.includes('T') && !quote.validUntilTime.includes('Z')
-                                ? `당일 ${quote.validUntilTime}까지`
-                                : validUntil?.toLocaleString('ko-KR', { 
-                                    hour: '2-digit', 
-                                    minute: '2-digit' 
-                                  })
+                      <div className="space-y-2 max-h-48 overflow-y-auto">
+                        {marketQuotes.quoteReady.map((quote) => {
+                          const pair = currencyPairs.find(p => p.id === quote.currencyPairId);
+                          if (!pair) return null;
+                          const isExpired = quote.expiresAt && new Date(quote.expiresAt) <= new Date();
+                          return (
+                            <div key={quote.id} className="p-3 rounded-xl bg-green-50 border border-green-200">
+                              <div className="flex justify-between items-start">
+                                <div className="flex-1">
+                                  <div className="font-semibold text-gray-800 text-sm">
+                                    {pair.symbol} {quote.direction === "BUY" ? "매수" : "매도"}
+                                  </div>
+                                  <div className="text-xs text-gray-600">
+                                    {quote.amountCurrency || "USD"} {formatCurrencyAmount(parseFloat(quote.amount), quote.amountCurrency || "USD")}
+                                  </div>
+                                  {quote.quotedRate && (
+                                    <div className="text-sm font-bold text-green-600 mt-1">
+                                      체결가: {parseFloat(quote.quotedRate).toFixed(2)}
+                                    </div>
+                                  )}
+                                </div>
+                                <Button
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedQuoteId(quote.id);
+                                    handleExecuteTrade();
+                                  }}
+                                  disabled={isExpired || tradeExecutionMutation.isPending}
+                                  className="bg-green-600 hover:bg-green-700 text-white"
+                                  data-testid={`button-execute-quote-${quote.id}`}
+                                >
+                                  체결
+                                </Button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Confirmed */}
+                  {marketQuotes.confirmed.length > 0 && (
+                    <div>
+                      <div className="text-sm font-semibold text-gray-600 mb-2 flex items-center">
+                        <div className="w-2 h-2 rounded-full bg-blue-500 mr-2"></div>
+                        거래체결 완료 ({marketQuotes.confirmed.length}건)
+                      </div>
+                      <div className="space-y-2 max-h-48 overflow-y-auto">
+                        {marketQuotes.confirmed.map((quote) => {
+                          const pair = currencyPairs.find(p => p.id === quote.currencyPairId);
+                          if (!pair) return null;
+                          return (
+                            <div key={quote.id} className="p-3 rounded-xl bg-blue-50 border border-blue-200">
+                              <div className="flex justify-between items-start">
+                                <div className="flex-1">
+                                  <div className="font-semibold text-gray-800 text-sm">
+                                    {pair.symbol} {quote.direction === "BUY" ? "매수" : "매도"}
+                                  </div>
+                                  <div className="text-xs text-gray-600">
+                                    {quote.amountCurrency || "USD"} {formatCurrencyAmount(parseFloat(quote.amount), quote.amountCurrency || "USD")}
+                                  </div>
+                                  {quote.quotedRate && (
+                                    <div className="text-sm font-bold text-blue-600 mt-1">
+                                      체결가: {parseFloat(quote.quotedRate).toFixed(2)}
+                                    </div>
+                                  )}
+                                </div>
+                                <span className="px-2 py-1 rounded-full text-xs font-bold bg-blue-600 text-white">
+                                  완료
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {marketQuotes.requested.length === 0 && marketQuotes.quoteReady.length === 0 && marketQuotes.confirmed.length === 0 && (
+                    <div className="text-center py-8 text-gray-500">
+                      <Clock className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                      <p className="text-sm">가격 요청 내역이 없습니다</p>
+                    </div>
+                  )}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          </Card>
+
+          {/* Limit Order Status Board */}
+          <Card className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border-0 text-gray-900">
+            <Collapsible open={limitOrderOpen} onOpenChange={setLimitOrderOpen}>
+              <CollapsibleTrigger className="w-full p-6 flex items-center justify-between hover:bg-gray-50 transition-colors rounded-t-3xl">
+                <h3 className="text-lg font-bold text-gray-800 flex items-center">
+                  <Clock className="w-5 h-5 mr-2 text-purple-600" />
+                  지정가 주문 현황 ({allLimitQuotes.length}건)
+                </h3>
+                {limitOrderOpen ? <ChevronUp className="w-5 h-5 text-gray-600" /> : <ChevronDown className="w-5 h-5 text-gray-600" />}
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="px-6 pb-6">
+                  {allLimitQuotes.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <Clock className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                      <p className="text-sm">진행 중인 지정가 주문이 없습니다</p>
+                      <p className="text-xs mt-2">지정가 주문을 등록하면 여기에 표시됩니다</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4 max-h-[600px] overflow-y-auto">
+                      {allLimitQuotes.map((quote) => {
+                        const pair = currencyPairs.find(p => p.id === quote.currencyPairId);
+                        if (!pair) return null;
+
+                        // Handle validity expiration
+                        let validUntil: Date | null = null;
+                        let isExpired = false;
+
+                        if (quote.validUntilTime) {
+                          if (quote.validUntilTime.includes('T') || quote.validUntilTime.includes('Z')) {
+                            validUntil = new Date(quote.validUntilTime);
+                            if (!isNaN(validUntil.getTime())) {
+                              isExpired = validUntil <= new Date();
+                            } else {
+                              validUntil = null;
                             }
-                          </span>
-                        </div>
-                      )}
-                      {quote.nearDate && (
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">만기일:</span>
-                          <span className="text-gray-700">
-                            {format(new Date(quote.nearDate), "yyyy-MM-dd")}
-                          </span>
-                        </div>
-                      )}
-                      {isExpired && (
-                        <div className="text-xs text-red-600 font-medium mt-1">
-                          유효기간 만료
-                        </div>
-                      )}
+                          } else if (quote.validityType === "TIME") {
+                            const parts = quote.validUntilTime.split(':');
+                            if (parts.length === 2) {
+                              const hours = parseInt(parts[0], 10);
+                              const minutes = parseInt(parts[1], 10);
+                              if (!isNaN(hours) && !isNaN(minutes)) {
+                                const today = new Date();
+                                validUntil = new Date(today.getFullYear(), today.getMonth(), today.getDate(), hours, minutes, 0);
+                                isExpired = validUntil <= new Date();
+                              }
+                            }
+                          }
+                        }
+
+                        if (!validUntil && quote.validityType === "DAY") {
+                          const today = new Date();
+                          validUntil = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 16, 0, 0);
+                          isExpired = validUntil <= new Date();
+                        }
+
+                        return (
+                          <div
+                            key={quote.id}
+                            className={cn(
+                              "p-4 rounded-xl border-2 transition-all",
+                              isExpired 
+                                ? "border-red-300 bg-red-50" 
+                                : quote.status === "QUOTE_READY"
+                                  ? "border-green-300 bg-green-50"
+                                  : "border-blue-200 bg-blue-50"
+                            )}
+                          >
+                            <div className="flex justify-between items-start mb-2">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                  <div className="font-semibold text-gray-800">
+                                    {pair.symbol} {quote.direction === "BUY" ? "매수" : "매도"}
+                                  </div>
+                                  <span className={cn(
+                                    "px-2 py-0.5 rounded-full text-xs font-bold",
+                                    quote.status === "QUOTE_READY" 
+                                      ? "bg-green-600 text-white" 
+                                      : "bg-gray-500 text-white"
+                                  )}>
+                                    {quote.status === "QUOTE_READY" ? "체결완료" : "체결전"}
+                                  </span>
+                                </div>
+                                <div className="text-sm text-gray-600">
+                                  주문번호: {quote.id}
+                                </div>
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => cancelQuoteMutation.mutate(quote.id)}
+                                disabled={cancelQuoteMutation.isPending || isExpired || quote.status === "QUOTE_READY"}
+                                className="text-red-600 hover:text-red-700 hover:bg-red-100"
+                                data-testid={`button-cancel-limit-quote-${quote.id}`}
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </div>
+
+                            <div className="space-y-1 text-sm">
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">주문금액:</span>
+                                <span className="font-medium text-gray-800">
+                                  {quote.amountCurrency === "BASE" ? pair.baseCurrency : pair.quoteCurrency}{" "}
+                                  {formatCurrencyAmount(
+                                    parseFloat(quote.amount),
+                                    quote.amountCurrency === "BASE" ? pair.baseCurrency : pair.quoteCurrency
+                                  )}
+                                </span>
+                              </div>
+                              {quote.limitRate && (
+                                <div className="flex justify-between">
+                                  <span className="text-gray-600">지정환율:</span>
+                                  <span className="font-medium text-blue-600">
+                                    {parseFloat(quote.limitRate).toFixed(2)}
+                                  </span>
+                                </div>
+                              )}
+                              {(quote.validityType === "DAY" || (quote.validityType === "TIME" && validUntil)) && (
+                                <div className="flex justify-between">
+                                  <span className="text-gray-600">유효기간:</span>
+                                  <span className={cn(
+                                    "text-xs",
+                                    isExpired ? "text-red-600 font-medium" : "text-gray-600"
+                                  )}>
+                                    {quote.validityType === "DAY" 
+                                      ? "당일 오후 4시까지"
+                                      : quote.validUntilTime && !quote.validUntilTime.includes('T') && !quote.validUntilTime.includes('Z')
+                                        ? `당일 ${quote.validUntilTime}까지`
+                                        : validUntil?.toLocaleString('ko-KR', { 
+                                            hour: '2-digit', 
+                                            minute: '2-digit' 
+                                          })
+                                    }
+                                  </span>
+                                </div>
+                              )}
+                              {quote.nearDate && (
+                                <div className="flex justify-between">
+                                  <span className="text-gray-600">만기일:</span>
+                                  <span className="text-gray-700">
+                                    {format(new Date(quote.nearDate), "yyyy-MM-dd")}
+                                  </span>
+                                </div>
+                              )}
+                              {isExpired && (
+                                <div className="text-xs text-red-600 font-medium mt-1">
+                                  유효기간 만료
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </Card>
+                  )}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          </Card>
+        </div>
       </div>
     </div>
   );

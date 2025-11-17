@@ -6,12 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, ChevronDown, ChevronUp, X } from "lucide-react";
 import { format, addDays } from "date-fns";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { formatCurrencyAmount, formatInputValue, removeThousandSeparator } from "@/lib/currencyUtils";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import type { CurrencyPair, QuoteRequest } from "@shared/schema";
 
 export default function SwapTradingCustomer() {
@@ -24,7 +25,8 @@ export default function SwapTradingCustomer() {
   const [separateAmounts, setSeparateAmounts] = useState(false);
   const [farAmount, setFarAmount] = useState("");
   const [farAmountCurrency, setFarAmountCurrency] = useState<"USD" | "KRW">("USD");
-  const { toast } = useToast();
+  const [quoteStatusOpen, setQuoteStatusOpen] = useState(true);
+  const { toast} = useToast();
   const queryClient = useQueryClient();
 
   const [baseCurrency, quoteCurrency] = selectedPair.split('/');
@@ -573,134 +575,151 @@ export default function SwapTradingCustomer() {
               </Button>
             </Card>
 
-        {/* Right Panel: Swap Quote List */}
-        <Card className="p-8 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border-0 text-gray-900">
-          <h3 className="text-lg font-bold mb-4 text-gray-800 flex items-center">
-            <CalendarIcon className="w-5 h-5 mr-2 text-blue-600" />
-            스왑 가격 요청 ({allSwapQuotes.length}건)
-          </h3>
-
-          {allSwapQuotes.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              <CalendarIcon className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p className="text-sm">진행 중인 스왑 거래가 없습니다</p>
-              <p className="text-xs mt-2">스왑 거래를 요청하면 여기에 표시됩니다</p>
-            </div>
-          ) : (
-            <div className="space-y-4 max-h-[600px] overflow-y-auto">
-              {allSwapQuotes.map((quote) => {
-                const pair = currencyPairs.find(p => p.id === quote.currencyPairId);
-                if (!pair) return null;
-
-                const isExpired = quote.expiresAt && new Date(quote.expiresAt) <= new Date();
-
-                return (
-                  <div
-                    key={quote.id}
-                    className={cn(
-                      "p-4 rounded-xl border-2 transition-all",
-                      quote.status === "CONFIRMED"
-                        ? "border-green-300 bg-green-50"
-                        : quote.status === "QUOTE_READY"
-                          ? "border-blue-300 bg-blue-50"
-                          : isExpired
-                            ? "border-red-300 bg-red-50"
-                            : "border-gray-200 bg-gray-50"
-                    )}
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <div className="font-semibold text-gray-800">
-                            {pair.symbol} {quote.direction === "BUY_SELL_USD" ? "Buy&Sell" : "Sell&Buy"}
+        {/* Right Panel: Quote Status Board */}
+        <Card className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border-0 text-gray-900">
+          <Collapsible open={quoteStatusOpen} onOpenChange={setQuoteStatusOpen}>
+            <CollapsibleTrigger className="w-full p-6 flex items-center justify-between hover:bg-gray-50 transition-colors rounded-t-3xl">
+              <h3 className="text-lg font-bold text-gray-800 flex items-center">
+                <CalendarIcon className="w-5 h-5 mr-2 text-blue-600" />
+                가격 요청 현황 ({allSwapQuotes.length}건)
+              </h3>
+              {quoteStatusOpen ? <ChevronUp className="w-5 h-5 text-gray-600" /> : <ChevronDown className="w-5 h-5 text-gray-600" />}
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="px-6 pb-6">
+                {/* Requested */}
+                {swapPendingQuotes.length > 0 && (
+                  <div className="mb-4">
+                    <div className="text-sm font-semibold text-gray-600 mb-2 flex items-center">
+                      <div className="w-2 h-2 rounded-full bg-yellow-500 mr-2"></div>
+                      가격요청 ({swapPendingQuotes.length}건)
+                    </div>
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {swapPendingQuotes.map((quote) => {
+                        const pair = currencyPairs.find(p => p.id === quote.currencyPairId);
+                        if (!pair) return null;
+                        return (
+                          <div key={quote.id} className="p-3 rounded-xl bg-yellow-50 border border-yellow-200">
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <div className="font-semibold text-gray-800 text-sm">
+                                  {pair.symbol} {quote.direction === "BUY_SELL_USD" ? "Buy&Sell" : "Sell&Buy"}
+                                </div>
+                                <div className="text-xs text-gray-600">
+                                  Near: {quote.nearAmountCurrency || "USD"} {formatCurrencyAmount(parseFloat(quote.nearAmount || "0"), quote.nearAmountCurrency || "USD")}
+                                </div>
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => cancelQuoteMutation.mutate(quote.id)}
+                                disabled={cancelQuoteMutation.isPending}
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                data-testid={`button-cancel-swap-quote-${quote.id}`}
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </div>
                           </div>
-                          <span className={cn(
-                            "px-2 py-0.5 rounded-full text-xs font-bold",
-                            quote.status === "CONFIRMED"
-                              ? "bg-green-600 text-white"
-                              : quote.status === "QUOTE_READY"
-                                ? "bg-blue-600 text-white"
-                                : "bg-gray-500 text-white"
-                          )}>
-                            {quote.status === "CONFIRMED" ? "체결완료" : quote.status === "QUOTE_READY" ? "승인됨" : "요청중"}
-                          </span>
-                        </div>
-                        <div className="text-sm text-gray-600">
-                          주문번호: {quote.id.slice(0, 8)}...
-                        </div>
-                      </div>
+                        );
+                      })}
                     </div>
-
-                    <div className="space-y-1 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Near Date:</span>
-                        <span className="font-medium text-gray-800">
-                          {quote.nearDate ? format(new Date(quote.nearDate), "yyyy-MM-dd") : "--"}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Far Date:</span>
-                        <span className="font-medium text-gray-800">
-                          {quote.farDate ? format(new Date(quote.farDate), "yyyy-MM-dd") : "--"}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Near Amount:</span>
-                        <span className="font-medium text-gray-800">
-                          {quote.nearAmountCurrency || quote.amountCurrency || "USD"}{" "}
-                          {formatCurrencyAmount(
-                            parseFloat(quote.nearAmount || "0"),
-                            quote.nearAmountCurrency || quote.amountCurrency || "USD"
-                          )}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Far Amount:</span>
-                        <span className="font-medium text-gray-800">
-                          {quote.farAmountCurrency || quote.amountCurrency || "USD"}{" "}
-                          {formatCurrencyAmount(
-                            parseFloat(quote.farAmount || "0"),
-                            quote.farAmountCurrency || quote.amountCurrency || "USD"
-                          )}
-                        </span>
-                      </div>
-
-                      {/* Show Swap Points for QUOTE_READY or CONFIRMED */}
-                      {(quote.status === "QUOTE_READY" || quote.status === "CONFIRMED") && quote.quotedRate && (
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">{quote.status === "CONFIRMED" ? "체결 포인트:" : "스왑 포인트:"}</span>
-                          <span className={cn(
-                            "font-medium",
-                            quote.status === "CONFIRMED" ? "text-green-600" : "text-blue-600"
-                          )}>
-                            {parseFloat(quote.quotedRate) >= 0 ? '+' : ''}{parseFloat(quote.quotedRate).toFixed(1)}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Execute Trade Button for QUOTE_READY */}
-                    {quote.status === "QUOTE_READY" && !isExpired && (
-                      <Button
-                        onClick={() => handleTradeExecution(quote)}
-                        disabled={tradeExecutionMutation.isPending}
-                        className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white"
-                        data-testid={`button-execute-trade-${quote.id}`}
-                      >
-                        {tradeExecutionMutation.isPending ? "처리 중..." : "거래 요청"}
-                      </Button>
-                    )}
-
-                    {isExpired && quote.status === "QUOTE_READY" && (
-                      <div className="text-xs text-red-600 font-medium mt-2">
-                        유효기간 만료
-                      </div>
-                    )}
                   </div>
-                );
-              })}
-            </div>
-          )}
+                )}
+
+                {/* Quote Ready */}
+                {swapApprovedQuotes.length > 0 && (
+                  <div className="mb-4">
+                    <div className="text-sm font-semibold text-gray-600 mb-2 flex items-center">
+                      <div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
+                      가격확인가능 ({swapApprovedQuotes.length}건)
+                    </div>
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {swapApprovedQuotes.map((quote) => {
+                        const pair = currencyPairs.find(p => p.id === quote.currencyPairId);
+                        if (!pair) return null;
+                        const isExpired = quote.expiresAt && new Date(quote.expiresAt) <= new Date();
+                        return (
+                          <div key={quote.id} className="p-3 rounded-xl bg-green-50 border border-green-200">
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <div className="font-semibold text-gray-800 text-sm">
+                                  {pair.symbol} {quote.direction === "BUY_SELL_USD" ? "Buy&Sell" : "Sell&Buy"}
+                                </div>
+                                <div className="text-xs text-gray-600">
+                                  Near: {quote.nearAmountCurrency || "USD"} {formatCurrencyAmount(parseFloat(quote.nearAmount || "0"), quote.nearAmountCurrency || "USD")}
+                                </div>
+                                {quote.quotedRate && (
+                                  <div className="text-sm font-bold text-green-600 mt-1">
+                                    스왑 포인트: {parseFloat(quote.quotedRate) >= 0 ? '+' : ''}{parseFloat(quote.quotedRate).toFixed(1)}
+                                  </div>
+                                )}
+                              </div>
+                              <Button
+                                size="sm"
+                                onClick={() => handleTradeExecution(quote)}
+                                disabled={isExpired || tradeExecutionMutation.isPending}
+                                className="bg-green-600 hover:bg-green-700 text-white"
+                                data-testid={`button-execute-swap-quote-${quote.id}`}
+                              >
+                                체결
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Confirmed */}
+                {swapConfirmedQuotes.length > 0 && (
+                  <div>
+                    <div className="text-sm font-semibold text-gray-600 mb-2 flex items-center">
+                      <div className="w-2 h-2 rounded-full bg-blue-500 mr-2"></div>
+                      거래체결 완료 ({swapConfirmedQuotes.length}건)
+                    </div>
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {swapConfirmedQuotes.map((quote) => {
+                        const pair = currencyPairs.find(p => p.id === quote.currencyPairId);
+                        if (!pair) return null;
+                        return (
+                          <div key={quote.id} className="p-3 rounded-xl bg-blue-50 border border-blue-200">
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <div className="font-semibold text-gray-800 text-sm">
+                                  {pair.symbol} {quote.direction === "BUY_SELL_USD" ? "Buy&Sell" : "Sell&Buy"}
+                                </div>
+                                <div className="text-xs text-gray-600">
+                                  Near: {quote.nearAmountCurrency || "USD"} {formatCurrencyAmount(parseFloat(quote.nearAmount || "0"), quote.nearAmountCurrency || "USD")}
+                                </div>
+                                {quote.quotedRate && (
+                                  <div className="text-sm font-bold text-blue-600 mt-1">
+                                    체결 포인트: {parseFloat(quote.quotedRate) >= 0 ? '+' : ''}{parseFloat(quote.quotedRate).toFixed(1)}
+                                  </div>
+                                )}
+                              </div>
+                              <span className="px-2 py-1 rounded-full text-xs font-bold bg-blue-600 text-white">
+                                완료
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {allSwapQuotes.length === 0 && (
+                  <div className="text-center py-8 text-gray-500">
+                    <CalendarIcon className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                    <p className="text-sm">진행 중인 스왑 거래가 없습니다</p>
+                    <p className="text-xs mt-2">스왑 거래를 요청하면 여기에 표시됩니다</p>
+                  </div>
+                )}
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
         </Card>
       </div>
     </div>
