@@ -446,7 +446,7 @@ export default function SpotTradingCustomer() {
                       onClick={() => setAmountCurrency("BASE")}
                       data-testid="button-trader-currency-base"
                     >
-                      {baseCurrency} {direction === "BUY" ? "매수" : "매도"}
+                      {baseCurrency} {direction === "BUY" ? "매수" : "매도"} / {quoteCurrency} {direction === "BUY" ? "매도" : "매수"}
                     </Button>
                     <Button 
                       variant="outline"
@@ -464,7 +464,7 @@ export default function SpotTradingCustomer() {
                       onClick={() => setAmountCurrency("QUOTE")}
                       data-testid="button-trader-currency-quote"
                     >
-                      {quoteCurrency} {direction === "BUY" ? "매도" : "매수"}
+                      {baseCurrency} {direction === "BUY" ? "매도" : "매수"} / {quoteCurrency} {direction === "BUY" ? "매수" : "매도"}
                     </Button>
                   </div>
                   <Input
@@ -572,13 +572,25 @@ export default function SpotTradingCustomer() {
                       "p-4 rounded-xl border-2 transition-all",
                       isExpired 
                         ? "border-red-300 bg-red-50" 
-                        : "border-blue-200 bg-blue-50"
+                        : trade.status === "active" 
+                          ? "border-green-300 bg-green-50"
+                          : "border-blue-200 bg-blue-50"
                     )}
                   >
                     <div className="flex justify-between items-start mb-2">
                       <div className="flex-1">
-                        <div className="font-semibold text-gray-800">
-                          {pair.symbol} {trade.direction === "BUY" ? "매수" : "매도"}
+                        <div className="flex items-center gap-2">
+                          <div className="font-semibold text-gray-800">
+                            {pair.symbol} {trade.direction === "BUY" ? "매수" : "매도"}
+                          </div>
+                          <span className={cn(
+                            "px-2 py-0.5 rounded-full text-xs font-bold",
+                            trade.status === "active" 
+                              ? "bg-green-600 text-white" 
+                              : "bg-gray-500 text-white"
+                          )}>
+                            {trade.status === "active" ? "체결완료" : "체결전"}
+                          </span>
                         </div>
                         <div className="text-sm text-gray-600">
                           주문번호: {trade.tradeNumber}
@@ -588,7 +600,7 @@ export default function SpotTradingCustomer() {
                         size="sm"
                         variant="ghost"
                         onClick={() => cancelMutation.mutate(trade.id)}
-                        disabled={cancelMutation.isPending || isExpired}
+                        disabled={cancelMutation.isPending || isExpired || trade.status === "active"}
                         className="text-red-600 hover:text-red-700 hover:bg-red-100"
                         data-testid={`button-cancel-trade-${trade.id}`}
                       >
