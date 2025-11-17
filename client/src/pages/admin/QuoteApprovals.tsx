@@ -269,6 +269,7 @@ export default function QuoteApprovals() {
                                 onClick={() => handleApprove(request.id)}
                                 disabled={approveMutation.isPending || !quotedRate[request.id]}
                                 className="bg-green-500 hover:bg-green-600 text-white"
+                                data-testid={`button-approve-${request.id}`}
                               >
                                 <CheckCircle className="w-4 h-4" />
                               </Button>
@@ -277,6 +278,7 @@ export default function QuoteApprovals() {
                                 variant="destructive"
                                 onClick={() => handleReject(request.id)}
                                 disabled={rejectMutation.isPending}
+                                data-testid={`button-reject-${request.id}`}
                               >
                                 <XCircle className="w-4 h-4" />
                               </Button>
