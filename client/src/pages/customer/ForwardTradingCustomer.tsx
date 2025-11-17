@@ -294,46 +294,95 @@ export default function ForwardTradingCustomer() {
             </Select>
           </div>
 
-          {/* Step 2: Direction Selection (No rates shown) */}
+          {/* Step 2: Approved Rate Display & Direction Selection */}
           <div className="mb-4">
-            <div className="text-sm text-gray-700 font-medium mb-2">거래 방향</div>
-            <div className="grid grid-cols-2 gap-2">
-              <Button 
-                variant="outline"
-                className={cn(
-                  "rounded-xl transition-all duration-200",
-                  direction === "SELL" 
-                    ? "text-white shadow-inner" 
-                    : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
-                )}
-                style={direction === "SELL" ? { 
-                  backgroundColor: '#4169E1', 
-                  borderColor: '#4169E1',
-                  boxShadow: '0 0 15px rgba(65, 105, 225, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
-                } : {}}
-                onClick={() => setDirection("SELL")}
-                data-testid="button-trader-sell"
-              >
-                SELL {baseCurrency}
-              </Button>
-              <Button 
-                variant="outline"
-                className={cn(
-                  "rounded-xl transition-all duration-200",
-                  direction === "BUY" 
-                    ? "text-white shadow-inner" 
-                    : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
-                )}
-                style={direction === "BUY" ? { 
-                  backgroundColor: '#FF6B6B', 
-                  borderColor: '#FF6B6B',
-                  boxShadow: '0 0 15px rgba(255, 107, 107, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
-                } : {}}
-                onClick={() => setDirection("BUY")}
-                data-testid="button-trader-buy"
-              >
-                BUY {baseCurrency}
-              </Button>
+            {/* Rate display - show approved quoted rates by direction */}
+            <div className="flex items-center mb-4">
+              <div className="flex-1 grid grid-cols-2 gap-4">
+                {/* SELL Rate */}
+                <div className="text-center">
+                  <div className="text-sm text-gray-600 mb-1">SELL {baseCurrency}</div>
+                  <div className="text-2xl font-bold text-blue-600">
+                    {(() => {
+                      const sellQuote = approvedLimitQuotes.find(
+                        q => q.currencyPairId === selectedPairData?.id && q.direction === "SELL"
+                      );
+                      if (sellQuote && sellQuote.quotedRate) {
+                        const rate = parseFloat(sellQuote.quotedRate);
+                        return (
+                          <>
+                            {rate.toFixed(2).split('.')[0]}.
+                            <span className="text-lg">{rate.toFixed(2).split('.')[1]}</span>
+                          </>
+                        );
+                      }
+                      return '--';
+                    })()}
+                  </div>
+
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className={cn(
+                      "mt-2 w-full rounded-xl transition-all duration-200",
+                      direction === "SELL" 
+                        ? "text-white shadow-inner" 
+                        : "bg-transparent border-gray-200 text-gray-400 hover:bg-gray-50"
+                    )}
+                    style={direction === "SELL" ? {
+                      backgroundColor: '#4169E1',
+                      borderColor: '#4169E1',
+                      boxShadow: '0 0 15px rgba(65, 105, 225, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                    } : {}}
+                    onClick={() => setDirection("SELL")}
+                    data-testid="button-trader-sell"
+                  >
+                    SELL
+                  </Button>
+                </div>
+
+                {/* BUY Rate */}
+                <div className="text-center">
+                  <div className="text-sm text-gray-600 mb-1">BUY {baseCurrency}</div>
+                  <div className="text-2xl font-bold text-red-600">
+                    {(() => {
+                      const buyQuote = approvedLimitQuotes.find(
+                        q => q.currencyPairId === selectedPairData?.id && q.direction === "BUY"
+                      );
+                      if (buyQuote && buyQuote.quotedRate) {
+                        const rate = parseFloat(buyQuote.quotedRate);
+                        return (
+                          <>
+                            {rate.toFixed(2).split('.')[0]}.
+                            <span className="text-lg">{rate.toFixed(2).split('.')[1]}</span>
+                          </>
+                        );
+                      }
+                      return '--';
+                    })()}
+                  </div>
+
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className={cn(
+                      "mt-2 w-full rounded-xl transition-all duration-200",
+                      direction === "BUY" 
+                        ? "text-white shadow-inner" 
+                        : "bg-transparent border-gray-200 text-gray-400 hover:bg-gray-50"
+                    )}
+                    style={direction === "BUY" ? {
+                      backgroundColor: '#FF6B6B',
+                      borderColor: '#FF6B6B',
+                      boxShadow: '0 0 15px rgba(255, 107, 107, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                    } : {}}
+                    onClick={() => setDirection("BUY")}
+                    data-testid="button-trader-buy"
+                  >
+                    BUY
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
 
