@@ -33,7 +33,7 @@ export default function SwapTradingCustomer() {
 
   const selectedPairData = currencyPairs.find(p => p.symbol === selectedPair);
 
-  // Convert farDate to tenor for spread lookup
+  // Convert date to tenor for spread lookup
   const getTenorFromDate = (date: Date): string | undefined => {
     const today = new Date();
     const daysToMaturity = Math.ceil((date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
@@ -47,19 +47,34 @@ export default function SwapTradingCustomer() {
     return "12M";
   };
 
-  const tenor = getTenorFromDate(farDate);
+  const nearTenor = getTenorFromDate(nearDate);
+  const farTenor = getTenorFromDate(farDate);
 
+  // Get Near Leg rates
   const {
-    buyRate: customerBuyRate,
-    sellRate: customerSellRate,
-    isLoading: isRateLoading,
-    isError: isRateError,
-    dataUpdatedAt,
-  } = useCustomerRate("Swap", selectedPairData?.id, tenor);
+    buyRate: nearBuyRate,
+    sellRate: nearSellRate,
+    isLoading: isNearLoading,
+    isError: isNearError,
+  } = useCustomerRate("Swap", selectedPairData?.id, nearTenor);
 
-  const buyRate = customerBuyRate || 0;
-  const sellRate = customerSellRate || 0;
-  const hasValidRates = customerBuyRate != null && customerSellRate != null && !isRateError;
+  // Get Far Leg rates
+  const {
+    buyRate: farBuyRate,
+    sellRate: farSellRate,
+    isLoading: isFarLoading,
+    isError: isFarError,
+  } = useCustomerRate("Swap", selectedPairData?.id, farTenor);
+
+  // Calculate Swap Points: (Far Rate - Near Rate) × 100
+  // For BUY_SELL_USD: Buy USD near, Sell USD far → use buy rates
+  // For SELL_BUY_USD: Sell USD near, Buy USD far → use sell rates
+  const buySwapPoints = (nearBuyRate && farBuyRate) ? (farBuyRate - nearBuyRate) * 100 : null;
+  const sellSwapPoints = (nearSellRate && farSellRate) ? (farSellRate - nearSellRate) * 100 : null;
+
+  const isRateLoading = isNearLoading || isFarLoading;
+  const isRateError = isNearError || isFarError;
+  const hasValidRates = buySwapPoints !== null && sellSwapPoints !== null && !isRateError;
 
   const mutation = useMutation({
     mutationFn: async (requestData: any) => {
@@ -140,7 +155,7 @@ export default function SwapTradingCustomer() {
                 </Select>
               </div>
 
-              {/* 환율 표시 */}
+              {/* 스왑 포인트 표시 */}
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div 
                   className={cn(
@@ -154,7 +169,9 @@ export default function SwapTradingCustomer() {
                 >
                   <div className="text-sm text-gray-600 mb-2">{selectedPair.split('/')[0]} Buy & Sell</div>
                   <div className="text-2xl font-bold text-blue-600">
-                    {hasValidRates ? buyRate.toFixed(2) : '--'}
+                    {hasValidRates && buySwapPoints !== null 
+                      ? (buySwapPoints >= 0 ? '+' : '') + buySwapPoints.toFixed(1)
+                      : '--'}
                   </div>
                   <div className="text-xs text-gray-500 mt-1">현물매수/선물매도</div>
                 </div>
@@ -170,7 +187,9 @@ export default function SwapTradingCustomer() {
                 >
                   <div className="text-sm text-gray-600 mb-2">{selectedPair.split('/')[0]} Sell & Buy</div>
                   <div className="text-2xl font-bold text-red-500">
-                    {hasValidRates ? sellRate.toFixed(2) : '--'}
+                    {hasValidRates && sellSwapPoints !== null
+                      ? (sellSwapPoints >= 0 ? '+' : '') + sellSwapPoints.toFixed(1)
+                      : '--'}
                   </div>
                   <div className="text-xs text-gray-500 mt-1">현물매도/선물매수</div>
                 </div>
