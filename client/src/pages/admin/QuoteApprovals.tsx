@@ -20,14 +20,23 @@ interface QuoteRequest {
   amountCurrency?: string;
   nearAmount?: string;
   farAmount?: string;
+  nearAmountCurrency?: string;
+  farAmountCurrency?: string;
   tenor?: string;
   nearDate?: string;
   farDate?: string;
   nearRate?: string;
+  farRate?: string;
   status: string;
   createdAt: string;
   quotedRate?: string;
   expiresAt?: string;
+}
+
+interface CustomerRateInfo {
+  baseRate: number;
+  spread: number;
+  customerRate: number;
 }
 
 interface CurrencyPair {
@@ -38,10 +47,14 @@ interface CurrencyPair {
 interface User {
   id: string;
   username: string;
+  majorGroup?: string;
+  midGroup?: string;
+  subGroup?: string;
 }
 
 export default function QuoteApprovals() {
   const [quotedRate, setQuotedRate] = useState<Record<string, string>>({});
+  const [selectedQuotes, setSelectedQuotes] = useState<Set<string>>(new Set());
   const [autoApprovalUserId, setAutoApprovalUserId] = useState("");
   const [maxAmount, setMaxAmount] = useState("");
   const [timeWindowMinutes, setTimeWindowMinutes] = useState("30");
@@ -62,6 +75,13 @@ export default function QuoteApprovals() {
 
   const { data: users } = useQuery<User[]>({
     queryKey: ["/api/users"],
+  });
+
+  const pendingRequests = quoteRequests?.filter(req => req.status === "REQUESTED") || [];
+
+  const { data: customerRates } = useQuery<Record<string, CustomerRateInfo>>({
+    queryKey: ["/api/quote-requests/customer-rates"],
+    enabled: (pendingRequests.length > 0),
   });
 
   const approveMutation = useMutation({
@@ -180,7 +200,92 @@ export default function QuoteApprovals() {
     return user?.username || userId;
   };
 
-  const pendingRequests = quoteRequests?.filter(req => req.status === "REQUESTED") || [];
+  const getUserGroups = (userId: string) => {
+    const user = users?.find(u => u.id === userId);
+    return {
+      major: user?.majorGroup || "-",
+      mid: user?.midGroup || "-",
+      sub: user?.subGroup || "-",
+    };
+  };
+
+  const toggleSelectQuote = (quoteId: string) => {
+    setSelectedQuotes((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(quoteId)) {
+        newSet.delete(quoteId);
+      } else {
+        newSet.add(quoteId);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedQuotes.size === pendingRequests.length) {
+      setSelectedQuotes(new Set());
+    } else {
+      setSelectedQuotes(new Set(pendingRequests.map(req => req.id)));
+    }
+  };
+
+  const bulkApproveMutation = useMutation({
+    mutationFn: async (quoteIds: string[]) => {
+      const promises = quoteIds.map(id => {
+        const rate = parseFloat(quotedRate[id]);
+        if (!rate) throw new Error(`호가가 입력되지 않은 항목이 있습니다: ${id}`);
+        return apiRequest("POST", `/api/quote-requests/${id}/approve`, { quotedRate: rate });
+      });
+      return Promise.all(promises);
+    },
+    onSuccess: () => {
+      toast({
+        title: "일괄 승인 완료",
+        description: `${selectedQuotes.size}건의 호가가 승인되었습니다.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/quote-requests"] });
+      setSelectedQuotes(new Set());
+    },
+    onError: (error: any) => {
+      toast({
+        title: "오류",
+        description: error.message || "일괄 승인 중 오류가 발생했습니다.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const bulkRejectMutation = useMutation({
+    mutationFn: async (quoteIds: string[]) => {
+      const promises = quoteIds.map(id =>
+        apiRequest("POST", `/api/quote-requests/${id}/reject`)
+      );
+      return Promise.all(promises);
+    },
+    onSuccess: () => {
+      toast({
+        title: "일괄 거부 완료",
+        description: `${selectedQuotes.size}건의 호가가 거부되었습니다.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/quote-requests"] });
+      setSelectedQuotes(new Set());
+    },
+    onError: () => {
+      toast({
+        title: "오류",
+        description: "일괄 거부 중 오류가 발생했습니다.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleBulkApprove = () => {
+    bulkApproveMutation.mutate(Array.from(selectedQuotes));
+  };
+
+  const handleBulkReject = () => {
+    bulkRejectMutation.mutate(Array.from(selectedQuotes));
+  };
 
   return (
     <div className="p-6">
@@ -195,23 +300,32 @@ export default function QuoteApprovals() {
                 <CardTitle className="flex items-center">
                   <Clock className="w-5 h-5 mr-2" />
                   승인 대기 목록 ({pendingRequests.length}건)
+                  {selectedQuotes.size > 0 && (
+                    <span className="ml-3 text-sm text-blue-600">
+                      ({selectedQuotes.size}건 선택됨)
+                    </span>
+                  )}
                 </CardTitle>
                 <div className="flex space-x-2">
                   <Button
                     variant="outline"
                     size="sm"
                     className="text-green-600 border-green-600 hover:bg-green-50"
-                    disabled={pendingRequests.length === 0}
+                    disabled={selectedQuotes.size === 0 || bulkApproveMutation.isPending}
+                    onClick={handleBulkApprove}
+                    data-testid="button-bulk-approve"
                   >
-                    전체 승인
+                    선택 승인 ({selectedQuotes.size})
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     className="text-red-600 border-red-600 hover:bg-red-50"
-                    disabled={pendingRequests.length === 0}
+                    disabled={selectedQuotes.size === 0 || bulkRejectMutation.isPending}
+                    onClick={handleBulkReject}
+                    data-testid="button-bulk-reject"
                   >
-                    전체 거부
+                    선택 거부 ({selectedQuotes.size})
                   </Button>
                 </div>
               </div>
@@ -222,80 +336,136 @@ export default function QuoteApprovals() {
                   <table className="w-full">
                     <thead>
                       <tr className="text-sm text-gray-500 border-b">
+                        <th className="text-center py-3 w-12">
+                          <Checkbox
+                            checked={selectedQuotes.size === pendingRequests.length && pendingRequests.length > 0}
+                            onCheckedChange={toggleSelectAll}
+                            data-testid="checkbox-select-all"
+                          />
+                        </th>
                         <th className="text-left py-3">요청 시간</th>
                         <th className="text-left py-3">고객 ID</th>
+                        <th className="text-left py-3">그룹</th>
                         <th className="text-left py-3">상품</th>
                         <th className="text-left py-3">통화쌍</th>
-                        <th className="text-right py-3">금액</th>
-                        <th className="text-center py-3">만기</th>
+                        <th className="text-center py-3">방향</th>
+                        <th className="text-right py-3">금액 / 만기</th>
+                        <th className="text-right py-3">적용 호가</th>
                         <th className="text-center py-3">호가 입력</th>
                         <th className="text-center py-3">작업</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {pendingRequests.map((request) => (
-                        <tr key={request.id} className="border-b hover:bg-gray-50">
-                          <td className="py-3 text-sm">
-                            {new Date(request.createdAt).toLocaleString('ko-KR')}
-                          </td>
-                          <td className="py-3 font-medium">
-                            {getUserName(request.userId)}
-                          </td>
-                          <td className="py-3">
-                            <Badge variant="outline">{request.productType}</Badge>
-                          </td>
-                          <td className="py-3">{getPairSymbol(request.currencyPairId)}</td>
-                          <td className="py-3 text-right">
-                            {request.productType === "Swap" ? (
-                              <div className="text-xs">
-                                <div>Near: {Number(request.nearAmount || 0).toLocaleString()} {request.amountCurrency || "USD"}</div>
-                                <div>Far: {Number(request.farAmount || 0).toLocaleString()} {request.amountCurrency || "USD"}</div>
+                      {pendingRequests.map((request) => {
+                        const groups = getUserGroups(request.userId);
+                        const rateInfo = customerRates?.[request.id];
+                        
+                        return (
+                          <tr key={request.id} className="border-b hover:bg-gray-50">
+                            <td className="py-3 text-center">
+                              <Checkbox
+                                checked={selectedQuotes.has(request.id)}
+                                onCheckedChange={() => toggleSelectQuote(request.id)}
+                                data-testid={`checkbox-quote-${request.id}`}
+                              />
+                            </td>
+                            <td className="py-3 text-sm">
+                              {new Date(request.createdAt).toLocaleString('ko-KR', { 
+                                month: 'short', 
+                                day: 'numeric', 
+                                hour: '2-digit', 
+                                minute: '2-digit' 
+                              })}
+                            </td>
+                            <td className="py-3 font-medium">
+                              {getUserName(request.userId)}
+                            </td>
+                            <td className="py-3 text-xs">
+                              <div>M: {groups.major}</div>
+                              <div>I: {groups.mid}</div>
+                              <div>S: {groups.sub}</div>
+                            </td>
+                            <td className="py-3">
+                              <Badge variant="outline">{request.productType}</Badge>
+                            </td>
+                            <td className="py-3">{getPairSymbol(request.currencyPairId)}</td>
+                            <td className="py-3 text-center">
+                              <Badge variant={request.direction === "BUY" ? "default" : "secondary"}>
+                                {request.direction}
+                              </Badge>
+                            </td>
+                            <td className="py-3 text-right text-xs">
+                              {request.productType === "Swap" ? (
+                                <div>
+                                  <div>Near: {Number(request.nearAmount || 0).toLocaleString()} {request.nearAmountCurrency || "USD"}</div>
+                                  <div>Far: {Number(request.farAmount || 0).toLocaleString()} {request.farAmountCurrency || "USD"}</div>
+                                  <div className="mt-1 text-gray-500">
+                                    <div>{request.nearDate ? new Date(request.nearDate).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' }) : "-"}</div>
+                                    <div>{request.farDate ? new Date(request.farDate).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' }) : "-"}</div>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div>
+                                  <div>{Number(request.amount).toLocaleString()} {request.amountCurrency || "USD"}</div>
+                                  <div className="text-gray-500">
+                                    {request.tenor || (request.nearDate ? new Date(request.nearDate).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' }) : "-")}
+                                  </div>
+                                </div>
+                              )}
+                            </td>
+                            <td className="py-3 text-right text-xs">
+                              {rateInfo ? (
+                                <div>
+                                  <div className="font-semibold text-blue-600">
+                                    {rateInfo.customerRate.toFixed(2)}
+                                  </div>
+                                  <div className="text-gray-500">
+                                    Base: {rateInfo.baseRate.toFixed(2)}
+                                  </div>
+                                  <div className="text-orange-600">
+                                    Spread: {rateInfo.spread.toFixed(2)}
+                                  </div>
+                                </div>
+                              ) : (
+                                <span className="text-gray-400">-</span>
+                              )}
+                            </td>
+                            <td className="py-3 text-center">
+                              <Input
+                                type="number"
+                                step="0.01"
+                                placeholder="호가 수정"
+                                value={quotedRate[request.id] || ""}
+                                onChange={(e) => handleQuotedRateChange(request.id, e.target.value)}
+                                className="w-28 text-center text-sm"
+                                data-testid={`input-quote-${request.id}`}
+                              />
+                            </td>
+                            <td className="py-3 text-center">
+                              <div className="flex space-x-2 justify-center">
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleApprove(request.id)}
+                                  disabled={approveMutation.isPending || !quotedRate[request.id]}
+                                  className="bg-green-500 hover:bg-green-600 text-white"
+                                  data-testid={`button-approve-${request.id}`}
+                                >
+                                  <CheckCircle className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => handleReject(request.id)}
+                                  disabled={rejectMutation.isPending}
+                                  data-testid={`button-reject-${request.id}`}
+                                >
+                                  <XCircle className="w-4 h-4" />
+                                </Button>
                               </div>
-                            ) : (
-                              `${Number(request.amount).toLocaleString()} ${request.amountCurrency || "USD"}`
-                            )}
-                          </td>
-                          <td className="py-3 text-center">
-                            {request.tenor || (
-                              request.nearDate && request.farDate 
-                                ? `${new Date(request.nearDate).toLocaleDateString('ko-KR')} - ${new Date(request.farDate).toLocaleDateString('ko-KR')}`
-                                : "-"
-                            )}
-                          </td>
-                          <td className="py-3 text-center">
-                            <Input
-                              type="number"
-                              step="0.01"
-                              placeholder="호가"
-                              value={quotedRate[request.id] || ""}
-                              onChange={(e) => handleQuotedRateChange(request.id, e.target.value)}
-                              className="w-24 text-center"
-                            />
-                          </td>
-                          <td className="py-3 text-center">
-                            <div className="flex space-x-2 justify-center">
-                              <Button
-                                size="sm"
-                                onClick={() => handleApprove(request.id)}
-                                disabled={approveMutation.isPending || !quotedRate[request.id]}
-                                className="bg-green-500 hover:bg-green-600 text-white"
-                                data-testid={`button-approve-${request.id}`}
-                              >
-                                <CheckCircle className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() => handleReject(request.id)}
-                                disabled={rejectMutation.isPending}
-                                data-testid={`button-reject-${request.id}`}
-                              >
-                                <XCircle className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>

@@ -409,6 +409,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get customer rates for quote requests (admin only)
+  app.get("/api/quote-requests/customer-rates", isAdmin, async (req: any, res) => {
+    try {
+      const pendingRequests = await storage.getPendingQuoteRequests();
+      const customerRates: Record<string, { baseRate: number; spread: number; customerRate: number }> = {};
+      
+      // Get all latest market rates
+      const allMarketRates = await storage.getLatestMarketRates();
+      
+      for (const request of pendingRequests) {
+        try {
+          // Skip if currencyPairId is null
+          if (!request.currencyPairId) continue;
+          
+          // Get user info
+          const user = await storage.getUser(request.userId);
+          if (!user) continue;
+          
+          // Find market rate for this currency pair
+          const marketRate = allMarketRates.find(rate => rate.currencyPairId === request.currencyPairId);
+          if (!marketRate) continue;
+          
+          // Determine base rate based on direction
+          const baseRate = request.direction === "BUY" 
+            ? parseFloat(marketRate.buyRate) 
+            : parseFloat(marketRate.sellRate);
+          
+          // Get spread for this user and product type
+          const spread = await storage.getSpreadForUser(
+            request.productType,
+            request.currencyPairId,
+            user,
+            request.tenor ?? undefined
+          );
+          
+          // Calculate customer rate
+          // For BUY: customer pays more (base + spread)
+          // For SELL: customer receives less (base - spread)
+          const customerRate = request.direction === "BUY"
+            ? baseRate + (spread / 100)
+            : baseRate - (spread / 100);
+          
+          customerRates[request.id] = {
+            baseRate,
+            spread,
+            customerRate
+          };
+        } catch (error) {
+          console.error(`Error calculating rate for request ${request.id}:`, error);
+          // Continue processing other requests
+        }
+      }
+      
+      res.json(customerRates);
+    } catch (error) {
+      console.error("Customer rates calculation error:", error);
+      res.status(500).json({ message: "Failed to calculate customer rates" });
+    }
+  });
+
   // Trades
   app.get("/api/trades", isAuthenticated, async (req: any, res) => {
     try {
