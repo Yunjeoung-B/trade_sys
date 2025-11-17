@@ -602,11 +602,14 @@ export default function SwapTradingCustomer() {
                           <div key={quote.id} className="p-3 rounded-xl bg-yellow-50 border border-yellow-200">
                             <div className="flex justify-between items-start">
                               <div className="flex-1">
-                                <div className="font-semibold text-gray-800 text-sm">
+                                <div className="font-semibold text-gray-800 text-sm mb-1">
                                   {pair.symbol} {quote.direction === "BUY_SELL_USD" ? "Buy&Sell" : "Sell&Buy"}
                                 </div>
-                                <div className="text-xs text-gray-600">
-                                  Near: {quote.nearAmountCurrency || "USD"} {formatCurrencyAmount(parseFloat(quote.nearAmount || "0"), quote.nearAmountCurrency || "USD")}
+                                <div className="text-xs text-gray-600 space-y-0.5">
+                                  <div>Near: {quote.nearAmountCurrency || "USD"} {formatCurrencyAmount(parseFloat(quote.nearAmount || "0"), quote.nearAmountCurrency || "USD")}</div>
+                                  <div>Near Date: {quote.nearDate ? format(new Date(quote.nearDate), "yyyy-MM-dd") : "--"}</div>
+                                  <div>Far: {quote.farAmountCurrency || "USD"} {formatCurrencyAmount(parseFloat(quote.farAmount || "0"), quote.farAmountCurrency || "USD")}</div>
+                                  <div>Far Date: {quote.farDate ? format(new Date(quote.farDate), "yyyy-MM-dd") : "--"}</div>
                                 </div>
                               </div>
                               <Button
@@ -643,11 +646,14 @@ export default function SwapTradingCustomer() {
                           <div key={quote.id} className="p-3 rounded-xl bg-green-50 border border-green-200">
                             <div className="flex justify-between items-start">
                               <div className="flex-1">
-                                <div className="font-semibold text-gray-800 text-sm">
+                                <div className="font-semibold text-gray-800 text-sm mb-1">
                                   {pair.symbol} {quote.direction === "BUY_SELL_USD" ? "Buy&Sell" : "Sell&Buy"}
                                 </div>
-                                <div className="text-xs text-gray-600">
-                                  Near: {quote.nearAmountCurrency || "USD"} {formatCurrencyAmount(parseFloat(quote.nearAmount || "0"), quote.nearAmountCurrency || "USD")}
+                                <div className="text-xs text-gray-600 space-y-0.5">
+                                  <div>Near: {quote.nearAmountCurrency || "USD"} {formatCurrencyAmount(parseFloat(quote.nearAmount || "0"), quote.nearAmountCurrency || "USD")}</div>
+                                  <div>Near Date: {quote.nearDate ? format(new Date(quote.nearDate), "yyyy-MM-dd") : "--"}</div>
+                                  <div>Far: {quote.farAmountCurrency || "USD"} {formatCurrencyAmount(parseFloat(quote.farAmount || "0"), quote.farAmountCurrency || "USD")}</div>
+                                  <div>Far Date: {quote.farDate ? format(new Date(quote.farDate), "yyyy-MM-dd") : "--"}</div>
                                 </div>
                                 {quote.quotedRate && (
                                   <div className="text-sm font-bold text-green-600 mt-1">
@@ -687,11 +693,14 @@ export default function SwapTradingCustomer() {
                           <div key={quote.id} className="p-3 rounded-xl bg-blue-50 border border-blue-200">
                             <div className="flex justify-between items-start">
                               <div className="flex-1">
-                                <div className="font-semibold text-gray-800 text-sm">
+                                <div className="font-semibold text-gray-800 text-sm mb-1">
                                   {pair.symbol} {quote.direction === "BUY_SELL_USD" ? "Buy&Sell" : "Sell&Buy"}
                                 </div>
-                                <div className="text-xs text-gray-600">
-                                  Near: {quote.nearAmountCurrency || "USD"} {formatCurrencyAmount(parseFloat(quote.nearAmount || "0"), quote.nearAmountCurrency || "USD")}
+                                <div className="text-xs text-gray-600 space-y-0.5">
+                                  <div>Near: {quote.nearAmountCurrency || "USD"} {formatCurrencyAmount(parseFloat(quote.nearAmount || "0"), quote.nearAmountCurrency || "USD")}</div>
+                                  <div>Near Date: {quote.nearDate ? format(new Date(quote.nearDate), "yyyy-MM-dd") : "--"}</div>
+                                  <div>Far: {quote.farAmountCurrency || "USD"} {formatCurrencyAmount(parseFloat(quote.farAmount || "0"), quote.farAmountCurrency || "USD")}</div>
+                                  <div>Far Date: {quote.farDate ? format(new Date(quote.farDate), "yyyy-MM-dd") : "--"}</div>
                                 </div>
                                 {quote.quotedRate && (
                                   <div className="text-sm font-bold text-blue-600 mt-1">
