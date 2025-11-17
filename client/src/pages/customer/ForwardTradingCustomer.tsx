@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { CalendarIcon, Clock, X, ChevronDown, ChevronUp } from "lucide-react";
 import { format, addDays } from "date-fns";
 import { apiRequest } from "@/lib/queryClient";
@@ -40,8 +41,17 @@ export default function ForwardTradingCustomer() {
   const [quoteStatusOpen, setQuoteStatusOpen] = useState(true);
   const [limitOrderOpen, setLimitOrderOpen] = useState(true);
   const [showInfoDialog, setShowInfoDialog] = useState(false);
+  const [dontShowAgain, setDontShowAgain] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Show info dialog on first visit
+  useEffect(() => {
+    const hasSeenIntro = localStorage.getItem("forward-trading-intro-seen");
+    if (!hasSeenIntro) {
+      setShowInfoDialog(true);
+    }
+  }, []);
 
   const [baseCurrency, quoteCurrency] = selectedPair.split('/');
 
@@ -1011,18 +1021,42 @@ export default function ForwardTradingCustomer() {
               </div>
             </DialogDescription>
           </DialogHeader>
-          <div className="flex gap-3 mt-6">
+          <div className="flex items-center space-x-2 mt-4 px-1">
+            <Checkbox
+              id="dont-show-again"
+              checked={dontShowAgain}
+              onCheckedChange={(checked) => setDontShowAgain(checked === true)}
+              data-testid="checkbox-dont-show-again"
+            />
+            <label
+              htmlFor="dont-show-again"
+              className="text-sm font-medium text-gray-700 cursor-pointer"
+            >
+              다시 보지 않기
+            </label>
+          </div>
+          <div className="flex gap-3 mt-4">
             <Button
               variant="outline"
-              onClick={() => setShowInfoDialog(false)}
-              className="flex-1 bg-white hover:bg-gray-50"
+              onClick={() => {
+                if (dontShowAgain) {
+                  localStorage.setItem("forward-trading-intro-seen", "true");
+                }
+                setShowInfoDialog(false);
+                setDontShowAgain(false);
+              }}
+              className="flex-1 bg-white hover:bg-gray-50 text-black"
               data-testid="button-cancel-quote-info"
             >
               취소
             </Button>
             <Button
               onClick={() => {
+                if (dontShowAgain) {
+                  localStorage.setItem("forward-trading-intro-seen", "true");
+                }
                 setShowInfoDialog(false);
+                setDontShowAgain(false);
                 submitQuoteRequest();
               }}
               disabled={quoteRequestMutation.isPending}
