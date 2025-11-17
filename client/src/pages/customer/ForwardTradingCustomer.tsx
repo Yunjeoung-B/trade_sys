@@ -999,19 +999,23 @@ export default function ForwardTradingCustomer() {
 
       {/* Info Dialog */}
       <Dialog open={showInfoDialog} onOpenChange={setShowInfoDialog}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-gray-900">선물환 가격 요청</DialogTitle>
-            <DialogDescription className="text-gray-600 space-y-3 pt-4">
-              <p>선물환 거래를 위해서는 CHOIICE FX에 가격을 요청해야 합니다.</p>
-              <p>관리자 승인 후 거래 가능한 환율이 제공됩니다.</p>
+            <DialogTitle className="text-2xl font-bold text-gray-900 mb-2">선물환 가격 요청</DialogTitle>
+            <DialogDescription className="text-gray-800 space-y-3 pt-2 text-base">
+              <div className="bg-white/80 backdrop-blur-sm p-4 rounded-xl border border-blue-100 space-y-2">
+                <p className="font-medium">• 선물환 거래를 위해서는 CHOIICE FX에 가격을 요청해야 합니다.</p>
+                <p className="font-medium">• 요청 현황은 오른쪽 패널에서 확인 가능합니다.</p>
+                <p className="font-medium">• 관리자 승인되면 가격 요청 건이 <span className="text-green-600 font-bold">"가격확인가능"</span> 보드로 이동합니다.</p>
+                <p className="font-medium">• 승인 후 거래 가능한 환율이 표시됩니다.</p>
+              </div>
             </DialogDescription>
           </DialogHeader>
           <div className="flex gap-3 mt-6">
             <Button
               variant="outline"
               onClick={() => setShowInfoDialog(false)}
-              className="flex-1"
+              className="flex-1 bg-white hover:bg-gray-50"
               data-testid="button-cancel-quote-info"
             >
               취소
@@ -1022,7 +1026,7 @@ export default function ForwardTradingCustomer() {
                 submitQuoteRequest();
               }}
               disabled={quoteRequestMutation.isPending}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold"
               data-testid="button-confirm-quote-info"
             >
               {quoteRequestMutation.isPending ? "처리 중..." : "확인"}
