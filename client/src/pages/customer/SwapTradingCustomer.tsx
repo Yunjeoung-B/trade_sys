@@ -577,7 +577,7 @@ export default function SwapTradingCustomer() {
         <Card className="p-8 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border-0 text-gray-900">
           <h3 className="text-lg font-bold mb-4 text-gray-800 flex items-center">
             <CalendarIcon className="w-5 h-5 mr-2 text-blue-600" />
-            스왑 거래 요청 ({allSwapQuotes.length}건)
+            스왑 가격 요청 ({allSwapQuotes.length}건)
           </h3>
 
           {allSwapQuotes.length === 0 ? (
