@@ -155,16 +155,18 @@ export default function SwapTradingCustomer() {
       return;
     }
 
+    const amount = parseFloat(removeThousandSeparator(nearAmount));
+    
     quoteRequestMutation.mutate({
       productType: "Swap",
       currencyPairId: selectedPairData.id,
       direction,
       nearDate,
       farDate,
-      nearAmount: parseFloat(removeThousandSeparator(nearAmount)),
-      nearAmountCurrency,
-      farAmount: parseFloat(removeThousandSeparator(nearAmount)),
-      farAmountCurrency: nearAmountCurrency,
+      amount,
+      amountCurrency: nearAmountCurrency,
+      nearAmount: amount,
+      farAmount: amount,
     });
   };
 
@@ -177,8 +179,8 @@ export default function SwapTradingCustomer() {
         productType: "Swap",
         currencyPairId: quote.currencyPairId,
         direction: quote.direction,
-        amount: quote.nearAmount || quote.amount,
-        amountCurrency: quote.amountCurrency,
+        amount: quote.nearAmount || "0",
+        amountCurrency: quote.amountCurrency || "USD",
         rate: quote.quotedRate || "0",
         valueDate: quote.farDate,
         quoteRequestId: quote.id,
@@ -468,11 +470,21 @@ export default function SwapTradingCustomer() {
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-600">거래금액:</span>
+                        <span className="text-gray-600">Near Amount:</span>
                         <span className="font-medium text-gray-800">
                           {quote.amountCurrency || "USD"}{" "}
                           {formatCurrencyAmount(
-                            parseFloat(quote.nearAmount || quote.amount || "0"),
+                            parseFloat(quote.nearAmount || "0"),
+                            quote.amountCurrency || "USD"
+                          )}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Far Amount:</span>
+                        <span className="font-medium text-gray-800">
+                          {quote.amountCurrency || "USD"}{" "}
+                          {formatCurrencyAmount(
+                            parseFloat(quote.farAmount || "0"),
                             quote.amountCurrency || "USD"
                           )}
                         </span>
