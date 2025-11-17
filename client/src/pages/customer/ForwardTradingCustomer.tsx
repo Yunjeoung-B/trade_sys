@@ -678,6 +678,11 @@ export default function ForwardTradingCustomer() {
                         {marketQuotes.requested.map((quote) => {
                           const pair = currencyPairs.find(p => p.id === quote.currencyPairId);
                           if (!pair) return null;
+                          const displayCurrency = quote.amountCurrency === "BASE" 
+                            ? pair.baseCurrency 
+                            : quote.amountCurrency === "QUOTE"
+                              ? pair.quoteCurrency
+                              : (quote.amountCurrency || "USD");
                           return (
                             <div key={quote.id} className="p-3 rounded-xl bg-yellow-50 border border-yellow-200">
                               <div className="flex justify-between items-start">
@@ -686,7 +691,7 @@ export default function ForwardTradingCustomer() {
                                     {pair.symbol} {quote.direction === "BUY" ? "매수" : "매도"}
                                   </div>
                                   <div className="text-xs text-gray-600">
-                                    {quote.amountCurrency || "USD"} {formatCurrencyAmount(parseFloat(quote.amount), quote.amountCurrency || "USD")}
+                                    {displayCurrency} {formatCurrencyAmount(parseFloat(quote.amount), displayCurrency)}
                                   </div>
                                 </div>
                                 <Button
@@ -719,6 +724,11 @@ export default function ForwardTradingCustomer() {
                           const pair = currencyPairs.find(p => p.id === quote.currencyPairId);
                           if (!pair) return null;
                           const isExpired = quote.expiresAt && new Date(quote.expiresAt) <= new Date();
+                          const displayCurrency = quote.amountCurrency === "BASE" 
+                            ? pair.baseCurrency 
+                            : quote.amountCurrency === "QUOTE"
+                              ? pair.quoteCurrency
+                              : (quote.amountCurrency || "USD");
                           return (
                             <div key={quote.id} className="p-3 rounded-xl bg-green-50 border border-green-200">
                               <div className="flex justify-between items-start">
@@ -727,7 +737,7 @@ export default function ForwardTradingCustomer() {
                                     {pair.symbol} {quote.direction === "BUY" ? "매수" : "매도"}
                                   </div>
                                   <div className="text-xs text-gray-600">
-                                    {quote.amountCurrency || "USD"} {formatCurrencyAmount(parseFloat(quote.amount), quote.amountCurrency || "USD")}
+                                    {displayCurrency} {formatCurrencyAmount(parseFloat(quote.amount), displayCurrency)}
                                   </div>
                                   {quote.quotedRate && (
                                     <div className="text-sm font-bold text-green-600 mt-1">
@@ -766,6 +776,11 @@ export default function ForwardTradingCustomer() {
                         {marketQuotes.confirmed.map((quote) => {
                           const pair = currencyPairs.find(p => p.id === quote.currencyPairId);
                           if (!pair) return null;
+                          const displayCurrency = quote.amountCurrency === "BASE" 
+                            ? pair.baseCurrency 
+                            : quote.amountCurrency === "QUOTE"
+                              ? pair.quoteCurrency
+                              : (quote.amountCurrency || "USD");
                           return (
                             <div key={quote.id} className="p-3 rounded-xl bg-blue-50 border border-blue-200">
                               <div className="flex justify-between items-start">
@@ -774,7 +789,7 @@ export default function ForwardTradingCustomer() {
                                     {pair.symbol} {quote.direction === "BUY" ? "매수" : "매도"}
                                   </div>
                                   <div className="text-xs text-gray-600">
-                                    {quote.amountCurrency || "USD"} {formatCurrencyAmount(parseFloat(quote.amount), quote.amountCurrency || "USD")}
+                                    {displayCurrency} {formatCurrencyAmount(parseFloat(quote.amount), displayCurrency)}
                                   </div>
                                   {quote.quotedRate && (
                                     <div className="text-sm font-bold text-blue-600 mt-1">
