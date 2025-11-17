@@ -46,15 +46,13 @@ export default function ForwardTradingCustomer() {
 
   // Fetch approved quotes (QUOTE_READY)
   const { data: approvedQuotes = [] } = useQuery<QuoteRequest[]>({
-    queryKey: ["/api/quote-requests", "QUOTE_READY"],
-    queryFn: () => fetch("/api/quote-requests?status=QUOTE_READY").then(res => res.json()),
+    queryKey: ["/api/quote-requests?status=QUOTE_READY"],
     refetchInterval: 5000, // Refresh every 5 seconds
   });
 
   // Fetch pending quote requests (REQUESTED)
   const { data: pendingQuotes = [] } = useQuery<QuoteRequest[]>({
-    queryKey: ["/api/quote-requests", "REQUESTED"],
-    queryFn: () => fetch("/api/quote-requests?status=REQUESTED").then(res => res.json()),
+    queryKey: ["/api/quote-requests?status=REQUESTED"],
     refetchInterval: 5000, // Refresh every 5 seconds
   });
 
@@ -89,7 +87,8 @@ export default function ForwardTradingCustomer() {
         description: "선물환 가격 요청이 제출되었습니다. 승인을 기다려주세요.",
       });
       setAmount("");
-      queryClient.invalidateQueries({ queryKey: ["/api/quote-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/quote-requests?status=REQUESTED"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/quote-requests?status=QUOTE_READY"] });
     },
     onError: (error: any) => {
       console.error("Quote request error:", error);
@@ -104,10 +103,10 @@ export default function ForwardTradingCustomer() {
   const tradeExecutionMutation = useMutation({
     mutationFn: async (tradeData: any) => {
       // First, refetch quotes to revalidate
-      await queryClient.refetchQueries({ queryKey: ["/api/quote-requests", "QUOTE_READY"] });
+      await queryClient.refetchQueries({ queryKey: ["/api/quote-requests?status=QUOTE_READY"] });
       
       // Check if quote is still valid after refetch
-      const quotes = queryClient.getQueryData<QuoteRequest[]>(["/api/quote-requests", "QUOTE_READY"]);
+      const quotes = queryClient.getQueryData<QuoteRequest[]>(["/api/quote-requests?status=QUOTE_READY"]);
       const currentQuote = quotes?.find(q => q.id === selectedQuoteId);
       
       if (!currentQuote) {
@@ -138,7 +137,8 @@ export default function ForwardTradingCustomer() {
         description: "선물환 거래가 성공적으로 체결되었습니다.",
       });
       setSelectedQuoteId(null);
-      queryClient.invalidateQueries({ queryKey: ["/api/quote-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/quote-requests?status=REQUESTED"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/quote-requests?status=QUOTE_READY"] });
       queryClient.invalidateQueries({ queryKey: ["/api/trades"] });
     },
     onError: (error: any) => {
@@ -146,7 +146,7 @@ export default function ForwardTradingCustomer() {
       setSelectedQuoteId(null);
       
       // Refetch quotes to sync with backend (e.g., EXPIRED status)
-      queryClient.invalidateQueries({ queryKey: ["/api/quote-requests", "QUOTE_READY"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/quote-requests?status=QUOTE_READY"] });
       
       toast({
         title: "거래 실패",
@@ -165,7 +165,8 @@ export default function ForwardTradingCustomer() {
         title: "요청 취소 완료",
         description: "가격 요청이 취소되었습니다.",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/quote-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/quote-requests?status=REQUESTED"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/quote-requests?status=QUOTE_READY"] });
     },
     onError: () => {
       toast({
@@ -657,7 +658,7 @@ export default function ForwardTradingCustomer() {
                               ? "bg-green-600 text-white" 
                               : "bg-gray-500 text-white"
                           )}>
-                            {quote.status === "QUOTE_READY" ? "승인완료" : "승인대기"}
+                            {quote.status === "QUOTE_READY" ? "체결완료" : "체결전"}
                           </span>
                         </div>
                         <div className="text-sm text-gray-600">
