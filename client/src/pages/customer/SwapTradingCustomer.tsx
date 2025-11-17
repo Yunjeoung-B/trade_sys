@@ -179,12 +179,14 @@ export default function SwapTradingCustomer() {
               {/* 날짜 선택 */}
               <div className="mb-6 grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Near Date</label>
+                  <div className="text-sm text-gray-700 font-medium mb-2">Near Date</div>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
-                        className="w-full justify-start text-left font-normal rounded-xl"
+                        className={cn(
+                          "w-full justify-start text-left font-normal bg-gray-50 border-gray-300 text-gray-900 rounded-xl"
+                        )}
                         data-testid="button-near-date-trader"
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
@@ -202,12 +204,14 @@ export default function SwapTradingCustomer() {
                   </Popover>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Far Date</label>
+                  <div className="text-sm text-gray-700 font-medium mb-2">Far Date</div>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
-                        className="w-full justify-start text-left font-normal rounded-xl"
+                        className={cn(
+                          "w-full justify-start text-left font-normal bg-gray-50 border-gray-300 text-gray-900 rounded-xl"
+                        )}
                         data-testid="button-far-date-trader"
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
@@ -228,17 +232,21 @@ export default function SwapTradingCustomer() {
 
               {/* 금액 입력 */}
               <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  거래 금액
-                </label>
-                <div className="flex gap-2 mb-2">
+                <div className="text-sm text-gray-700 font-medium mb-2">거래 금액</div>
+                <div className="flex-1 grid grid-cols-2 gap-2 mb-2">
                   <Button
                     variant="outline"
-                    size="sm"
                     className={cn(
-                      "rounded-xl flex-1",
-                      nearAmountCurrency === "USD" && "bg-teal-500 text-white border-teal-500"
+                      "rounded-xl transition-all duration-200",
+                      nearAmountCurrency === "USD" 
+                        ? "text-white shadow-inner" 
+                        : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                     )}
+                    style={nearAmountCurrency === "USD" ? {
+                      backgroundColor: '#2dd4bf',
+                      borderColor: '#2dd4bf',
+                      boxShadow: '0 0 15px rgba(45, 212, 191, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                    } : {}}
                     onClick={() => setNearAmountCurrency("USD")}
                     data-testid="button-currency-usd-trader"
                   >
@@ -246,11 +254,17 @@ export default function SwapTradingCustomer() {
                   </Button>
                   <Button
                     variant="outline"
-                    size="sm"
                     className={cn(
-                      "rounded-xl flex-1",
-                      nearAmountCurrency === "KRW" && "bg-teal-500 text-white border-teal-500"
+                      "rounded-xl transition-all duration-200",
+                      nearAmountCurrency === "KRW" 
+                        ? "text-white shadow-inner" 
+                        : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                     )}
+                    style={nearAmountCurrency === "KRW" ? {
+                      backgroundColor: '#2dd4bf',
+                      borderColor: '#2dd4bf',
+                      boxShadow: '0 0 15px rgba(45, 212, 191, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                    } : {}}
                     onClick={() => setNearAmountCurrency("KRW")}
                     data-testid="button-currency-krw-trader"
                   >
@@ -259,10 +273,10 @@ export default function SwapTradingCustomer() {
                 </div>
                 <Input
                   type="text"
-                  placeholder="금액을 입력하세요"
+                  placeholder="여기에 거래금액을 입력하세요"
                   value={nearAmount}
                   onChange={(e) => setNearAmount(formatInputValue(e.target.value, nearAmountCurrency))}
-                  className="text-lg rounded-xl"
+                  className="text-right text-lg bg-gray-50/50 border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-200"
                   data-testid="input-amount-trader"
                 />
               </div>
