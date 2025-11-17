@@ -1017,35 +1017,35 @@ export default function ForwardTradingCustomer() {
             <DialogTitle className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent text-center tracking-tight">
               선물환 가격 요청
             </DialogTitle>
-            <DialogDescription className="space-y-4 pt-2">
-              <div className="bg-white/70 backdrop-blur-md p-6 rounded-2xl border border-blue-200/50 shadow-lg space-y-4">
-                <div className="flex items-start space-x-3">
-                  <div className="w-3 h-3 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 mt-1.5 flex-shrink-0 shadow-md"></div>
-                  <p className="text-lg font-bold text-gray-800 leading-relaxed">
-                    선물환 거래를 위해서는 CHOIICE FX에 가격을 요청해야 합니다.
-                  </p>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <div className="w-3 h-3 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 mt-1.5 flex-shrink-0 shadow-md"></div>
-                  <p className="text-lg font-bold text-gray-800 leading-relaxed">
-                    요청 현황은 오른쪽 패널에서 확인 가능합니다.
-                  </p>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <div className="w-3 h-3 rounded-full bg-gradient-to-br from-green-400 to-green-600 mt-1.5 flex-shrink-0 shadow-md"></div>
-                  <p className="text-lg font-bold text-gray-800 leading-relaxed">
-                    관리자 승인되면 가격 요청 건이 <span className="text-green-600 font-black underline decoration-2 underline-offset-2">"가격확인가능"</span> 보드로 이동합니다.
-                  </p>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <div className="w-3 h-3 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 mt-1.5 flex-shrink-0 shadow-md"></div>
-                  <p className="text-lg font-bold text-gray-800 leading-relaxed">
-                    승인 후 거래 가능한 환율이 표시됩니다.
-                  </p>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="bg-white/70 backdrop-blur-md p-6 rounded-2xl border border-blue-200/50 shadow-lg space-y-4">
+              <div className="flex items-start space-x-3">
+                <div className="w-3 h-3 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 mt-1.5 flex-shrink-0 shadow-md"></div>
+                <div className="text-lg font-bold text-gray-800 leading-relaxed">
+                  선물환 거래를 위해서는 CHOICE FX에 가격을 요청해야 합니다.
                 </div>
               </div>
-            </DialogDescription>
-          </DialogHeader>
+              <div className="flex items-start space-x-3">
+                <div className="w-3 h-3 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 mt-1.5 flex-shrink-0 shadow-md"></div>
+                <div className="text-lg font-bold text-gray-800 leading-relaxed">
+                  요청 현황은 오른쪽 패널에서 확인 가능합니다.
+                </div>
+              </div>
+              <div className="flex items-start space-x-3">
+                <div className="w-3 h-3 rounded-full bg-gradient-to-br from-green-400 to-green-600 mt-1.5 flex-shrink-0 shadow-md"></div>
+                <div className="text-lg font-bold text-gray-800 leading-relaxed">
+                  관리자 승인되면 가격 요청 건이 <span className="text-green-600 font-black underline decoration-2 underline-offset-2">"가격확인가능"</span> 보드로 이동합니다.
+                </div>
+              </div>
+              <div className="flex items-start space-x-3">
+                <div className="w-3 h-3 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 mt-1.5 flex-shrink-0 shadow-md"></div>
+                <div className="text-lg font-bold text-gray-800 leading-relaxed">
+                  승인 후 거래 가능한 환율이 표시됩니다.
+                </div>
+              </div>
+            </div>
+          </div>
           <div className="flex items-center space-x-3 mt-6 px-2">
             <Checkbox
               id="dont-show-again"
@@ -1077,9 +1077,7 @@ export default function ForwardTradingCustomer() {
             </Button>
             <Button
               onClick={() => {
-                if (dontShowAgain) {
-                  localStorage.setItem("forward-trading-intro-seen", "true");
-                }
+                localStorage.setItem("forward-trading-intro-seen", "true");
                 setShowInfoDialog(false);
                 setDontShowAgain(false);
                 // Only submit quote request if this is a quote request dialog, not intro
