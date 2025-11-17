@@ -21,6 +21,9 @@ export default function SwapTradingCustomer() {
   const [farDate, setFarDate] = useState<Date>(addDays(new Date(), 30));
   const [nearAmount, setNearAmount] = useState("");
   const [nearAmountCurrency, setNearAmountCurrency] = useState<"USD" | "KRW">("USD");
+  const [separateAmounts, setSeparateAmounts] = useState(false);
+  const [farAmount, setFarAmount] = useState("");
+  const [farAmountCurrency, setFarAmountCurrency] = useState<"USD" | "KRW">("USD");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -165,7 +168,20 @@ export default function SwapTradingCustomer() {
       return;
     }
 
-    const amount = parseFloat(removeThousandSeparator(nearAmount));
+    // Check if separate amounts mode requires far amount
+    if (separateAmounts && !farAmount) {
+      toast({
+        title: "입력 오류",
+        description: "Far Amount를 입력해주세요.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const nearAmountNum = parseFloat(removeThousandSeparator(nearAmount));
+    const farAmountNum = separateAmounts 
+      ? parseFloat(removeThousandSeparator(farAmount))
+      : nearAmountNum;
     
     quoteRequestMutation.mutate({
       productType: "Swap",
@@ -173,10 +189,10 @@ export default function SwapTradingCustomer() {
       direction,
       nearDate,
       farDate,
-      amount,
+      amount: nearAmountNum,
       amountCurrency: nearAmountCurrency,
-      nearAmount: amount,
-      farAmount: amount,
+      nearAmount: nearAmountNum,
+      farAmount: farAmountNum,
     });
   };
 
@@ -315,52 +331,177 @@ export default function SwapTradingCustomer() {
               {/* 금액 입력 */}
               <div className="mb-6">
                 <div className="text-sm text-gray-700 font-medium mb-2">거래 금액</div>
-                <div className="flex-1 grid grid-cols-2 gap-2 mb-2">
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "rounded-xl transition-all duration-200",
-                      nearAmountCurrency === "USD" 
-                        ? "text-white shadow-inner" 
-                        : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
-                    )}
-                    style={nearAmountCurrency === "USD" ? {
-                      backgroundColor: '#2dd4bf',
-                      borderColor: '#2dd4bf',
-                      boxShadow: '0 0 15px rgba(45, 212, 191, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
-                    } : {}}
-                    onClick={() => setNearAmountCurrency("USD")}
-                    data-testid="button-currency-usd-trader"
-                  >
-                    USD
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "rounded-xl transition-all duration-200",
-                      nearAmountCurrency === "KRW" 
-                        ? "text-white shadow-inner" 
-                        : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
-                    )}
-                    style={nearAmountCurrency === "KRW" ? {
-                      backgroundColor: '#2dd4bf',
-                      borderColor: '#2dd4bf',
-                      boxShadow: '0 0 15px rgba(45, 212, 191, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
-                    } : {}}
-                    onClick={() => setNearAmountCurrency("KRW")}
-                    data-testid="button-currency-krw-trader"
-                  >
-                    KRW
-                  </Button>
-                </div>
-                <Input
-                  type="text"
-                  placeholder="여기에 거래금액을 입력하세요"
-                  value={nearAmount}
-                  onChange={(e) => setNearAmount(formatInputValue(e.target.value, nearAmountCurrency))}
-                  className="text-right text-lg bg-gray-50/50 border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-200"
-                  data-testid="input-amount-trader"
-                />
+                
+                {!separateAmounts ? (
+                  <>
+                    <div className="flex-1 grid grid-cols-2 gap-2 mb-2">
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "rounded-xl transition-all duration-200",
+                          nearAmountCurrency === "USD" 
+                            ? "text-white shadow-inner" 
+                            : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                        )}
+                        style={nearAmountCurrency === "USD" ? {
+                          backgroundColor: '#2dd4bf',
+                          borderColor: '#2dd4bf',
+                          boxShadow: '0 0 15px rgba(45, 212, 191, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                        } : {}}
+                        onClick={() => setNearAmountCurrency("USD")}
+                        data-testid="button-currency-usd-trader"
+                      >
+                        USD
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "rounded-xl transition-all duration-200",
+                          nearAmountCurrency === "KRW" 
+                            ? "text-white shadow-inner" 
+                            : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                        )}
+                        style={nearAmountCurrency === "KRW" ? {
+                          backgroundColor: '#2dd4bf',
+                          borderColor: '#2dd4bf',
+                          boxShadow: '0 0 15px rgba(45, 212, 191, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                        } : {}}
+                        onClick={() => setNearAmountCurrency("KRW")}
+                        data-testid="button-currency-krw-trader"
+                      >
+                        KRW
+                      </Button>
+                    </div>
+                    <Input
+                      type="text"
+                      placeholder="여기에 거래금액을 입력하세요"
+                      value={nearAmount}
+                      onChange={(e) => setNearAmount(formatInputValue(e.target.value, nearAmountCurrency))}
+                      className="text-right text-lg bg-gray-50/50 border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-200"
+                      data-testid="input-amount-trader"
+                    />
+                  </>
+                ) : (
+                  <>
+                    {/* Near Amount */}
+                    <div className="mb-4 p-4 bg-blue-50/50 rounded-xl">
+                      <div className="text-sm text-gray-600 font-medium mb-2">Near Amount</div>
+                      <div className="flex-1 grid grid-cols-2 gap-2 mb-2">
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "rounded-xl transition-all duration-200",
+                            nearAmountCurrency === "USD" 
+                              ? "text-white shadow-inner" 
+                              : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                          )}
+                          style={nearAmountCurrency === "USD" ? {
+                            backgroundColor: '#2dd4bf',
+                            borderColor: '#2dd4bf',
+                            boxShadow: '0 0 15px rgba(45, 212, 191, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                          } : {}}
+                          onClick={() => setNearAmountCurrency("USD")}
+                          data-testid="button-near-currency-usd"
+                        >
+                          USD
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "rounded-xl transition-all duration-200",
+                            nearAmountCurrency === "KRW" 
+                              ? "text-white shadow-inner" 
+                              : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                          )}
+                          style={nearAmountCurrency === "KRW" ? {
+                            backgroundColor: '#2dd4bf',
+                            borderColor: '#2dd4bf',
+                            boxShadow: '0 0 15px rgba(45, 212, 191, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                          } : {}}
+                          onClick={() => setNearAmountCurrency("KRW")}
+                          data-testid="button-near-currency-krw"
+                        >
+                          KRW
+                        </Button>
+                      </div>
+                      <Input
+                        type="text"
+                        placeholder="Near Amount 입력"
+                        value={nearAmount}
+                        onChange={(e) => setNearAmount(formatInputValue(e.target.value, nearAmountCurrency))}
+                        className="text-right text-lg bg-white border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-200"
+                        data-testid="input-near-amount"
+                      />
+                    </div>
+
+                    {/* Far Amount */}
+                    <div className="p-4 bg-purple-50/50 rounded-xl">
+                      <div className="text-sm text-gray-600 font-medium mb-2">Far Amount</div>
+                      <div className="flex-1 grid grid-cols-2 gap-2 mb-2">
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "rounded-xl transition-all duration-200",
+                            farAmountCurrency === "USD" 
+                              ? "text-white shadow-inner" 
+                              : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                          )}
+                          style={farAmountCurrency === "USD" ? {
+                            backgroundColor: '#a855f7',
+                            borderColor: '#a855f7',
+                            boxShadow: '0 0 15px rgba(168, 85, 247, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                          } : {}}
+                          onClick={() => setFarAmountCurrency("USD")}
+                          data-testid="button-far-currency-usd"
+                        >
+                          USD
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "rounded-xl transition-all duration-200",
+                            farAmountCurrency === "KRW" 
+                              ? "text-white shadow-inner" 
+                              : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                          )}
+                          style={farAmountCurrency === "KRW" ? {
+                            backgroundColor: '#a855f7',
+                            borderColor: '#a855f7',
+                            boxShadow: '0 0 15px rgba(168, 85, 247, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                          } : {}}
+                          onClick={() => setFarAmountCurrency("KRW")}
+                          data-testid="button-far-currency-krw"
+                        >
+                          KRW
+                        </Button>
+                      </div>
+                      <Input
+                        type="text"
+                        placeholder="Far Amount 입력"
+                        value={farAmount}
+                        onChange={(e) => setFarAmount(formatInputValue(e.target.value, farAmountCurrency))}
+                        className="text-right text-lg bg-white border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-purple-200"
+                        data-testid="input-far-amount"
+                      />
+                    </div>
+                  </>
+                )}
+
+                {/* Toggle Button for Separate Amounts */}
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setSeparateAmounts(!separateAmounts);
+                    if (!separateAmounts) {
+                      setFarAmount(nearAmount);
+                      setFarAmountCurrency(nearAmountCurrency);
+                    }
+                  }}
+                  className="w-full mt-3 rounded-xl bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200 text-gray-700 hover:from-blue-100 hover:to-purple-100"
+                  data-testid="button-toggle-separate-amounts"
+                >
+                  {separateAmounts ? "📝 단일 금액 입력으로 전환" : "🔄 Near/Far 금액 분리 입력"}
+                </Button>
               </div>
 
               {/* 거래 내역 요약 */}
@@ -376,12 +517,31 @@ export default function SwapTradingCustomer() {
                       <span>Far Leg:</span>
                       <span className="font-medium">{format(farDate, "yyyy-MM-dd")}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span>거래금액:</span>
-                      <span className="font-medium">
-                        {nearAmountCurrency} {formatCurrencyAmount(parseFloat(removeThousandSeparator(nearAmount)), nearAmountCurrency)}
-                      </span>
-                    </div>
+                    {!separateAmounts ? (
+                      <div className="flex justify-between">
+                        <span>거래금액:</span>
+                        <span className="font-medium">
+                          {nearAmountCurrency} {formatCurrencyAmount(parseFloat(removeThousandSeparator(nearAmount)), nearAmountCurrency)}
+                        </span>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex justify-between">
+                          <span>Near Amount:</span>
+                          <span className="font-medium">
+                            {nearAmountCurrency} {formatCurrencyAmount(parseFloat(removeThousandSeparator(nearAmount)), nearAmountCurrency)}
+                          </span>
+                        </div>
+                        {farAmount && (
+                          <div className="flex justify-between">
+                            <span>Far Amount:</span>
+                            <span className="font-medium">
+                              {farAmountCurrency} {formatCurrencyAmount(parseFloat(removeThousandSeparator(farAmount)), farAmountCurrency)}
+                            </span>
+                          </div>
+                        )}
+                      </>
+                    )}
                   </div>
                 </div>
               )}
