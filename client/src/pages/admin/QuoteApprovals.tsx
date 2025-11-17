@@ -59,7 +59,13 @@ export default function QuoteApprovals() {
   const [maxAmount, setMaxAmount] = useState("");
   const [timeWindowMinutes, setTimeWindowMinutes] = useState("30");
   const [isEnabled, setIsEnabled] = useState(false);
-  const [allowWeekends, setAllowWeekends] = useState(false);
+  
+  // Filtering and sorting states
+  const [sortBy, setSortBy] = useState<"amount" | "time">("amount");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [filterProductType, setFilterProductType] = useState<string>("all");
+  const [filterDateFrom, setFilterDateFrom] = useState<string>("");
+  const [filterDateTo, setFilterDateTo] = useState<string>("");
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -145,7 +151,6 @@ export default function QuoteApprovals() {
     setMaxAmount("");
     setTimeWindowMinutes("30");
     setIsEnabled(false);
-    setAllowWeekends(false);
   };
 
   const handleApprove = (id: string) => {
@@ -186,7 +191,7 @@ export default function QuoteApprovals() {
       maxAmount: parseFloat(maxAmount),
       timeWindowMinutes: parseInt(timeWindowMinutes),
       isEnabled,
-      allowWeekends,
+      allowWeekends: false,
     });
   };
 
@@ -287,6 +292,48 @@ export default function QuoteApprovals() {
     bulkRejectMutation.mutate(Array.from(selectedQuotes));
   };
 
+  // Filter and sort pending requests
+  const getFilteredAndSortedRequests = () => {
+    let filtered = [...pendingRequests];
+    
+    // Apply product type filter
+    if (filterProductType !== "all") {
+      filtered = filtered.filter(req => req.productType === filterProductType);
+    }
+    
+    // Apply date range filter
+    if (filterDateFrom) {
+      const fromDate = new Date(filterDateFrom);
+      filtered = filtered.filter(req => new Date(req.createdAt) >= fromDate);
+    }
+    if (filterDateTo) {
+      const toDate = new Date(filterDateTo);
+      toDate.setHours(23, 59, 59, 999);
+      filtered = filtered.filter(req => new Date(req.createdAt) <= toDate);
+    }
+    
+    // Apply sorting
+    filtered.sort((a, b) => {
+      if (sortBy === "amount") {
+        const amountA = a.productType === "Swap" 
+          ? parseFloat(a.nearAmount || "0") + parseFloat(a.farAmount || "0")
+          : parseFloat(a.amount);
+        const amountB = b.productType === "Swap"
+          ? parseFloat(b.nearAmount || "0") + parseFloat(b.farAmount || "0")
+          : parseFloat(b.amount);
+        return sortOrder === "desc" ? amountB - amountA : amountA - amountB;
+      } else {
+        const timeA = new Date(a.createdAt).getTime();
+        const timeB = new Date(b.createdAt).getTime();
+        return sortOrder === "desc" ? timeB - timeA : timeA - timeB;
+      }
+    });
+    
+    return filtered;
+  };
+
+  const filteredRequests = getFilteredAndSortedRequests();
+
   return (
     <div className="p-6">
       <div className="mb-6">
@@ -296,7 +343,7 @@ export default function QuoteApprovals() {
           
           <Card className="mb-6">
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between mb-4">
                 <CardTitle className="flex items-center">
                   <Clock className="w-5 h-5 mr-2" />
                   승인 대기 목록 ({pendingRequests.length}건)
@@ -329,9 +376,72 @@ export default function QuoteApprovals() {
                   </Button>
                 </div>
               </div>
+              
+              {/* Filters and Sorting */}
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4 pb-4 border-b">
+                <div>
+                  <Label className="text-xs">정렬 기준</Label>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as "amount" | "time")}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    data-testid="select-sort-by"
+                  >
+                    <option value="amount">금액순</option>
+                    <option value="time">시간순</option>
+                  </select>
+                </div>
+                <div>
+                  <Label className="text-xs">정렬 방향</Label>
+                  <select
+                    value={sortOrder}
+                    onChange={(e) => setSortOrder(e.target.value as "asc" | "desc")}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    data-testid="select-sort-order"
+                  >
+                    <option value="desc">높은순 / 최신순</option>
+                    <option value="asc">낮은순 / 오래된순</option>
+                  </select>
+                </div>
+                <div>
+                  <Label className="text-xs">상품 유형</Label>
+                  <select
+                    value={filterProductType}
+                    onChange={(e) => setFilterProductType(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    data-testid="select-filter-product"
+                  >
+                    <option value="all">전체</option>
+                    <option value="Forward">Forward</option>
+                    <option value="Swap">Swap</option>
+                    <option value="Spot">Spot</option>
+                    <option value="MAR">MAR</option>
+                  </select>
+                </div>
+                <div>
+                  <Label className="text-xs">시작일</Label>
+                  <Input
+                    type="date"
+                    value={filterDateFrom}
+                    onChange={(e) => setFilterDateFrom(e.target.value)}
+                    className="text-sm"
+                    data-testid="input-date-from"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">종료일</Label>
+                  <Input
+                    type="date"
+                    value={filterDateTo}
+                    onChange={(e) => setFilterDateTo(e.target.value)}
+                    className="text-sm"
+                    data-testid="input-date-to"
+                  />
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
-              {pendingRequests.length > 0 ? (
+              {filteredRequests.length > 0 ? (
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
@@ -356,7 +466,7 @@ export default function QuoteApprovals() {
                       </tr>
                     </thead>
                     <tbody>
-                      {pendingRequests.map((request) => {
+                      {filteredRequests.map((request) => {
                         const groups = getUserGroups(request.userId);
                         const rateInfo = customerRates?.[request.id];
                         
@@ -533,15 +643,6 @@ export default function QuoteApprovals() {
                       onCheckedChange={(checked) => setIsEnabled(checked as boolean)}
                     />
                     <Label htmlFor="autoApproval">자동 승인 활성화</Label>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="weekendApproval"
-                      checked={allowWeekends}
-                      onCheckedChange={(checked) => setAllowWeekends(checked as boolean)}
-                    />
-                    <Label htmlFor="weekendApproval">주말 자동 승인</Label>
                   </div>
                   
                   <Button
