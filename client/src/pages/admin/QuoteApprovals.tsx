@@ -17,6 +17,9 @@ interface QuoteRequest {
   currencyPairId: string;
   direction: string;
   amount: string;
+  amountCurrency?: string;
+  nearAmount?: string;
+  farAmount?: string;
   tenor?: string;
   nearDate?: string;
   farDate?: string;
@@ -243,7 +246,14 @@ export default function QuoteApprovals() {
                           </td>
                           <td className="py-3">{getPairSymbol(request.currencyPairId)}</td>
                           <td className="py-3 text-right">
-                            {Number(request.amount).toLocaleString()} USD
+                            {request.productType === "Swap" ? (
+                              <div className="text-xs">
+                                <div>Near: {Number(request.nearAmount || 0).toLocaleString()} {request.amountCurrency || "USD"}</div>
+                                <div>Far: {Number(request.farAmount || 0).toLocaleString()} {request.amountCurrency || "USD"}</div>
+                              </div>
+                            ) : (
+                              `${Number(request.amount).toLocaleString()} ${request.amountCurrency || "USD"}`
+                            )}
                           </td>
                           <td className="py-3 text-center">
                             {request.tenor || (
