@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CalendarIcon, Clock, X, ChevronDown, ChevronUp } from "lucide-react";
 import { format, addDays } from "date-fns";
 import { apiRequest } from "@/lib/queryClient";
@@ -38,6 +39,7 @@ export default function ForwardTradingCustomer() {
   const [selectedQuoteId, setSelectedQuoteId] = useState<string | null>(null);
   const [quoteStatusOpen, setQuoteStatusOpen] = useState(true);
   const [limitOrderOpen, setLimitOrderOpen] = useState(true);
+  const [showInfoDialog, setShowInfoDialog] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -216,6 +218,19 @@ export default function ForwardTradingCustomer() {
       });
       return;
     }
+
+    // Show info dialog for MARKET orders
+    if (orderType === "MARKET") {
+      setShowInfoDialog(true);
+      return;
+    }
+
+    // For LIMIT orders, proceed directly
+    submitQuoteRequest();
+  };
+
+  const submitQuoteRequest = () => {
+    if (!selectedPairData) return;
 
     quoteRequestMutation.mutate({
       productType: "Forward",
@@ -981,6 +996,40 @@ export default function ForwardTradingCustomer() {
           </Card>
         </div>
       </div>
+
+      {/* Info Dialog */}
+      <Dialog open={showInfoDialog} onOpenChange={setShowInfoDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-gray-900">선물환 가격 요청</DialogTitle>
+            <DialogDescription className="text-gray-600 space-y-3 pt-4">
+              <p>선물환 거래를 위해서는 CHOIICE FX에 가격을 요청해야 합니다.</p>
+              <p>관리자 승인 후 거래 가능한 환율이 제공됩니다.</p>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-3 mt-6">
+            <Button
+              variant="outline"
+              onClick={() => setShowInfoDialog(false)}
+              className="flex-1"
+              data-testid="button-cancel-quote-info"
+            >
+              취소
+            </Button>
+            <Button
+              onClick={() => {
+                setShowInfoDialog(false);
+                submitQuoteRequest();
+              }}
+              disabled={quoteRequestMutation.isPending}
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+              data-testid="button-confirm-quote-info"
+            >
+              {quoteRequestMutation.isPending ? "처리 중..." : "확인"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
