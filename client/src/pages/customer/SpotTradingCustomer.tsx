@@ -446,7 +446,7 @@ export default function SpotTradingCustomer() {
                       onClick={() => setAmountCurrency("BASE")}
                       data-testid="button-trader-currency-base"
                     >
-                      {baseCurrency} {direction === "BUY" ? "매수" : "매도"} / {quoteCurrency} {direction === "BUY" ? "매도" : "매수"}
+                      {baseCurrency}
                     </Button>
                     <Button 
                       variant="outline"
@@ -464,7 +464,7 @@ export default function SpotTradingCustomer() {
                       onClick={() => setAmountCurrency("QUOTE")}
                       data-testid="button-trader-currency-quote"
                     >
-                      {baseCurrency} {direction === "BUY" ? "매도" : "매수"} / {quoteCurrency} {direction === "BUY" ? "매수" : "매도"}
+                      {quoteCurrency}
                     </Button>
                   </div>
                   <Input
