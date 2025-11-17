@@ -562,8 +562,41 @@ export default function SpotTradingCustomer() {
                 const pair = currencyPairs.find(p => p.id === trade.currencyPairId);
                 if (!pair) return null;
 
-                const validUntil = trade.validUntilTime ? new Date(trade.validUntilTime) : null;
-                const isExpired = validUntil ? validUntil <= new Date() : false;
+                // Handle validity expiration based on type
+                let validUntil: Date | null = null;
+                let isExpired = false;
+
+                if (trade.validUntilTime) {
+                  // Try to parse stored validUntilTime first
+                  if (trade.validUntilTime.includes('T') || trade.validUntilTime.includes('Z')) {
+                    // ISO timestamp format (stored by backend)
+                    validUntil = new Date(trade.validUntilTime);
+                    if (!isNaN(validUntil.getTime())) {
+                      isExpired = validUntil <= new Date();
+                    } else {
+                      validUntil = null;
+                    }
+                  } else if (trade.validityType === "TIME") {
+                    // HH:MM format - create Date object for today with specified time
+                    const parts = trade.validUntilTime.split(':');
+                    if (parts.length === 2) {
+                      const hours = parseInt(parts[0], 10);
+                      const minutes = parseInt(parts[1], 10);
+                      if (!isNaN(hours) && !isNaN(minutes)) {
+                        const today = new Date();
+                        validUntil = new Date(today.getFullYear(), today.getMonth(), today.getDate(), hours, minutes, 0);
+                        isExpired = validUntil <= new Date();
+                      }
+                    }
+                  }
+                }
+                
+                // Fallback for DAY type if validUntil is not set
+                if (!validUntil && trade.validityType === "DAY") {
+                  const today = new Date();
+                  validUntil = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 16, 0, 0);
+                  isExpired = validUntil <= new Date();
+                }
 
                 return (
                   <div
@@ -625,7 +658,7 @@ export default function SpotTradingCustomer() {
                           {parseFloat(trade.limitRate || trade.rate).toFixed(2)}
                         </span>
                       </div>
-                      {validUntil && (
+                      {(trade.validityType === "DAY" || (trade.validityType === "TIME" && validUntil)) && (
                         <div className="flex justify-between">
                           <span className="text-gray-600">유효기간:</span>
                           <span className={cn(
@@ -634,10 +667,12 @@ export default function SpotTradingCustomer() {
                           )}>
                             {trade.validityType === "DAY" 
                               ? "당일 오후 4시까지"
-                              : validUntil.toLocaleString('ko-KR', { 
-                                  hour: '2-digit', 
-                                  minute: '2-digit' 
-                                })
+                              : trade.validUntilTime && !trade.validUntilTime.includes('T') && !trade.validUntilTime.includes('Z')
+                                ? `당일 ${trade.validUntilTime}까지`
+                                : validUntil?.toLocaleString('ko-KR', { 
+                                    hour: '2-digit', 
+                                    minute: '2-digit' 
+                                  })
                             }
                           </span>
                         </div>
