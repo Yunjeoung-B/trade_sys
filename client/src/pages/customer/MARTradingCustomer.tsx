@@ -26,6 +26,7 @@ export default function MARTradingCustomer() {
   const {
     buyRate: customerBuyRate,
     sellRate: customerSellRate,
+    spread: customerSpread,
     isLoading: isRateLoading,
     isError: isRateError,
     dataUpdatedAt,
@@ -37,6 +38,7 @@ export default function MARTradingCustomer() {
 
   const buyRate = customerBuyRate || 0;
   const sellRate = customerSellRate || 0;
+  const spreadValue = customerSpread ? (customerSpread / 100).toFixed(2) : "0.00";
 
   const mutation = useMutation({
     mutationFn: async (tradeData: any) => {
@@ -145,68 +147,54 @@ export default function MARTradingCustomer() {
                 </Select>
               </div>
 
-              {/* Step 2: Rate display */}
+              {/* Step 2: Direction buttons with MAR ± Spread */}
               <div className="flex items-center mb-6">
                 <div className="flex-1 grid grid-cols-2 gap-4">
-                  <div className="text-center">
-                    <div className="text-sm text-gray-600 mb-1">SELL USD</div>
-                    <div className="text-2xl font-bold text-[#1c5bcb]">
-                      {hasValidRates ? sellRate.toFixed(2) : "--"}
+                  <Button 
+                    variant="outline" 
+                    size="lg"
+                    className={cn(
+                      "h-20 rounded-xl transition-all duration-200 flex flex-col items-center justify-center",
+                      direction === "SELL" 
+                        ? "text-white shadow-inner" 
+                        : "bg-transparent border-gray-200 text-gray-700 hover:bg-gray-50"
+                    )}
+                    style={direction === "SELL" ? {
+                      backgroundColor: '#4169E1',
+                      borderColor: '#4169E1',
+                      boxShadow: '0 0 15px rgba(65, 105, 225, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                    } : {}}
+                    onClick={() => setDirection("SELL")}
+                    data-testid="button-trader-sell"
+                  >
+                    <div className="text-sm mb-1">SELL USD</div>
+                    <div className="text-lg font-bold">
+                      {hasValidRates ? `MAR - ${spreadValue}` : "MAR - --"}
                     </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className={cn(
-                        "mt-2 w-full rounded-xl transition-all duration-200",
-                        direction === "SELL" 
-                          ? "text-white shadow-inner" 
-                          : "bg-transparent border-gray-200 text-gray-400 hover:bg-gray-50"
-                      )}
-                      style={direction === "SELL" ? {
-                        backgroundColor: '#4169E1',
-                        borderColor: '#4169E1',
-                        boxShadow: '0 0 15px rgba(65, 105, 225, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
-                      } : {}}
-                      onClick={() => setDirection("SELL")}
-                      data-testid="button-trader-sell"
-                    >
-                      SELL선택
-                    </Button>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-sm text-gray-600 mb-1">BUY USD</div>
-                    <div className="text-2xl font-bold text-[#f45da7]">
-                      {hasValidRates ? buyRate.toFixed(2) : "--"}
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="lg"
+                    className={cn(
+                      "h-20 rounded-xl transition-all duration-200 flex flex-col items-center justify-center",
+                      direction === "BUY" 
+                        ? "text-white shadow-inner" 
+                        : "bg-transparent border-gray-200 text-gray-700 hover:bg-gray-50"
+                    )}
+                    style={direction === "BUY" ? { 
+                      backgroundColor: '#FF6B6B', 
+                      borderColor: '#FF6B6B',
+                      boxShadow: '0 0 15px rgba(255, 107, 107, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
+                    } : {}}
+                    onClick={() => setDirection("BUY")}
+                    data-testid="button-trader-buy"
+                  >
+                    <div className="text-sm mb-1">BUY USD</div>
+                    <div className="text-lg font-bold">
+                      {hasValidRates ? `MAR + ${spreadValue}` : "MAR + --"}
                     </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className={cn(
-                        "mt-2 w-full rounded-xl transition-all duration-200",
-                        direction === "BUY" 
-                          ? "text-white shadow-inner" 
-                          : "bg-transparent border-gray-200 text-gray-400 hover:bg-gray-50"
-                      )}
-                      style={direction === "BUY" ? { 
-                        backgroundColor: '#FF6B6B', 
-                        borderColor: '#FF6B6B',
-                        boxShadow: '0 0 15px rgba(255, 107, 107, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
-                      } : {}}
-                      onClick={() => setDirection("BUY")}
-                      data-testid="button-trader-buy"
-                    >
-                      BUY선택
-                    </Button>
-                  </div>
+                  </Button>
                 </div>
-              </div>
-
-              {/* Step 2.5: MAR 환율 표시 */}
-              <div className="flex items-center justify-between mb-4 bg-gray-50 p-3 rounded-xl">
-                <span className="text-sm text-gray-600">환율</span>
-                <span className="text-lg font-semibold text-gray-800">
-                  MAR {direction === "BUY" ? buyRate.toFixed(2) : sellRate.toFixed(2)}
-                </span>
               </div>
 
               {/* Step 3: Amount input */}
