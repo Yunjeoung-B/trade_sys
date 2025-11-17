@@ -12,8 +12,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { formatCurrencyAmount, formatInputValue, removeThousandSeparator } from "@/lib/currencyUtils";
-import type { CurrencyPair } from "@shared/schema";
-import { useCustomerRate } from "@/hooks/useCustomerRate";
+import type { CurrencyPair, QuoteRequest } from "@shared/schema";
 
 export default function SwapTradingCustomer() {
   const [selectedPair, setSelectedPair] = useState("USD/KRW");
@@ -33,50 +32,33 @@ export default function SwapTradingCustomer() {
 
   const selectedPairData = currencyPairs.find(p => p.symbol === selectedPair);
 
-  // Convert date to tenor for spread lookup
-  const getTenorFromDate = (date: Date): string | undefined => {
-    const today = new Date();
-    const daysToMaturity = Math.ceil((date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    
-    if (daysToMaturity <= 10) return "1W";
-    if (daysToMaturity <= 45) return "1M";
-    if (daysToMaturity <= 75) return "2M";
-    if (daysToMaturity <= 105) return "3M";
-    if (daysToMaturity <= 270) return "6M";
-    if (daysToMaturity <= 315) return "9M";
-    return "12M";
-  };
+  // Fetch pending quote requests (REQUESTED)
+  const { data: pendingQuotes = [] } = useQuery<QuoteRequest[]>({
+    queryKey: ["/api/quote-requests?status=REQUESTED"],
+    refetchInterval: 5000,
+  });
 
-  const nearTenor = getTenorFromDate(nearDate);
-  const farTenor = getTenorFromDate(farDate);
+  // Fetch approved quotes (QUOTE_READY)
+  const { data: approvedQuotes = [] } = useQuery<QuoteRequest[]>({
+    queryKey: ["/api/quote-requests?status=QUOTE_READY"],
+    refetchInterval: 5000,
+  });
 
-  // Get Near Leg rates
-  const {
-    buyRate: nearBuyRate,
-    sellRate: nearSellRate,
-    isLoading: isNearLoading,
-    isError: isNearError,
-  } = useCustomerRate("Swap", selectedPairData?.id, nearTenor);
+  // Fetch confirmed quotes (CONFIRMED)
+  const { data: confirmedQuotes = [] } = useQuery<QuoteRequest[]>({
+    queryKey: ["/api/quote-requests?status=CONFIRMED"],
+    refetchInterval: 5000,
+  });
 
-  // Get Far Leg rates
-  const {
-    buyRate: farBuyRate,
-    sellRate: farSellRate,
-    isLoading: isFarLoading,
-    isError: isFarError,
-  } = useCustomerRate("Swap", selectedPairData?.id, farTenor);
+  // Filter Swap quotes
+  const swapPendingQuotes = pendingQuotes.filter(q => q.productType === "Swap");
+  const swapApprovedQuotes = approvedQuotes.filter(q => q.productType === "Swap");
+  const swapConfirmedQuotes = confirmedQuotes.filter(q => q.productType === "Swap");
 
-  // Calculate Swap Points: (Far Rate - Near Rate) × 100
-  // For BUY_SELL_USD: Buy USD near, Sell USD far → use buy rates
-  // For SELL_BUY_USD: Sell USD near, Buy USD far → use sell rates
-  const buySwapPoints = (nearBuyRate && farBuyRate) ? (farBuyRate - nearBuyRate) * 100 : null;
-  const sellSwapPoints = (nearSellRate && farSellRate) ? (farSellRate - nearSellRate) * 100 : null;
+  // All Swap quotes combined
+  const allSwapQuotes = [...swapPendingQuotes, ...swapApprovedQuotes, ...swapConfirmedQuotes];
 
-  const isRateLoading = isNearLoading || isFarLoading;
-  const isRateError = isNearError || isFarError;
-  const hasValidRates = buySwapPoints !== null && sellSwapPoints !== null && !isRateError;
-
-  const mutation = useMutation({
+  const quoteRequestMutation = useMutation({
     mutationFn: async (requestData: any) => {
       return apiRequest("POST", "/api/quote-requests", requestData);
     },
@@ -86,7 +68,8 @@ export default function SwapTradingCustomer() {
         description: "외환스왑 가격 요청이 제출되었습니다. 승인을 기다려주세요.",
       });
       setNearAmount("");
-      queryClient.invalidateQueries({ queryKey: ["/api/quote-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/quote-requests?status=REQUESTED"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/quote-requests?status=QUOTE_READY"] });
     },
     onError: () => {
       toast({
@@ -97,16 +80,72 @@ export default function SwapTradingCustomer() {
     },
   });
 
-  const handleRequest = () => {
-    if (!hasValidRates) {
+  const tradeExecutionMutation = useMutation({
+    mutationFn: async ({ quoteId, tradeData }: { quoteId: string; tradeData: any }) => {
+      // Revalidate quote status
+      await queryClient.refetchQueries({ queryKey: ["/api/quote-requests?status=QUOTE_READY"] });
+      
+      const quotes = queryClient.getQueryData<QuoteRequest[]>(["/api/quote-requests?status=QUOTE_READY"]);
+      const currentQuote = quotes?.find(q => q.id === quoteId);
+      
+      if (!currentQuote) {
+        throw new Error("Quote no longer available");
+      }
+      
+      if (currentQuote.status !== "QUOTE_READY") {
+        throw new Error("Quote status has changed");
+      }
+      
+      if (currentQuote.expiresAt && new Date(currentQuote.expiresAt) <= new Date()) {
+        throw new Error("Quote has expired");
+      }
+      
+      // Confirm quote and create trade
+      await apiRequest("POST", `/api/quote-requests/${quoteId}/confirm`);
+      return await apiRequest("POST", "/api/trades", tradeData);
+    },
+    onSuccess: () => {
       toast({
-        title: "환율 오류",
-        description: "현재 거래 가능한 환율이 없습니다. 잠시 후 다시 시도해주세요.",
+        title: "거래 체결 성공",
+        description: "스왑 거래가 성공적으로 체결되었습니다.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/quote-requests?status=REQUESTED"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/quote-requests?status=QUOTE_READY"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/quote-requests?status=CONFIRMED"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/trades"] });
+    },
+    onError: (error: any) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/quote-requests?status=QUOTE_READY"] });
+      toast({
+        title: "거래 실패",
+        description: error?.message || "거래 체결 중 오류가 발생했습니다.",
         variant: "destructive",
       });
-      return;
-    }
+    },
+  });
 
+  const cancelQuoteMutation = useMutation({
+    mutationFn: async (quoteId: string) => {
+      return apiRequest("POST", `/api/quote-requests/${quoteId}/cancel`, {});
+    },
+    onSuccess: () => {
+      toast({
+        title: "요청 취소 완료",
+        description: "가격 요청이 취소되었습니다.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/quote-requests?status=REQUESTED"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/quote-requests?status=QUOTE_READY"] });
+    },
+    onError: () => {
+      toast({
+        title: "취소 실패",
+        description: "요청 취소 중 오류가 발생했습니다.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleRequest = () => {
     if (!selectedPairData || !nearAmount) {
       toast({
         title: "입력 오류",
@@ -116,7 +155,7 @@ export default function SwapTradingCustomer() {
       return;
     }
 
-    mutation.mutate({
+    quoteRequestMutation.mutate({
       productType: "Swap",
       currencyPairId: selectedPairData.id,
       direction,
@@ -129,6 +168,24 @@ export default function SwapTradingCustomer() {
     });
   };
 
+  const handleTradeExecution = (quote: QuoteRequest) => {
+    if (!selectedPairData) return;
+
+    tradeExecutionMutation.mutate({
+      quoteId: quote.id,
+      tradeData: {
+        productType: "Swap",
+        currencyPairId: quote.currencyPairId,
+        direction: quote.direction,
+        amount: quote.nearAmount || quote.amount,
+        amountCurrency: quote.amountCurrency,
+        rate: quote.quotedRate || "0",
+        valueDate: quote.farDate,
+        quoteRequestId: quote.id,
+      },
+    });
+  };
+
   return (
     <div className="p-6">
       <div className="mb-6">
@@ -136,64 +193,58 @@ export default function SwapTradingCustomer() {
         <p className="text-slate-200">두 개의 반대 방향 거래를 동시에 체결합니다</p>
       </div>
 
-      <div className="max-w-md mx-auto">
-            <Card className="p-8 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border-0 text-gray-900">
-              {/* 통화쌍 선택 */}
-              <div className="flex items-center justify-between mb-6">
-                <span className="text-lg font-semibold text-gray-700">통화쌍</span>
-                <Select value={selectedPair} onValueChange={setSelectedPair}>
-                  <SelectTrigger className="w-40 bg-gray-50 border-gray-200 rounded-xl shadow-sm text-lg font-medium" data-testid="select-currency-pair-trader">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {currencyPairs.map((pair) => (
-                      <SelectItem key={pair.id} value={pair.symbol}>
-                        {pair.symbol}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+      <div className="grid grid-cols-2 gap-6">
+        {/* Left Panel: Quote Request Form */}
+        <Card className="p-8 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border-0 text-gray-900">
+          {/* 통화쌍 선택 */}
+          <div className="flex items-center justify-between mb-6">
+            <span className="text-lg font-semibold text-gray-700">통화쌍</span>
+            <Select value={selectedPair} onValueChange={setSelectedPair}>
+              <SelectTrigger className="w-40 bg-gray-50 border-gray-200 rounded-xl shadow-sm text-lg font-medium" data-testid="select-currency-pair-trader">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {currencyPairs.map((pair) => (
+                  <SelectItem key={pair.id} value={pair.symbol} data-testid={`select-item-${pair.symbol}`}>
+                    {pair.symbol}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-              {/* 스왑 포인트 표시 */}
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <div 
-                  className={cn(
-                    "p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200",
-                    direction === "BUY_SELL_USD" 
-                      ? "bg-blue-50 border-blue-500 shadow-lg" 
-                      : "bg-gray-50 border-gray-200 hover:border-gray-300"
-                  )}
-                  onClick={() => setDirection("BUY_SELL_USD")}
-                  data-testid="button-buy-sell-direction-trader"
-                >
-                  <div className="text-sm text-gray-600 mb-2">{selectedPair.split('/')[0]} Buy & Sell</div>
-                  <div className="text-2xl font-bold text-blue-600">
-                    {hasValidRates && buySwapPoints !== null 
-                      ? (buySwapPoints >= 0 ? '+' : '') + buySwapPoints.toFixed(1)
-                      : '--'}
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">현물매수/선물매도</div>
-                </div>
-                <div 
-                  className={cn(
-                    "p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200",
-                    direction === "SELL_BUY_USD" 
-                      ? "bg-red-50 border-red-500 shadow-lg" 
-                      : "bg-gray-50 border-gray-200 hover:border-gray-300"
-                  )}
-                  onClick={() => setDirection("SELL_BUY_USD")}
-                  data-testid="button-sell-buy-direction-trader"
-                >
-                  <div className="text-sm text-gray-600 mb-2">{selectedPair.split('/')[0]} Sell & Buy</div>
-                  <div className="text-2xl font-bold text-red-500">
-                    {hasValidRates && sellSwapPoints !== null
-                      ? (sellSwapPoints >= 0 ? '+' : '') + sellSwapPoints.toFixed(1)
-                      : '--'}
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">현물매도/선물매수</div>
-                </div>
+          {/* 방향 선택 */}
+          <div className="mb-6">
+            <div className="text-sm text-gray-700 font-medium mb-2">거래 방향</div>
+            <div className="grid grid-cols-2 gap-4">
+              <div 
+                className={cn(
+                  "p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200",
+                  direction === "BUY_SELL_USD" 
+                    ? "bg-blue-50 border-blue-500 shadow-lg" 
+                    : "bg-gray-50 border-gray-200 hover:border-gray-300"
+                )}
+                onClick={() => setDirection("BUY_SELL_USD")}
+                data-testid="button-buy-sell-direction-trader"
+              >
+                <div className="text-sm text-gray-600 mb-1">{selectedPair.split('/')[0]} Buy & Sell</div>
+                <div className="text-xs text-gray-500">현물매수/선물매도</div>
               </div>
+              <div 
+                className={cn(
+                  "p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200",
+                  direction === "SELL_BUY_USD" 
+                    ? "bg-red-50 border-red-500 shadow-lg" 
+                    : "bg-gray-50 border-gray-200 hover:border-gray-300"
+                )}
+                onClick={() => setDirection("SELL_BUY_USD")}
+                data-testid="button-sell-buy-direction-trader"
+              >
+                <div className="text-sm text-gray-600 mb-1">{selectedPair.split('/')[0]} Sell & Buy</div>
+                <div className="text-xs text-gray-500">현물매도/선물매수</div>
+              </div>
+            </div>
+          </div>
 
               {/* 날짜 선택 */}
               <div className="mb-6 grid grid-cols-2 gap-4">
@@ -301,7 +352,7 @@ export default function SwapTradingCustomer() {
               </div>
 
               {/* 거래 내역 요약 */}
-              {nearAmount && hasValidRates && (
+              {nearAmount && (
                 <div className="mb-6 p-4 bg-gray-50 rounded-2xl">
                   <div className="text-sm font-medium text-gray-700 mb-2">거래 내역</div>
                   <div className="space-y-1 text-sm text-gray-600">
@@ -331,7 +382,7 @@ export default function SwapTradingCustomer() {
               {/* 가격 요청 버튼 */}
               <Button
                 onClick={handleRequest}
-                disabled={mutation.isPending || !nearAmount || !hasValidRates}
+                disabled={quoteRequestMutation.isPending || !nearAmount}
                 className="w-full py-6 text-xl font-bold rounded-2xl text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
                 style={{ 
                   backgroundColor: direction === "BUY_SELL_USD" ? '#4169E1' : '#FF6B6B',
@@ -341,10 +392,130 @@ export default function SwapTradingCustomer() {
                 }}
                 data-testid="button-request-quote-trader"
               >
-                {mutation.isPending ? "처리 중..." : "가격 요청"}
+                {quoteRequestMutation.isPending ? "처리 중..." : "가격 요청"}
               </Button>
             </Card>
-          </div>
+
+        {/* Right Panel: Swap Quote List */}
+        <Card className="p-8 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border-0 text-gray-900">
+          <h3 className="text-lg font-bold mb-4 text-gray-800 flex items-center">
+            <CalendarIcon className="w-5 h-5 mr-2 text-blue-600" />
+            스왑 거래 요청 ({allSwapQuotes.length}건)
+          </h3>
+
+          {allSwapQuotes.length === 0 ? (
+            <div className="text-center py-12 text-gray-500">
+              <CalendarIcon className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p className="text-sm">진행 중인 스왑 거래가 없습니다</p>
+              <p className="text-xs mt-2">스왑 거래를 요청하면 여기에 표시됩니다</p>
+            </div>
+          ) : (
+            <div className="space-y-4 max-h-[600px] overflow-y-auto">
+              {allSwapQuotes.map((quote) => {
+                const pair = currencyPairs.find(p => p.id === quote.currencyPairId);
+                if (!pair) return null;
+
+                const isExpired = quote.expiresAt && new Date(quote.expiresAt) <= new Date();
+
+                return (
+                  <div
+                    key={quote.id}
+                    className={cn(
+                      "p-4 rounded-xl border-2 transition-all",
+                      quote.status === "CONFIRMED"
+                        ? "border-green-300 bg-green-50"
+                        : quote.status === "QUOTE_READY"
+                          ? "border-blue-300 bg-blue-50"
+                          : isExpired
+                            ? "border-red-300 bg-red-50"
+                            : "border-gray-200 bg-gray-50"
+                    )}
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <div className="font-semibold text-gray-800">
+                            {pair.symbol} {quote.direction === "BUY_SELL_USD" ? "Buy&Sell" : "Sell&Buy"}
+                          </div>
+                          <span className={cn(
+                            "px-2 py-0.5 rounded-full text-xs font-bold",
+                            quote.status === "CONFIRMED"
+                              ? "bg-green-600 text-white"
+                              : quote.status === "QUOTE_READY"
+                                ? "bg-blue-600 text-white"
+                                : "bg-gray-500 text-white"
+                          )}>
+                            {quote.status === "CONFIRMED" ? "체결완료" : quote.status === "QUOTE_READY" ? "승인됨" : "요청중"}
+                          </span>
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          주문번호: {quote.id.slice(0, 8)}...
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Near Date:</span>
+                        <span className="font-medium text-gray-800">
+                          {quote.nearDate ? format(new Date(quote.nearDate), "yyyy-MM-dd") : "--"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Far Date:</span>
+                        <span className="font-medium text-gray-800">
+                          {quote.farDate ? format(new Date(quote.farDate), "yyyy-MM-dd") : "--"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">거래금액:</span>
+                        <span className="font-medium text-gray-800">
+                          {quote.amountCurrency || "USD"}{" "}
+                          {formatCurrencyAmount(
+                            parseFloat(quote.nearAmount || quote.amount || "0"),
+                            quote.amountCurrency || "USD"
+                          )}
+                        </span>
+                      </div>
+
+                      {/* Show Swap Points for QUOTE_READY or CONFIRMED */}
+                      {(quote.status === "QUOTE_READY" || quote.status === "CONFIRMED") && quote.quotedRate && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">{quote.status === "CONFIRMED" ? "체결 포인트:" : "스왑 포인트:"}</span>
+                          <span className={cn(
+                            "font-medium",
+                            quote.status === "CONFIRMED" ? "text-green-600" : "text-blue-600"
+                          )}>
+                            {parseFloat(quote.quotedRate) >= 0 ? '+' : ''}{parseFloat(quote.quotedRate).toFixed(1)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Execute Trade Button for QUOTE_READY */}
+                    {quote.status === "QUOTE_READY" && !isExpired && (
+                      <Button
+                        onClick={() => handleTradeExecution(quote)}
+                        disabled={tradeExecutionMutation.isPending}
+                        className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white"
+                        data-testid={`button-execute-trade-${quote.id}`}
+                      >
+                        {tradeExecutionMutation.isPending ? "처리 중..." : "거래 요청"}
+                      </Button>
+                    )}
+
+                    {isExpired && quote.status === "QUOTE_READY" && (
+                      <div className="text-xs text-red-600 font-medium mt-2">
+                        유효기간 만료
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </Card>
+      </div>
     </div>
   );
 }
