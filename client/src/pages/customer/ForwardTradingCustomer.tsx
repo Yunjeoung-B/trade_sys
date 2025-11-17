@@ -1012,41 +1012,41 @@ export default function ForwardTradingCustomer() {
 
       {/* Info Dialog */}
       <Dialog open={showInfoDialog} onOpenChange={setShowInfoDialog}>
-        <DialogContent className="sm:max-w-2xl bg-gradient-to-br from-white via-blue-50 to-purple-50 border-0 shadow-2xl">
-          <DialogHeader className="space-y-4">
-            <DialogTitle className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent text-center tracking-tight">
-              선물환 가격 요청
+        <DialogContent className="sm:max-w-xl bg-white border border-gray-200 shadow-2xl">
+          <DialogHeader className="space-y-2">
+            <DialogTitle className="text-2xl font-bold text-gray-900 tracking-tight">
+              Important Notes
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 pt-2">
-            <div className="bg-white/70 backdrop-blur-md p-6 rounded-2xl border border-blue-200/50 shadow-lg space-y-4">
+          <div className="space-y-3 pt-2">
+            <div className="bg-gray-50/50 p-5 rounded-xl border border-gray-100 space-y-3">
               <div className="flex items-start space-x-3">
-                <div className="w-3 h-3 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 mt-1.5 flex-shrink-0 shadow-md"></div>
-                <div className="text-lg font-bold text-gray-800 leading-relaxed">
+                <div className="w-2 h-2 rounded-full bg-teal-500 mt-2 flex-shrink-0"></div>
+                <div className="text-sm text-gray-700 leading-relaxed">
                   선물환 거래를 위해서는 CHOICE FX에 가격을 요청해야 합니다.
                 </div>
               </div>
               <div className="flex items-start space-x-3">
-                <div className="w-3 h-3 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 mt-1.5 flex-shrink-0 shadow-md"></div>
-                <div className="text-lg font-bold text-gray-800 leading-relaxed">
+                <div className="w-2 h-2 rounded-full bg-teal-500 mt-2 flex-shrink-0"></div>
+                <div className="text-sm text-gray-700 leading-relaxed">
                   요청 현황은 오른쪽 패널에서 확인 가능합니다.
                 </div>
               </div>
               <div className="flex items-start space-x-3">
-                <div className="w-3 h-3 rounded-full bg-gradient-to-br from-green-400 to-green-600 mt-1.5 flex-shrink-0 shadow-md"></div>
-                <div className="text-lg font-bold text-gray-800 leading-relaxed">
-                  관리자 승인되면 가격 요청 건이 <span className="text-green-600 font-black underline decoration-2 underline-offset-2">"가격확인가능"</span> 보드로 이동합니다.
+                <div className="w-2 h-2 rounded-full bg-teal-500 mt-2 flex-shrink-0"></div>
+                <div className="text-sm text-gray-700 leading-relaxed">
+                  관리자 승인되면 가격 요청 건이 <span className="text-teal-600 font-semibold">"가격확인가능"</span> 보드로 이동합니다.
                 </div>
               </div>
               <div className="flex items-start space-x-3">
-                <div className="w-3 h-3 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 mt-1.5 flex-shrink-0 shadow-md"></div>
-                <div className="text-lg font-bold text-gray-800 leading-relaxed">
+                <div className="w-2 h-2 rounded-full bg-teal-500 mt-2 flex-shrink-0"></div>
+                <div className="text-sm text-gray-700 leading-relaxed">
                   승인 후 거래 가능한 환율이 표시됩니다.
                 </div>
               </div>
             </div>
           </div>
-          <div className="flex items-center space-x-3 mt-6 px-2">
+          <div className="flex items-center space-x-2 mt-4 px-1">
             <Checkbox
               id="dont-show-again"
               checked={dontShowAgain}
@@ -1056,12 +1056,12 @@ export default function ForwardTradingCustomer() {
             />
             <label
               htmlFor="dont-show-again"
-              className="text-base font-bold text-gray-700 cursor-pointer select-none"
+              className="text-sm text-gray-600 cursor-pointer select-none"
             >
               다시 보지 않기
             </label>
           </div>
-          <div className="flex gap-4 mt-6">
+          <div className="flex gap-3 mt-5">
             <Button
               onClick={() => {
                 if (dontShowAgain) {
@@ -1070,7 +1070,7 @@ export default function ForwardTradingCustomer() {
                 setShowInfoDialog(false);
                 setDontShowAgain(false);
               }}
-              className="flex-1 py-6 text-lg font-bold rounded-2xl bg-gray-100 hover:bg-gray-200 text-gray-800 border-2 border-gray-300 transition-all duration-200 shadow-lg hover:shadow-xl"
+              className="flex-1 py-2.5 text-sm font-medium rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 transition-all duration-200"
               data-testid="button-cancel-quote-info"
             >
               취소
@@ -1086,11 +1086,7 @@ export default function ForwardTradingCustomer() {
                 }
               }}
               disabled={dialogType === "quote_request" && quoteRequestMutation.isPending}
-              className="flex-1 py-6 text-lg font-bold rounded-2xl text-white transition-all duration-200 shadow-lg hover:shadow-2xl disabled:opacity-50"
-              style={{
-                backgroundColor: '#2dd4bf',
-                boxShadow: '0 0 20px rgba(45, 212, 191, 0.6), inset 0 2px 4px rgba(0,0,0,0.3)'
-              }}
+              className="flex-1 py-2.5 text-sm font-medium rounded-lg bg-teal-500 hover:bg-teal-600 text-white transition-all duration-200 disabled:opacity-50"
               data-testid="button-confirm-quote-info"
             >
               {dialogType === "quote_request" && quoteRequestMutation.isPending ? "처리 중..." : "확인"}
