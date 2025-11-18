@@ -142,6 +142,21 @@ export const autoApprovalSettings = pgTable("auto_approval_settings", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Swap points (settlement date-based rates)
+export const swapPoints = pgTable("swap_points", {
+  id: varchar("id").primaryKey(),
+  currencyPairId: varchar("currency_pair_id").references(() => currencyPairs.id),
+  tenor: varchar("tenor"), // 1M, 3M, 6M, 1Y, etc. or null for specific dates
+  settlementDate: timestamp("settlement_date"), // specific settlement date
+  days: integer("days"), // number of days from spot
+  swapPoint: decimal("swap_point", { precision: 12, scale: 6 }).notNull(), // swap point value
+  source: varchar("source").default("excel"), // excel, api, manual
+  uploadedBy: varchar("uploaded_by").references(() => users.id),
+  uploadedAt: timestamp("uploaded_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -215,6 +230,18 @@ export const insertAutoApprovalSettingSchema = createInsertSchema(autoApprovalSe
   updatedAt: true,
 });
 
+export const insertSwapPointSchema = createInsertSchema(swapPoints).omit({
+  id: true,
+  uploadedAt: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  swapPoint: z.union([z.string(), z.number()]).transform(val => String(val)),
+  settlementDate: z.union([z.string(), z.date(), z.null()]).transform(val => 
+    val === null ? null : (typeof val === 'string' ? new Date(val) : val)
+  ).optional(),
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -236,6 +263,9 @@ export type InsertTrade = z.infer<typeof insertTradeSchema>;
 
 export type AutoApprovalSetting = typeof autoApprovalSettings.$inferSelect;
 export type InsertAutoApprovalSetting = z.infer<typeof insertAutoApprovalSettingSchema>;
+
+export type SwapPoint = typeof swapPoints.$inferSelect;
+export type InsertSwapPoint = z.infer<typeof insertSwapPointSchema>;
 
 // Infomax API Status Schema
 export const infomaxStatusSchema = z.object({
