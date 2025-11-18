@@ -8,11 +8,7 @@ import Layout from "@/components/Layout";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/Landing";
 import Login from "@/pages/Login";
-import SpotTrading from "@/pages/SpotTrading";
-import ForwardTrading from "@/pages/ForwardTrading";
-import SwapTrading from "@/pages/SwapTrading";
-import MARTrading from "@/pages/MARTrading";
-import ExchangeRates from "@/pages/ExchangeRates";
+import UnderDevelopment from "@/pages/UnderDevelopment";
 import TradeStatus from "@/pages/TradeStatus";
 import SpotTradingCustomer from "@/pages/customer/SpotTradingCustomer";
 import ForwardTradingCustomer from "@/pages/customer/ForwardTradingCustomer";
@@ -48,21 +44,31 @@ function Router() {
         </>
       ) : (
         <Layout>
-          <Route path="/" component={SpotTrading} />
+          <Route path="/" component={SpotTradingCustomer} />
           
           {/* 고객용 거래 화면 */}
           <Route path="/customer/spot" component={SpotTradingCustomer} />
           <Route path="/customer/forward" component={ForwardTradingCustomer} />
           <Route path="/customer/swap" component={SwapTradingCustomer} />
           <Route path="/customer/mar" component={MARTradingCustomer} />
-          
-          {/* 트레이더용 거래 화면 */}
-          <Route path="/spot" component={SpotTrading} />
-          <Route path="/forward" component={ForwardTrading} />
-          <Route path="/swap" component={SwapTrading} />
-          <Route path="/mar" component={MARTrading} />
-          <Route path="/rates" component={ExchangeRates} />
           <Route path="/trades" component={TradeStatus} />
+          
+          {/* 개발 중 화면 (관리자 전용) */}
+          <Route path="/spot">
+            {user?.role === "admin" ? <UnderDevelopment /> : <NotFound />}
+          </Route>
+          <Route path="/forward">
+            {user?.role === "admin" ? <UnderDevelopment /> : <NotFound />}
+          </Route>
+          <Route path="/swap">
+            {user?.role === "admin" ? <UnderDevelopment /> : <NotFound />}
+          </Route>
+          <Route path="/mar">
+            {user?.role === "admin" ? <UnderDevelopment /> : <NotFound />}
+          </Route>
+          <Route path="/rates">
+            {user?.role === "admin" ? <UnderDevelopment /> : <NotFound />}
+          </Route>
           
           {/* Admin routes - 관리자 권한 확인 */}
           <Route path="/admin">
