@@ -952,6 +952,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create single swap point (admin only)
+  app.post("/api/swap-points", isAdmin, async (req, res) => {
+    try {
+      const userId = req.user?.id || 'system';
+      const swapPointData = {
+        ...req.body,
+        uploadedBy: userId,
+      };
+      
+      const created = await storage.createSwapPoint(swapPointData);
+      res.json(created);
+    } catch (error) {
+      console.error("Create swap point error:", error);
+      res.status(500).json({ message: "Failed to create swap point" });
+    }
+  });
+
   // Excel file upload endpoint
   app.post("/api/admin/swap-points/upload-excel", isAdmin, upload.single('file'), async (req, res) => {
     try {

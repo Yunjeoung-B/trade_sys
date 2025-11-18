@@ -65,6 +65,13 @@ UI Style: Gradient backgrounds (slate-800 → blue-900 → purple-900), rounded-
 - **Bloomberg API Dashboard**: Comprehensive admin interface for Bloomberg API management with connection testing, real-time data display, and bulk import capabilities
 - **HTTP Polling System**: WebSocket 연결 문제 해결을 위해 HTTP 폴링 기반 실시간 데이터 시스템으로 변경 (2초 간격 업데이트)
 - **Infomax API Integration**: Real-time market data from Infomax API (https://infomaxy.einfomax.co.kr/api/usdkrw/tick) with data=order parameter and broker=SMB configuration, 10-second background polling, automatic rate limiting compliance, and graceful error handling
+- **FX Swap Point Management**: Comprehensive admin interface (FX Swap 가격 모니터링 page) for managing swap points with Excel upload, manual CRUD operations, and linear interpolation for intermediate settlement dates
+  - Excel upload with strict validation (tenor, settlement_date, days, swap_point columns)
+  - Atomic validation: Invalid numeric values (NaN) abort entire upload with row-specific error messages
+  - Linear interpolation utility for calculating swap points for intermediate settlement dates not in dataset
+  - Currency pair-scoped queries with proper cache invalidation
+  - Real-time Infomax Forward API integration displaying MID_PRICE data
+  - Admin-only access controls on all swap points endpoints
 
 ## Business Logic Architecture
 - **Quote Calculation**: Layered pricing model combining source rates with group-specific spreads, product spreads, currency spreads, and tenor spreads
