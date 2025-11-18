@@ -187,7 +187,9 @@ export default function InfomaxAPI() {
                         <div>
                           <div className="text-red-400 font-semibold text-sm">마지막 오류</div>
                           <div className="text-red-300 text-sm mt-1" data-testid="text-last-error">
-                            {apiStatus.lastApiError}
+                            {typeof apiStatus.lastApiError === 'string' 
+                              ? apiStatus.lastApiError 
+                              : JSON.stringify(apiStatus.lastApiError)}
                           </div>
                         </div>
                       </div>

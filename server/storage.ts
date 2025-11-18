@@ -6,6 +6,7 @@ import {
   quoteRequests,
   trades,
   autoApprovalSettings,
+  swapPoints,
   type User,
   type InsertUser,
   type CurrencyPair,
@@ -20,6 +21,8 @@ import {
   type InsertTrade,
   type AutoApprovalSetting,
   type InsertAutoApprovalSetting,
+  type SwapPoint,
+  type InsertSwapPoint,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, sql } from "drizzle-orm";
@@ -83,6 +86,13 @@ export interface IStorage {
   // Auto approval settings
   getAutoApprovalSetting(userId: string): Promise<AutoApprovalSetting | undefined>;
   upsertAutoApprovalSetting(setting: InsertAutoApprovalSetting): Promise<AutoApprovalSetting>;
+
+  // Swap points
+  getSwapPoints(currencyPairId?: string): Promise<SwapPoint[]>;
+  createSwapPoint(swapPoint: InsertSwapPoint): Promise<SwapPoint>;
+  deleteSwapPoint(id: string): Promise<void>;
+  getSwapPointByTenor(currencyPairId: string, tenor: string): Promise<SwapPoint | undefined>;
+  getSwapPointByDays(currencyPairId: string, days: number): Promise<SwapPoint | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -646,6 +656,49 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return setting;
+  }
+
+  // Swap points
+  async getSwapPoints(currencyPairId?: string): Promise<SwapPoint[]> {
+    if (currencyPairId) {
+      return await db
+        .select()
+        .from(swapPoints)
+        .where(eq(swapPoints.currencyPairId, currencyPairId))
+        .orderBy(desc(swapPoints.days));
+    }
+    return await db.select().from(swapPoints).orderBy(desc(swapPoints.days));
+  }
+
+  async createSwapPoint(swapPointData: InsertSwapPoint): Promise<SwapPoint> {
+    const [swapPoint] = await db
+      .insert(swapPoints)
+      .values({
+        id: generateId(),
+        ...swapPointData,
+      })
+      .returning();
+    return swapPoint;
+  }
+
+  async deleteSwapPoint(id: string): Promise<void> {
+    await db.delete(swapPoints).where(eq(swapPoints.id, id));
+  }
+
+  async getSwapPointByTenor(currencyPairId: string, tenor: string): Promise<SwapPoint | undefined> {
+    const [swapPoint] = await db
+      .select()
+      .from(swapPoints)
+      .where(and(eq(swapPoints.currencyPairId, currencyPairId), eq(swapPoints.tenor, tenor)));
+    return swapPoint;
+  }
+
+  async getSwapPointByDays(currencyPairId: string, days: number): Promise<SwapPoint | undefined> {
+    const [swapPoint] = await db
+      .select()
+      .from(swapPoints)
+      .where(and(eq(swapPoints.currencyPairId, currencyPairId), eq(swapPoints.days, days)));
+    return swapPoint;
   }
 }
 

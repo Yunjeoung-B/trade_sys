@@ -7,6 +7,8 @@ import { promisify } from "util";
 import { excelMonitor } from "./excelMonitor";
 import * as path from "path";
 import * as fs from "fs";
+import multer from "multer";
+import { parseSwapPointsExcel, validateSwapPoints } from "./utils/excelParser";
 import {
   insertUserSchema,
   insertCurrencyPairSchema,
@@ -22,6 +24,27 @@ import { Strategy as LocalStrategy } from "passport-local";
 import connectPg from "connect-pg-simple";
 
 const execAsync = promisify(exec);
+
+// Multer configuration for file uploads (memory storage)
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    // Accept only Excel files
+    if (
+      file.mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+      file.mimetype === 'application/vnd.ms-excel' ||
+      file.originalname.endsWith('.xlsx') ||
+      file.originalname.endsWith('.xls')
+    ) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only Excel files (.xlsx, .xls) are allowed'));
+    }
+  }
+});
 
 // Bloomberg streaming process
 let bloombergStreamProcess: any = null;
@@ -892,6 +915,139 @@ export async function registerRoutes(app: Express): Promise<Server> {
         error: "Internal server error",
         simulationMode: true 
       });
+    }
+  });
+
+  // Infomax Forward API routes
+  app.get("/api/admin/infomax/forward", isAdmin, async (req, res) => {
+    try {
+      const { infomaxService } = await import('./services/infomaxService');
+      const broker = req.query.broker as string || 'KMB';
+      const result = await infomaxService.fetchForwardData(broker);
+      
+      if (!result.success) {
+        return res.status(result.simulationMode ? 200 : 429).json(result);
+      }
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Infomax Forward API error:", error);
+      res.status(500).json({ 
+        success: false, 
+        error: "Internal server error",
+        simulationMode: true 
+      });
+    }
+  });
+
+  // Swap Points routes (admin only)
+  app.get("/api/swap-points", isAdmin, async (req, res) => {
+    try {
+      const currencyPairId = req.query.currencyPairId as string;
+      const swapPoints = await storage.getSwapPoints(currencyPairId);
+      res.json(swapPoints);
+    } catch (error) {
+      console.error("Get swap points error:", error);
+      res.status(500).json({ message: "Failed to get swap points" });
+    }
+  });
+
+  // Excel file upload endpoint
+  app.post("/api/admin/swap-points/upload-excel", isAdmin, upload.single('file'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+
+      const currencyPairId = req.body.currencyPairId;
+      if (!currencyPairId) {
+        return res.status(400).json({ 
+          success: false,
+          message: "Currency pair ID is required" 
+        });
+      }
+
+      // Verify currency pair exists
+      const currencyPair = await storage.getCurrencyPairById(currencyPairId);
+      if (!currencyPair) {
+        return res.status(400).json({ 
+          success: false,
+          message: "Invalid currency pair ID" 
+        });
+      }
+
+      const userId = req.user?.id || 'system';
+
+      // Parse and validate Excel file (throws on invalid data)
+      const swapPoints = parseSwapPointsExcel(req.file.buffer, currencyPairId, userId);
+      
+      // Validate parsed data structure
+      validateSwapPoints(swapPoints);
+
+      // Store in database
+      const results = [];
+      for (const point of swapPoints) {
+        const created = await storage.createSwapPoint(point);
+        results.push(created);
+      }
+
+      res.json({ 
+        success: true, 
+        message: `${results.length} swap points uploaded successfully`,
+        data: results 
+      });
+    } catch (error: any) {
+      console.error("Excel upload error:", error);
+      res.status(400).json({ 
+        success: false,
+        message: error.message || "Failed to upload Excel file" 
+      });
+    }
+  });
+
+  app.post("/api/admin/swap-points/upload", isAdmin, async (req, res) => {
+    try {
+      const { currencyPairId, swapPoints } = req.body;
+      
+      if (!currencyPairId || !Array.isArray(swapPoints)) {
+        return res.status(400).json({ message: "Invalid request data" });
+      }
+
+      const userId = req.user?.id;
+      const results = [];
+
+      for (const point of swapPoints) {
+        const created = await storage.createSwapPoint({
+          currencyPairId,
+          tenor: point.tenor,
+          settlementDate: point.settlementDate,
+          days: point.days,
+          swapPoint: point.swapPoint,
+          source: 'excel',
+          uploadedBy: userId,
+        });
+        results.push(created);
+      }
+
+      res.json({ 
+        success: true, 
+        message: `${results.length} swap points uploaded successfully`,
+        data: results 
+      });
+    } catch (error) {
+      console.error("Upload swap points error:", error);
+      res.status(500).json({ message: "Failed to upload swap points" });
+    }
+  });
+
+  app.delete("/api/admin/swap-points/:id", isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteSwapPoint(id);
+      res.json({ success: true, message: "Swap point deleted" });
+    } catch (error) {
+      console.error("Delete swap point error:", error);
+      res.status(500).json({ message: "Failed to delete swap point" });
     }
   });
 
