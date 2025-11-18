@@ -176,8 +176,8 @@ const mockLimitOrders: LimitOrderItem[] = [
 export default function TradeStatus() {
   const [, setLocation] = useLocation();
   const [mainTab, setMainTab] = useState<"quote" | "limit">("quote");
-  const [quoteTab, setQuoteTab] = useState("all");
-  const [limitTab, setLimitTab] = useState("all");
+  const [quoteTab, setQuoteTab] = useState("requested");
+  const [limitTab, setLimitTab] = useState("pending");
   const [quoteRequests, setQuoteRequests] = useState<QuoteRequestItem[]>(mockQuoteRequests);
   const [limitOrders, setLimitOrders] = useState<LimitOrderItem[]>(mockLimitOrders);
 
@@ -244,8 +244,8 @@ export default function TradeStatus() {
     switch (status) {
       case "REQUESTED":
         return {
-          icon: "💬",
-          label: "가격요청",
+          icon: "⏳",
+          label: "대기중",
           color: "bg-yellow-100 text-yellow-800 border-yellow-200",
           buttonLabel: "🔒",
           buttonDisabled: true
@@ -261,7 +261,7 @@ export default function TradeStatus() {
       case "CONFIRMED":
         return {
           icon: "💼",
-          label: "거래체결완료",
+          label: "체결완료",
           color: "bg-blue-100 text-blue-800 border-blue-200", 
           buttonLabel: "상세보기",
           buttonDisabled: false
@@ -269,7 +269,7 @@ export default function TradeStatus() {
       case "EXPIRED":
         return {
           icon: "⏰",
-          label: "거래시한만료",
+          label: "만료됨",
           color: "bg-gray-100 text-gray-800 border-gray-200",
           buttonLabel: "만료됨",
           buttonDisabled: true
@@ -282,7 +282,7 @@ export default function TradeStatus() {
       case "PENDING":
         return {
           icon: "⏳",
-          label: "대기 중",
+          label: "대기중",
           color: "bg-blue-100 text-blue-800 border-blue-200",
           buttonLabel: "취소",
           buttonDisabled: false
@@ -290,7 +290,7 @@ export default function TradeStatus() {
       case "FILLED":
         return {
           icon: "✅",
-          label: "체결 완료",
+          label: "체결완료",
           color: "bg-green-100 text-green-800 border-green-200",
           buttonLabel: "상세보기",
           buttonDisabled: false
@@ -314,8 +314,7 @@ export default function TradeStatus() {
     }
   };
 
-  const filterQuoteRequests = (status?: string) => {
-    if (!status || status === "all") return quoteRequests;
+  const filterQuoteRequests = (status: string) => {
     return quoteRequests.filter(item => {
       switch (status) {
         case "requested": return item.status === "REQUESTED";
@@ -327,8 +326,7 @@ export default function TradeStatus() {
     });
   };
 
-  const filterLimitOrders = (status?: string) => {
-    if (!status || status === "all") return limitOrders;
+  const filterLimitOrders = (status: string) => {
     return limitOrders.filter(order => {
       switch (status) {
         case "pending": return order.status === "PENDING";
@@ -367,13 +365,13 @@ export default function TradeStatus() {
           <h1 className="text-3xl font-bold text-white mb-2">
             거래 현황
           </h1>
-          <p className="text-slate-300">가격 요청 및 지정가 주문 현황을 확인하고 관리하세요</p>
+          <p className="text-slate-300">시장가 주문 및 지정가 주문 현황을 확인하고 관리하세요</p>
         </div>
 
         <Tabs value={mainTab} onValueChange={(v) => setMainTab(v as "quote" | "limit")}>
           <TabsList className="grid w-full grid-cols-2 mb-6 bg-slate-800/50">
             <TabsTrigger value="quote" className="flex items-center gap-2 data-[state=active]:bg-teal-600" data-testid="tab-quote-requests">
-              💬 가격요청
+              💬 시장가 주문
               <Badge variant="secondary" className="text-xs">
                 {quoteRequests.length}
               </Badge>
@@ -390,15 +388,9 @@ export default function TradeStatus() {
             <Card className="backdrop-blur-sm bg-slate-800/50 border border-slate-700 shadow-xl rounded-3xl">
               <div className="p-6">
                 <Tabs value={quoteTab} onValueChange={setQuoteTab}>
-                  <TabsList className="grid w-full grid-cols-5 mb-6">
-                    <TabsTrigger value="all" className="flex items-center gap-2" data-testid="quote-tab-all">
-                      전체보기
-                      <Badge variant="secondary" className="text-xs">
-                        {getQuoteTabCount("all")}
-                      </Badge>
-                    </TabsTrigger>
+                  <TabsList className="grid w-full grid-cols-4 mb-6">
                     <TabsTrigger value="requested" className="flex items-center gap-2" data-testid="quote-tab-requested">
-                      가격요청
+                      대기중
                       <Badge variant="secondary" className="text-xs">
                         {getQuoteTabCount("requested")}
                       </Badge>
@@ -409,21 +401,21 @@ export default function TradeStatus() {
                         {getQuoteTabCount("quote_ready")}
                       </Badge>
                     </TabsTrigger>
-                    <TabsTrigger value="confirmed" className="flex items-center gap-2" data-testid="quote-tab-confirmed">
-                      거래체결완료
-                      <Badge variant="secondary" className="text-xs">
-                        {getQuoteTabCount("confirmed")}
-                      </Badge>
-                    </TabsTrigger>
                     <TabsTrigger value="expired" className="flex items-center gap-2" data-testid="quote-tab-expired">
-                      거래시한만료
+                      만료됨
                       <Badge variant="secondary" className="text-xs">
                         {getQuoteTabCount("expired")}
                       </Badge>
                     </TabsTrigger>
+                    <TabsTrigger value="confirmed" className="flex items-center gap-2" data-testid="quote-tab-confirmed">
+                      체결완료
+                      <Badge variant="secondary" className="text-xs">
+                        {getQuoteTabCount("confirmed")}
+                      </Badge>
+                    </TabsTrigger>
                   </TabsList>
 
-                  {["all", "requested", "quote_ready", "confirmed", "expired"].map(tabValue => (
+                  {["requested", "quote_ready", "expired", "confirmed"].map(tabValue => (
                     <TabsContent key={tabValue} value={tabValue}>
                       <div className="rounded-2xl border border-slate-600 overflow-hidden">
                         <Table>
@@ -516,7 +508,7 @@ export default function TradeStatus() {
                         {filterQuoteRequests(tabValue).length === 0 && (
                           <div className="text-center py-12 text-slate-400">
                             <div className="text-4xl mb-4">📊</div>
-                            <p>해당 상태의 가격요청이 없습니다</p>
+                            <p>해당 상태의 시장가 주문이 없습니다</p>
                           </div>
                         )}
                       </div>
@@ -531,23 +523,11 @@ export default function TradeStatus() {
             <Card className="backdrop-blur-sm bg-slate-800/50 border border-slate-700 shadow-xl rounded-3xl">
               <div className="p-6">
                 <Tabs value={limitTab} onValueChange={setLimitTab}>
-                  <TabsList className="grid w-full grid-cols-5 mb-6">
-                    <TabsTrigger value="all" className="flex items-center gap-2" data-testid="limit-tab-all">
-                      전체보기
-                      <Badge variant="secondary" className="text-xs">
-                        {getLimitTabCount("all")}
-                      </Badge>
-                    </TabsTrigger>
+                  <TabsList className="grid w-full grid-cols-4 mb-6">
                     <TabsTrigger value="pending" className="flex items-center gap-2" data-testid="limit-tab-pending">
-                      대기 중
+                      대기중
                       <Badge variant="secondary" className="text-xs">
                         {getLimitTabCount("pending")}
-                      </Badge>
-                    </TabsTrigger>
-                    <TabsTrigger value="filled" className="flex items-center gap-2" data-testid="limit-tab-filled">
-                      체결 완료
-                      <Badge variant="secondary" className="text-xs">
-                        {getLimitTabCount("filled")}
                       </Badge>
                     </TabsTrigger>
                     <TabsTrigger value="cancelled" className="flex items-center gap-2" data-testid="limit-tab-cancelled">
@@ -562,9 +542,15 @@ export default function TradeStatus() {
                         {getLimitTabCount("expired")}
                       </Badge>
                     </TabsTrigger>
+                    <TabsTrigger value="filled" className="flex items-center gap-2" data-testid="limit-tab-filled">
+                      체결완료
+                      <Badge variant="secondary" className="text-xs">
+                        {getLimitTabCount("filled")}
+                      </Badge>
+                    </TabsTrigger>
                   </TabsList>
 
-                  {["all", "pending", "filled", "cancelled", "expired"].map(tabValue => (
+                  {["pending", "cancelled", "expired", "filled"].map(tabValue => (
                     <TabsContent key={tabValue} value={tabValue}>
                       <div className="rounded-2xl border border-slate-600 overflow-hidden">
                         <Table>
