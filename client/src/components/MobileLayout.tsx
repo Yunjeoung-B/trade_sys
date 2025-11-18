@@ -14,12 +14,10 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
   const { user } = useAuth();
 
   const menuItems = [
-    { path: "/", icon: Home, label: "대시보드" },
-    { path: "/spot", icon: TrendingUp, label: "현물환" },
-    { path: "/forward", icon: Calendar, label: "선물환" },
-    { path: "/swap", icon: RotateCcw, label: "스왑" },
-    { path: "/mar", icon: BarChart3, label: "MAR" },
-    { path: "/rates", icon: TrendingUp, label: "환율" },
+    { path: "/customer/spot", icon: TrendingUp, label: "현물환 거래" },
+    { path: "/customer/forward", icon: Calendar, label: "선물환 거래" },
+    { path: "/customer/swap", icon: RotateCcw, label: "스왑 거래" },
+    { path: "/customer/mar", icon: BarChart3, label: "MAR 거래" },
     { path: "/trades", icon: BarChart3, label: "거래현황" },
   ];
 
