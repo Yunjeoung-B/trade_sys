@@ -2,6 +2,7 @@ import { infomaxRateLimiter } from './infomaxRateLimiter';
 
 const INFOMAX_API_BASE = 'https://infomaxy.einfomax.co.kr';
 const INFOMAX_API_ENDPOINT = '/api/usdkrw/tick';
+const INFOMAX_FORWARD_ENDPOINT = '/api/usdkrwforward/tick';
 
 interface InfomaxApiResponse {
   success: boolean;
@@ -136,6 +137,98 @@ class InfomaxService {
     }
     
     return this.testConnection(params);
+  }
+
+  async fetchForwardData(broker?: string): Promise<InfomaxApiResponse> {
+    const limitCheck = infomaxRateLimiter.canProceed();
+    
+    if (!limitCheck.allowed) {
+      return {
+        success: false,
+        error: limitCheck.reason,
+        simulationMode: true,
+      };
+    }
+
+    if (!this.hasApiKey()) {
+      infomaxRateLimiter.recordError('API key not configured');
+      return {
+        success: false,
+        error: 'INFOMAX_API_KEY environment variable not set',
+        simulationMode: true,
+      };
+    }
+
+    try {
+      const queryParams = new URLSearchParams();
+      if (broker) queryParams.append('broker', broker);
+      
+      const url = `${INFOMAX_API_BASE}${INFOMAX_FORWARD_ENDPOINT}${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const responseText = await response.text();
+      const responseSize = Buffer.byteLength(responseText, 'utf8');
+
+      if (!response.ok) {
+        const errorMsg = `Forward API returned ${response.status}: ${response.statusText}`;
+        infomaxRateLimiter.recordRequest(responseSize);
+        infomaxRateLimiter.recordError(errorMsg);
+        
+        return {
+          success: false,
+          error: errorMsg,
+          simulationMode: true,
+          responseSize,
+        };
+      }
+
+      infomaxRateLimiter.recordRequest(responseSize);
+
+      let data;
+      try {
+        data = JSON.parse(responseText);
+        
+        if (data.success === false) {
+          infomaxRateLimiter.recordError(data.message || 'Forward API returned error');
+          return {
+            success: false,
+            error: data.message || 'Forward API returned error',
+            simulationMode: false,
+            responseSize,
+          };
+        }
+        
+        return {
+          success: true,
+          data: data.results || data,
+          simulationMode: false,
+          responseSize,
+        };
+      } catch {
+        return {
+          success: true,
+          data: responseText,
+          simulationMode: false,
+          responseSize,
+        };
+      }
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      infomaxRateLimiter.recordRequest(0);
+      infomaxRateLimiter.recordError(errorMsg);
+      
+      return {
+        success: false,
+        error: errorMsg,
+        simulationMode: true,
+      };
+    }
   }
 
   getStatus() {
