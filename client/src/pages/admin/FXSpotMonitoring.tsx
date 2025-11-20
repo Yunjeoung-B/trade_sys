@@ -1,9 +1,17 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ArrowUp, ArrowDown, Minus, RefreshCw } from "lucide-react";
+import { ArrowUp, ArrowDown, Minus, RefreshCw, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface MarketRate {
   id: string;
@@ -24,6 +32,9 @@ interface CurrencyPair {
 }
 
 export default function FXSpotMonitoring() {
+  const [selectedCurrencyPairForHistory, setSelectedCurrencyPairForHistory] = useState<string>("");
+  const [historyHours, setHistoryHours] = useState<number>(24);
+
   const { data: marketRates, isLoading, refetch } = useQuery<MarketRate[]>({
     queryKey: ["/api/market-rates"],
     refetchInterval: 5000,
@@ -31,6 +42,11 @@ export default function FXSpotMonitoring() {
 
   const { data: currencyPairs } = useQuery<CurrencyPair[]>({
     queryKey: ["/api/currency-pairs"],
+  });
+
+  const { data: marketRateHistory } = useQuery<MarketRate[]>({
+    queryKey: ["/api/admin/market-rates/history", selectedCurrencyPairForHistory, historyHours],
+    enabled: !!selectedCurrencyPairForHistory,
   });
 
   const infomaxRates = marketRates?.filter(rate => rate.source === "infomax") || [];
@@ -215,6 +231,106 @@ export default function FXSpotMonitoring() {
             })}
           </div>
         )}
+
+        {/* Historical Data Section */}
+        <Card className="bg-white/10 backdrop-blur-sm border-white/20 rounded-3xl shadow-2xl">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <History className="h-6 w-6 text-teal-400" />
+                <CardTitle className="text-white text-xl">환율 기록 (Historical Data)</CardTitle>
+              </div>
+              <div className="flex items-center gap-3">
+                <Select value={historyHours.toString()} onValueChange={(val) => setHistoryHours(parseInt(val))}>
+                  <SelectTrigger className="w-32 bg-white/10 border-white/20 text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1시간</SelectItem>
+                    <SelectItem value="6">6시간</SelectItem>
+                    <SelectItem value="24">24시간</SelectItem>
+                    <SelectItem value="72">3일</SelectItem>
+                    <SelectItem value="168">7일</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={selectedCurrencyPairForHistory} onValueChange={setSelectedCurrencyPairForHistory}>
+                  <SelectTrigger className="w-48 bg-white/10 border-white/20 text-white">
+                    <SelectValue placeholder="통화쌍 선택" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {currencyPairs?.map((pair) => (
+                      <SelectItem key={pair.id} value={pair.id}>
+                        {pair.symbol}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {!selectedCurrencyPairForHistory ? (
+              <div className="text-center py-12 text-slate-400">
+                통화쌍을 선택하여 환율 기록을 조회하세요
+              </div>
+            ) : !marketRateHistory || marketRateHistory.length === 0 ? (
+              <div className="text-center py-12 text-slate-400">
+                선택한 기간 동안의 환율 기록이 없습니다
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-white">
+                  <thead>
+                    <tr className="border-b border-white/20">
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-slate-300">시간</th>
+                      <th className="text-right py-3 px-4 text-sm font-semibold text-slate-300">매수 환율</th>
+                      <th className="text-right py-3 px-4 text-sm font-semibold text-slate-300">매도 환율</th>
+                      <th className="text-right py-3 px-4 text-sm font-semibold text-slate-300">중간 환율</th>
+                      <th className="text-right py-3 px-4 text-sm font-semibold text-slate-300">스프레드</th>
+                      <th className="text-center py-3 px-4 text-sm font-semibold text-slate-300">소스</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {marketRateHistory.map((rate, index) => {
+                      const buyRate = parseFloat(rate.buyRate);
+                      const sellRate = parseFloat(rate.sellRate);
+                      const midRate = (buyRate + sellRate) / 2;
+                      const spread = buyRate - sellRate;
+                      
+                      return (
+                        <tr
+                          key={rate.id}
+                          className={`border-b border-white/10 hover:bg-white/5 ${index === 0 ? 'bg-teal-500/10' : ''}`}
+                        >
+                          <td className="py-3 px-4 text-sm font-mono">
+                            {new Date(rate.timestamp).toLocaleString('ko-KR')}
+                          </td>
+                          <td className="py-3 px-4 text-right text-sm font-mono text-blue-300">
+                            {buyRate.toFixed(2)}
+                          </td>
+                          <td className="py-3 px-4 text-right text-sm font-mono text-purple-300">
+                            {sellRate.toFixed(2)}
+                          </td>
+                          <td className="py-3 px-4 text-right text-sm font-mono text-white">
+                            {midRate.toFixed(2)}
+                          </td>
+                          <td className="py-3 px-4 text-right text-sm font-mono text-yellow-300">
+                            {spread.toFixed(2)}
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <Badge variant="outline" className="text-xs border-green-500/30 text-green-400">
+                              {rate.source}
+                            </Badge>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* 정보 카드 */}
         <Card className="bg-white/10 backdrop-blur-sm border-white/20 rounded-3xl shadow-2xl">
