@@ -24,6 +24,7 @@ import InfomaxAPI from "@/pages/admin/InfomaxAPI";
 import ExcelMonitoring from "@/pages/admin/ExcelMonitoring";
 import FXSpotMonitoring from "@/pages/admin/FXSpotMonitoring";
 import FXSwapMonitoring from "@/pages/admin/FXSwapMonitoring";
+import ForwardRateCalculator from "@/pages/admin/ForwardRateCalculator";
 
 function Router() {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -74,6 +75,9 @@ function Router() {
           {/* Admin routes - 관리자 권한 확인 */}
           <Route path="/admin">
             {user?.role === "admin" ? <AdminDashboard /> : <NotFound />}
+          </Route>
+          <Route path="/admin/forward-calculator">
+            {user?.role === "admin" ? <ForwardRateCalculator /> : <NotFound />}
           </Route>
           <Route path="/admin/fx-spot">
             {user?.role === "admin" ? <FXSpotMonitoring /> : <NotFound />}

@@ -940,6 +940,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Market rates historical data (admin only)
+  app.get("/api/admin/market-rates/history", isAdmin, async (req, res) => {
+    try {
+      const currencyPairId = req.query.currencyPairId as string;
+      const hours = parseInt(req.query.hours as string) || 24;
+      
+      if (!currencyPairId) {
+        return res.status(400).json({ message: "Currency pair ID is required" });
+      }
+      
+      const history = await storage.getMarketRateHistory(currencyPairId, hours);
+      res.json(history);
+    } catch (error) {
+      console.error("Get market rate history error:", error);
+      res.status(500).json({ message: "Failed to get market rate history" });
+    }
+  });
+
   // Swap Points routes (admin only)
   app.get("/api/swap-points", isAdmin, async (req, res) => {
     try {
@@ -955,8 +973,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create single swap point (admin only)
   app.post("/api/swap-points", isAdmin, async (req, res) => {
     try {
-      const userId = req.user?.id || 'system';
-      const swapPointData = {
+      const userId = (req.user as any)?.id || 'system';
+      const swapPointData: InsertSwapPoint = {
         ...req.body,
         uploadedBy: userId,
       };
@@ -985,7 +1003,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Verify currency pair exists
-      const currencyPair = await storage.getCurrencyPairById(currencyPairId);
+      const currencyPair = await storage.getCurrencyPair(currencyPairId);
       if (!currencyPair) {
         return res.status(400).json({ 
           success: false,
@@ -993,7 +1011,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const userId = req.user?.id || 'system';
+      const userId = (req.user as any)?.id || 'system';
 
       // Parse and validate Excel file (throws on invalid data)
       const swapPoints = parseSwapPointsExcel(req.file.buffer, currencyPairId, userId);
@@ -1030,7 +1048,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid request data" });
       }
 
-      const userId = req.user?.id;
+      const userId = (req.user as any)?.id;
       const results = [];
 
       for (const point of swapPoints) {
