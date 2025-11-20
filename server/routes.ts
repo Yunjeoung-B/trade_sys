@@ -970,6 +970,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Swap Points historical data (admin only)
+  app.get("/api/admin/swap-points/history", isAdmin, async (req, res) => {
+    try {
+      const currencyPairId = req.query.currencyPairId as string;
+      const hours = parseInt(req.query.hours as string) || 24;
+      
+      if (!currencyPairId) {
+        return res.status(400).json({ message: "Currency pair ID is required" });
+      }
+      
+      const history = await storage.getSwapPointHistory(currencyPairId, hours);
+      res.json(history);
+    } catch (error) {
+      console.error("Get swap point history error:", error);
+      res.status(500).json({ message: "Failed to get swap point history" });
+    }
+  });
+
   // Create single swap point (admin only)
   app.post("/api/swap-points", isAdmin, async (req, res) => {
     try {

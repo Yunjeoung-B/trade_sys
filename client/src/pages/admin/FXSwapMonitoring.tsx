@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RefreshCw, Upload, Trash2 } from "lucide-react";
+import { RefreshCw, Upload, Trash2, History } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { CurrencyPair } from "@shared/schema";
@@ -35,6 +35,8 @@ export default function FXSwapMonitoring() {
   const { toast } = useToast();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedCurrencyPair, setSelectedCurrencyPair] = useState<string>("");
+  const [selectedCurrencyPairForHistory, setSelectedCurrencyPairForHistory] = useState<string>("");
+  const [historyHours, setHistoryHours] = useState<number>(24);
 
   const { data: currencyPairs } = useQuery<CurrencyPair[]>({
     queryKey: ["/api/currency-pairs"],
@@ -56,6 +58,11 @@ export default function FXSwapMonitoring() {
       return response.json();
     },
     enabled: !!selectedCurrencyPair,
+  });
+
+  const { data: swapPointHistory } = useQuery<SwapPoint[]>({
+    queryKey: ["/api/admin/swap-points/history", selectedCurrencyPairForHistory, historyHours],
+    enabled: !!selectedCurrencyPairForHistory,
   });
 
   // Set default currency pair when loaded
@@ -327,6 +334,106 @@ export default function FXSwapMonitoring() {
             ) : (
               <div className="text-center py-12 text-slate-400">
                 저장된 Swap Point가 없습니다
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Historical Data Section */}
+        <Card className="bg-white/10 backdrop-blur-sm border-white/20 rounded-3xl shadow-2xl">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <History className="h-6 w-6 text-teal-400" />
+                <CardTitle className="text-white text-xl">Swap Points 업로드 기록 (Historical Data)</CardTitle>
+              </div>
+              <div className="flex items-center gap-3">
+                <Select value={historyHours.toString()} onValueChange={(val) => setHistoryHours(parseInt(val))}>
+                  <SelectTrigger className="w-32 bg-white/10 border-white/20 text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1시간</SelectItem>
+                    <SelectItem value="6">6시간</SelectItem>
+                    <SelectItem value="24">24시간</SelectItem>
+                    <SelectItem value="72">3일</SelectItem>
+                    <SelectItem value="168">7일</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={selectedCurrencyPairForHistory} onValueChange={setSelectedCurrencyPairForHistory}>
+                  <SelectTrigger className="w-48 bg-white/10 border-white/20 text-white">
+                    <SelectValue placeholder="통화쌍 선택" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {currencyPairs?.map((pair) => (
+                      <SelectItem key={pair.id} value={pair.id}>
+                        {pair.symbol}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {!selectedCurrencyPairForHistory ? (
+              <div className="text-center py-12 text-slate-400">
+                통화쌍을 선택하여 Swap Points 업로드 기록을 조회하세요
+              </div>
+            ) : !swapPointHistory || swapPointHistory.length === 0 ? (
+              <div className="text-center py-12 text-slate-400">
+                선택한 기간 동안의 업로드 기록이 없습니다
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-white">
+                  <thead>
+                    <tr className="border-b border-white/20">
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-slate-300">업로드 시간</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-slate-300">Tenor</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-slate-300">결제일</th>
+                      <th className="text-right py-3 px-4 text-sm font-semibold text-slate-300">Days</th>
+                      <th className="text-right py-3 px-4 text-sm font-semibold text-slate-300">Swap Point</th>
+                      <th className="text-center py-3 px-4 text-sm font-semibold text-slate-300">소스</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {swapPointHistory.map((point, index) => {
+                      return (
+                        <tr
+                          key={point.id}
+                          className={`border-b border-white/10 hover:bg-white/5 ${index === 0 ? 'bg-teal-500/10' : ''}`}
+                        >
+                          <td className="py-3 px-4 text-sm font-mono">
+                            {point.uploadedAt ? new Date(point.uploadedAt).toLocaleString('ko-KR') : '-'}
+                          </td>
+                          <td className="py-3 px-4 text-sm text-blue-300">
+                            {point.tenor || '-'}
+                          </td>
+                          <td className="py-3 px-4 text-sm text-purple-300">
+                            {point.settlementDate
+                              ? (() => {
+                                  const date = new Date(point.settlementDate);
+                                  return !isNaN(date.getTime()) ? date.toLocaleDateString('ko-KR') : '-';
+                                })()
+                              : '-'}
+                          </td>
+                          <td className="py-3 px-4 text-right text-sm font-mono text-white">
+                            {point.days || '-'}
+                          </td>
+                          <td className="py-3 px-4 text-right text-sm font-mono text-yellow-300">
+                            {parseFloat(point.swapPoint).toFixed(4)}
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <Badge variant="outline" className="text-xs border-green-500/30 text-green-400">
+                              {point.source}
+                            </Badge>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             )}
           </CardContent>

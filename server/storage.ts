@@ -247,6 +247,22 @@ export class DatabaseStorage implements IStorage {
       .orderBy(marketRates.timestamp);
   }
 
+  async getSwapPointHistory(currencyPairId: string, hours: number): Promise<SwapPoint[]> {
+    const hoursAgo = new Date();
+    hoursAgo.setHours(hoursAgo.getHours() - hours);
+
+    return await db
+      .select()
+      .from(swapPoints)
+      .where(
+        and(
+          eq(swapPoints.currencyPairId, currencyPairId),
+          sql`${swapPoints.uploadedAt} >= ${hoursAgo}`
+        )
+      )
+      .orderBy(desc(swapPoints.uploadedAt));
+  }
+
   // Spread settings
   async getSpreadSettings(): Promise<SpreadSetting[]> {
     return await db.select().from(spreadSettings).where(eq(spreadSettings.isActive, true));
