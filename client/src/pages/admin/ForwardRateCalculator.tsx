@@ -66,8 +66,8 @@ function calculateSettlementDate(spotDate: Date, tenor: string): Date {
   const tenorUpper = tenor.toUpperCase();
   
   if (tenorUpper === "SPOT") return new Date(spotDate);
-  if (tenorUpper === "ON") return addBusinessDays(new Date(), 1);
-  if (tenorUpper === "TN") return addBusinessDays(new Date(), 2);
+  if (tenorUpper === "ON") return addBusinessDays(new Date(), 1); // 익영업일 (T+1)
+  if (tenorUpper === "TN") return new Date(spotDate); // TN은 Spot 기준일로 고정
   
   const monthMatch = tenorUpper.match(/^(\d+)M$/);
   if (monthMatch) {
@@ -89,8 +89,18 @@ function calculateDaysFromSpot(spotDate: Date, tenor: string): number {
   const tenorUpper = tenor.toUpperCase();
   
   if (tenorUpper === "SPOT") return 0;
-  if (tenorUpper === "ON") return 1;
-  if (tenorUpper === "TN") return 2;
+  
+  // ON: 오늘과 익영업일의 실제 calendar days 차이
+  if (tenorUpper === "ON") {
+    const onDate = addBusinessDays(new Date(), 1);
+    return getDaysBetween(new Date(), onDate);
+  }
+  
+  // TN: ON의 만기일과 Spot의 실제 calendar days 차이
+  if (tenorUpper === "TN") {
+    const onDate = addBusinessDays(new Date(), 1);
+    return getDaysBetween(onDate, spotDate);
+  }
   
   const monthMatch = tenorUpper.match(/^(\d+)M$/);
   if (monthMatch) {

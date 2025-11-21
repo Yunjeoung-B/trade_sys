@@ -101,18 +101,29 @@ export function getDaysBetween(startDate: Date, endDate: Date): number {
  * Convert tenor to approximate days from spot
  * @param tenor - Tenor string like "ON", "TN", "1M", "2M", "3M", etc.
  * 
- * Days are calculated relative to Spot (T+2):
- * - ON (T+1) is 1 day before Spot → -1
- * - TN (T+2) is same as Spot → 0
- * - 1M, 2M, etc. are after Spot → positive values
+ * Days calculation:
+ * - SPOT: 0 (same as Spot)
+ * - ON: calendar days between today and T+1 (익영업일)
+ * - TN: calendar days between ON and Spot (ON 만기일과 Spot 차이)
+ * - 1M, 2M, etc.: calendar days from Spot to settlement date
  */
-export function tenorToApproxDays(tenor: string): number {
+export function tenorToApproxDays(tenor: string, baseDate: Date = new Date(), calendar?: HolidayCalendar): number {
   const tenorUpper = tenor.toUpperCase();
   
-  // Special cases (relative to Spot date)
   if (tenorUpper === "SPOT") return 0;
-  if (tenorUpper === "ON") return -1;  // T+1, one day before Spot (T+2)
-  if (tenorUpper === "TN") return 0;   // T+2, same as Spot
+  
+  // ON: 오늘과 익영업일의 실제 calendar days 차이
+  if (tenorUpper === "ON") {
+    const onDate = addBusinessDays(baseDate, 1, calendar);
+    return getDaysBetween(baseDate, onDate);
+  }
+  
+  // TN: ON의 만기일과 Spot의 실제 calendar days 차이
+  if (tenorUpper === "TN") {
+    const onDate = addBusinessDays(baseDate, 1, calendar);
+    const spotDate = getSpotDate(baseDate, calendar);
+    return getDaysBetween(onDate, spotDate);
+  }
   
   // Parse month tenors (1M, 2M, etc.)
   const monthMatch = tenorUpper.match(/^(\d+)M$/);
@@ -144,14 +155,18 @@ export function tenorToSettlementDate(
 ): Date {
   const tenorUpper = tenor.toUpperCase();
   
-  // Special cases - these are from TODAY, not from spot
+  // SPOT: Spot 기준일
+  if (tenorUpper === "SPOT") {
+    return new Date(spotDate);
+  }
+  
+  // ON: 익영업일 (T+1)
   if (tenorUpper === "ON") {
     return addBusinessDays(new Date(), 1, calendar);
   }
+  
+  // TN: Spot 기준일로 고정
   if (tenorUpper === "TN") {
-    return addBusinessDays(new Date(), 2, calendar);
-  }
-  if (tenorUpper === "SPOT") {
     return new Date(spotDate);
   }
   
