@@ -118,9 +118,7 @@ export default function ForwardRateCalculator() {
     return localStorage.getItem('forwardCalc_selectedPairId') || "";
   });
   const [spotRate, setSpotRate] = useState<string>("1350.00");
-  const [lastSavedSpotRate, setLastSavedSpotRate] = useState<string>(() => {
-    return localStorage.getItem('forwardCalc_lastSavedSpotRate') || "";
-  });
+  const [lastSavedSpotRate, setLastSavedSpotRate] = useState<string>("");
   const [spotDate, setSpotDate] = useState<Date>(getSpotDate());
   const [tenorRows, setTenorRows] = useState<TenorRow[]>([]);
   const [targetSettlementDate, setTargetSettlementDate] = useState<string>("");
@@ -144,10 +142,13 @@ export default function ForwardRateCalculator() {
     }
   }, [currencyPairs, selectedPairId]);
 
-  // Save selectedPairId to localStorage whenever it changes
+  // Save selectedPairId to localStorage whenever it changes, and restore lastSavedSpotRate
   useEffect(() => {
     if (selectedPairId) {
       localStorage.setItem('forwardCalc_selectedPairId', selectedPairId);
+      // Load the saved spot rate for this currency pair
+      const saved = localStorage.getItem(`forwardCalc_lastSavedSpotRate_${selectedPairId}`);
+      setLastSavedSpotRate(saved || "");
     }
   }, [selectedPairId]);
 
@@ -208,10 +209,10 @@ export default function ForwardRateCalculator() {
     },
     onSuccess: (savedRate) => {
       queryClient.invalidateQueries({ queryKey: ["/api/market-rates"] });
-      // Save the last saved spot rate to localStorage
+      // Save the last saved spot rate to localStorage with currency pair ID
       const rateString = savedRate.toString();
       setLastSavedSpotRate(rateString);
-      localStorage.setItem('forwardCalc_lastSavedSpotRate', rateString);
+      localStorage.setItem(`forwardCalc_lastSavedSpotRate_${selectedPairId}`, rateString);
       toast({
         title: "저장 완료 ✓",
         description: `Spot Rate ${rateString}이(가) 저장되었습니다.`,
