@@ -1,24 +1,56 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import { fileURLToPath, URL } from "url";
+import path from "path";
+import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 
-export default defineConfig({
-  plugins: [react()],
-  root: fileURLToPath(new URL("./client", import.meta.url)), // 루트를 client로 지정
-  resolve: {
-    alias: {
-      "@": fileURLToPath(new URL("./client/src", import.meta.url)), // @ -> src
+const port = Number(process.env.PORT) || 5173;
+const replSlug = process.env.REPL_SLUG;
+const replOwner = process.env.REPL_OWNER;
+const isReplit =
+  typeof replSlug !== "undefined" && typeof replOwner !== "undefined";
+
+export default defineConfig(async () => {
+  const plugins: any[] = [react(), runtimeErrorOverlay()];
+
+  // Replit 개발 환경일 때만 cartographer 플러그인을 로드
+  if (process.env.NODE_ENV !== "production" && isReplit) {
+    try {
+      const m = await import("@replit/vite-plugin-cartographer");
+      if (m && typeof m.cartographer === "function") {
+        plugins.push(m.cartographer());
+      }
+    } catch (e) {
+      console.warn("Failed to load cartographer plugin:", e);
+    }
+  }
+
+  return {
+    plugins,
+    resolve: {
+      alias: {
+        "@": path.resolve(import.meta.url, "..", "client", "src"),
+        "@shared": path.resolve(import.meta.url, "..", "shared"),
+        "@assets": path.resolve(import.meta.url, "..", "attached_assets"),
+      },
     },
-  },
-  build: {
-    outDir: fileURLToPath(new URL("./dist", import.meta.url)), // 빌드 결과
-    rollupOptions: {
-      input: fileURLToPath(new URL("./client/src/main.tsx", import.meta.url)), // entry point 지정
+    root: path.resolve(import.meta.url, "..", "client"),
+    build: {
+      outDir: path.resolve(import.meta.url, "..", "dist/public"),
+      emptyOutDir: true,
     },
-  },
-  server: {
-    fs: {
-      allow: [fileURLToPath(new URL("./client", import.meta.url))],
+    server: {
+      host: true,
+      port,
+      hmr: {
+        protocol: isReplit ? "wss" : "ws",
+        host: isReplit ? `${replSlug}.${replOwner}.repl.co` : "localhost",
+        port,
+        clientPort: port,
+      },
+      fs: {
+        strict: true,
+        deny: ["**/.*"],
+      },
     },
-  },
+  };
 });
