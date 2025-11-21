@@ -23,6 +23,11 @@ import session from "express-session";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import connectPg from "connect-pg-simple";
+import { 
+  getSwapPointForDate, 
+  calculateTheoreticalRate, 
+  getApplicableSpread 
+} from "./utils/forwardEngine";
 
 const execAsync = promisify(exec);
 
@@ -317,6 +322,137 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "Spread setting deleted successfully" });
     } catch (error) {
       res.status(500).json({ message: "Failed to delete spread setting" });
+    }
+  });
+
+  // Quote preview - calculate theoretical rates before requesting quote
+  app.post("/api/quotes/preview", isAuthenticated, async (req: any, res) => {
+    try {
+      const { currencyPairId, productType, settlementDate, nearDate, farDate } = req.body;
+
+      if (!currencyPairId || !productType) {
+        return res.status(400).json({ message: "Currency pair and product type are required" });
+      }
+
+      // Get current spot rate
+      const marketRates = await storage.getLatestMarketRates();
+      const marketRate = marketRates.find(r => r.currencyPairId === currencyPairId);
+      
+      if (!marketRate) {
+        return res.status(404).json({ message: "Market rate not found for currency pair" });
+      }
+
+      const spotRate = parseFloat(marketRate.buyRate); // Use buy rate as base
+
+      if (productType === "FORWARD") {
+        if (!settlementDate) {
+          return res.status(400).json({ message: "Settlement date is required for Forward" });
+        }
+
+        // Get swap point for settlement date
+        const swapPoint = await getSwapPointForDate(
+          currencyPairId,
+          new Date(settlementDate),
+          storage
+        );
+
+        if (swapPoint === null) {
+          return res.status(404).json({ 
+            message: "Swap points not available for this settlement date. Please contact admin." 
+          });
+        }
+
+        // Calculate theoretical rate
+        const theoreticalRate = calculateTheoreticalRate(spotRate, swapPoint);
+
+        // Get applicable spread
+        const spread = await getApplicableSpread(
+          req.user.id,
+          currencyPairId,
+          productType,
+          undefined, // No specific tenor for forward
+          storage
+        );
+
+        // Apply spread to theoretical rate
+        const customerRate = theoreticalRate + (spread / 100);
+
+        res.json({
+          productType: "FORWARD",
+          spotRate,
+          swapPoint,
+          theoreticalRate,
+          spread,
+          customerRate,
+          settlementDate,
+        });
+
+      } else if (productType === "SWAP") {
+        if (!nearDate || !farDate) {
+          return res.status(400).json({ message: "Near and far dates are required for Swap" });
+        }
+
+        // Get swap points for both legs
+        const nearSwapPoint = await getSwapPointForDate(
+          currencyPairId,
+          new Date(nearDate),
+          storage
+        );
+
+        const farSwapPoint = await getSwapPointForDate(
+          currencyPairId,
+          new Date(farDate),
+          storage
+        );
+
+        if (nearSwapPoint === null || farSwapPoint === null) {
+          return res.status(404).json({ 
+            message: "Swap points not available for these dates. Please contact admin." 
+          });
+        }
+
+        // Calculate theoretical rates for both legs
+        const nearTheoreticalRate = calculateTheoreticalRate(spotRate, nearSwapPoint);
+        const farTheoreticalRate = calculateTheoreticalRate(spotRate, farSwapPoint);
+
+        // Get applicable spread (apply only to far leg)
+        const spread = await getApplicableSpread(
+          req.user.id,
+          currencyPairId,
+          productType,
+          undefined,
+          storage
+        );
+
+        // Apply spread only to far leg
+        const nearCustomerRate = nearTheoreticalRate; // No spread on near leg
+        const farCustomerRate = farTheoreticalRate + (spread / 100); // Spread on far leg only
+
+        res.json({
+          productType: "SWAP",
+          spotRate,
+          near: {
+            date: nearDate,
+            swapPoint: nearSwapPoint,
+            theoreticalRate: nearTheoreticalRate,
+            customerRate: nearCustomerRate,
+          },
+          far: {
+            date: farDate,
+            swapPoint: farSwapPoint,
+            theoreticalRate: farTheoreticalRate,
+            spread,
+            customerRate: farCustomerRate,
+          },
+        });
+
+      } else {
+        return res.status(400).json({ message: "Invalid product type. Use FORWARD or SWAP" });
+      }
+
+    } catch (error: any) {
+      console.error("Quote preview error:", error);
+      res.status(500).json({ message: error.message || "Failed to calculate quote preview" });
     }
   });
 
