@@ -488,8 +488,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { status } = req.query;
       
       if (req.user.role === "admin") {
-        const requests = await storage.getPendingQuoteRequests();
-        res.json(requests);
+        // If status filter is provided, use filtered query
+        if (status) {
+          const requests = await storage.getQuoteRequestsByStatus(status as string);
+          res.json(requests);
+        } else {
+          const requests = await storage.getPendingQuoteRequests();
+          res.json(requests);
+        }
       } else {
         // If status filter is provided, use filtered query
         if (status) {

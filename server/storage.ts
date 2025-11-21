@@ -68,6 +68,7 @@ export interface IStorage {
   // Quote requests
   createQuoteRequest(request: InsertQuoteRequest): Promise<QuoteRequest>;
   getPendingQuoteRequests(): Promise<QuoteRequest[]>;
+  getQuoteRequestsByStatus(status: string): Promise<QuoteRequest[]>;
   approveQuoteRequest(id: string, adminId: string, quotedRate: number): Promise<QuoteRequest | undefined>;
   rejectQuoteRequest(id: string, adminId: string): Promise<QuoteRequest | undefined>;
   getUserQuoteRequests(userId: string): Promise<QuoteRequest[]>;
@@ -438,6 +439,14 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(quoteRequests)
       .where(eq(quoteRequests.status, "REQUESTED"))
+      .orderBy(desc(quoteRequests.createdAt));
+  }
+
+  async getQuoteRequestsByStatus(status: string): Promise<QuoteRequest[]> {
+    return await db
+      .select()
+      .from(quoteRequests)
+      .where(eq(quoteRequests.status, status))
       .orderBy(desc(quoteRequests.createdAt));
   }
 
