@@ -1,59 +1,24 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import path from "path";
-import { fileURLToPath } from "url";
-import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
+import { fileURLToPath, URL } from "url";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const port = Number(process.env.PORT) || 5173;
-const replSlug = process.env.REPL_SLUG;
-const replOwner = process.env.REPL_OWNER;
-const isReplit =
-  typeof replSlug !== "undefined" && typeof replOwner !== "undefined";
-
-export default defineConfig(async () => {
-  const plugins = [react(), runtimeErrorOverlay()];
-
-  if (process.env.NODE_ENV !== "production" && isReplit) {
-    try {
-      const m = await import("@replit/vite-plugin-cartographer");
-      if (m && typeof m.cartographer === "function") {
-        plugins.push(m.cartographer());
-      }
-    } catch (e) {
-      console.warn("Failed to load cartographer plugin:", e);
-    }
-  }
-
-  return {
-    plugins,
-    resolve: {
-      alias: {
-        "@": path.resolve(__dirname, "client/src"),
-        "@shared": path.resolve(__dirname, "shared"),
-        "@assets": path.resolve(__dirname, "attached_assets"),
-      },
+export default defineConfig({
+  plugins: [react()],
+  root: fileURLToPath(new URL("./client", import.meta.url)), // 루트를 client로 지정
+  resolve: {
+    alias: {
+      "@": fileURLToPath(new URL("./client/src", import.meta.url)), // @ -> src
     },
-    root: path.resolve(__dirname, "client"),
-    build: {
-      outDir: path.resolve(__dirname, "dist/public"),
-      emptyOutDir: true,
+  },
+  build: {
+    outDir: fileURLToPath(new URL("./dist", import.meta.url)), // 빌드 결과
+    rollupOptions: {
+      input: fileURLToPath(new URL("./client/src/main.tsx", import.meta.url)), // entry point 지정
     },
-    server: {
-      host: true,
-      port,
-      hmr: {
-        protocol: isReplit ? "wss" : "ws",
-        host: isReplit ? `${replSlug}.${replOwner}.repl.co` : "localhost",
-        port,
-        clientPort: port,
-      },
-      fs: {
-        strict: true,
-        deny: ["**/.*"],
-      },
+  },
+  server: {
+    fs: {
+      allow: [fileURLToPath(new URL("./client", import.meta.url))],
     },
-  };
+  },
 });
