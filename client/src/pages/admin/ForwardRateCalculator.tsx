@@ -118,6 +118,9 @@ export default function ForwardRateCalculator() {
     return localStorage.getItem('forwardCalc_selectedPairId') || "";
   });
   const [spotRate, setSpotRate] = useState<string>("1350.00");
+  const [lastSavedSpotRate, setLastSavedSpotRate] = useState<string>(() => {
+    return localStorage.getItem('forwardCalc_lastSavedSpotRate') || "";
+  });
   const [spotDate, setSpotDate] = useState<Date>(getSpotDate());
   const [tenorRows, setTenorRows] = useState<TenorRow[]>([]);
   const [targetSettlementDate, setTargetSettlementDate] = useState<string>("");
@@ -203,8 +206,11 @@ export default function ForwardRateCalculator() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/market-rates"] });
+      // Save the last saved spot rate to localStorage
+      setLastSavedSpotRate(spotRate);
+      localStorage.setItem('forwardCalc_lastSavedSpotRate', spotRate);
       toast({
-        title: "저장 완료",
+        title: "저장 완료 ✓",
         description: `Spot Rate ${spotRate}이(가) 저장되었습니다.`,
       });
     },
@@ -476,7 +482,7 @@ export default function ForwardRateCalculator() {
                   
                   <div>
                     <Label className="text-white mb-2 block">Spot Rate (현물환율)</Label>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 mb-2">
                       <Input
                         type="number"
                         step="0.01"
@@ -497,6 +503,11 @@ export default function ForwardRateCalculator() {
                         저장
                       </Button>
                     </div>
+                    {lastSavedSpotRate && (
+                      <p className="text-xs text-teal-200" data-testid="text-last-saved-spot">
+                        마지막 저장값: {lastSavedSpotRate}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
