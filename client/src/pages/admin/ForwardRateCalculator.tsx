@@ -202,16 +202,19 @@ export default function ForwardRateCalculator() {
         source: "manual",
       };
       
-      return apiRequest("POST", "/api/market-rates/manual", data);
+      // Return the rate so it can be used in onSuccess
+      await apiRequest("POST", "/api/market-rates/manual", data);
+      return rate; // Return the rate value
     },
-    onSuccess: () => {
+    onSuccess: (savedRate) => {
       queryClient.invalidateQueries({ queryKey: ["/api/market-rates"] });
       // Save the last saved spot rate to localStorage
-      setLastSavedSpotRate(spotRate);
-      localStorage.setItem('forwardCalc_lastSavedSpotRate', spotRate);
+      const rateString = savedRate.toString();
+      setLastSavedSpotRate(rateString);
+      localStorage.setItem('forwardCalc_lastSavedSpotRate', rateString);
       toast({
         title: "저장 완료 ✓",
-        description: `Spot Rate ${spotRate}이(가) 저장되었습니다.`,
+        description: `Spot Rate ${rateString}이(가) 저장되었습니다.`,
       });
     },
     onError: (error: any) => {
