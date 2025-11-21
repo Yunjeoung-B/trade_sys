@@ -432,9 +432,7 @@ export default function ForwardRateCalculator() {
                       <th className="text-left py-2 px-2">Tenor</th>
                       <th className="text-left py-2 px-2">Settlement Date</th>
                       <th className="text-left py-2 px-2">Days (from Spot)</th>
-                      <th className="text-left py-2 px-2">Swap Point (Mid)</th>
-                      <th className="text-left py-2 px-2">Bid</th>
-                      <th className="text-left py-2 px-2">Ask</th>
+                      <th className="text-left py-2 px-2">Swap Point</th>
                       <th className="text-left py-2 px-2">Actions</th>
                     </tr>
                   </thead>
@@ -472,30 +470,6 @@ export default function ForwardRateCalculator() {
                             disabled={row.tenor === "Spot"}
                             placeholder="0.00"
                             data-testid={`input-swap-point-${row.tenor}`}
-                          />
-                        </td>
-                        <td className="py-2 px-2">
-                          <Input
-                            type="number"
-                            step="0.01"
-                            value={row.bidPrice}
-                            onChange={(e) => updateTenorField(index, "bidPrice", e.target.value)}
-                            className="bg-white/10 border-white/20 text-white text-xs rounded-xl w-24"
-                            disabled={row.tenor === "Spot"}
-                            placeholder="Bid"
-                            data-testid={`input-bid-${row.tenor}`}
-                          />
-                        </td>
-                        <td className="py-2 px-2">
-                          <Input
-                            type="number"
-                            step="0.01"
-                            value={row.askPrice}
-                            onChange={(e) => updateTenorField(index, "askPrice", e.target.value)}
-                            className="bg-white/10 border-white/20 text-white text-xs rounded-xl w-24"
-                            disabled={row.tenor === "Spot"}
-                            placeholder="Ask"
-                            data-testid={`input-ask-${row.tenor}`}
                           />
                         </td>
                         <td className="py-2 px-2">
