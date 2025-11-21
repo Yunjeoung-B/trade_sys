@@ -4,7 +4,9 @@ import path from "path";
 import { fileURLToPath } from "url";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const port = Number(process.env.PORT) || 5173;
 const replSlug = process.env.REPL_SLUG;
 const replOwner = process.env.REPL_OWNER;
@@ -12,7 +14,7 @@ const isReplit =
   typeof replSlug !== "undefined" && typeof replOwner !== "undefined";
 
 export default defineConfig(async () => {
-  const plugins: any[] = [react(), runtimeErrorOverlay()];
+  const plugins = [react(), runtimeErrorOverlay()];
 
   if (process.env.NODE_ENV !== "production" && isReplit) {
     try {
@@ -29,7 +31,7 @@ export default defineConfig(async () => {
     plugins,
     resolve: {
       alias: {
-        "@": path.resolve(__dirname, "client", "src"),
+        "@": path.resolve(__dirname, "client/src"),
         "@shared": path.resolve(__dirname, "shared"),
         "@assets": path.resolve(__dirname, "attached_assets"),
       },

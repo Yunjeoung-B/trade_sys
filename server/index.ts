@@ -69,8 +69,8 @@ app.use((req, res, next) => {
   }, () => {
     log(`serving on port ${port}`);
     
-    infomaxPoller.start();
-    log('Infomax poller started');
+    // infomaxPoller.start();
+    // log('Infomax poller started');
   });
 
   process.on('SIGTERM', () => {
