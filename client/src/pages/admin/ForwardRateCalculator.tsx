@@ -221,6 +221,9 @@ export default function ForwardRateCalculator() {
     const newSpotDate = getSpotDate();
     setSpotDate(newSpotDate);
     
+    // localStorage에서 저장된 tenorRows 복원
+    const savedRows = localStorage.getItem('forwardCalc_tenorRows');
+    
     const initialRows: TenorRow[] = standardTenors.map(tenor => {
       const settlementDate = calculateSettlementDate(newSpotDate, tenor);
       const daysFromSpot = calculateDaysFromSpot(newSpotDate, tenor);
@@ -235,7 +238,17 @@ export default function ForwardRateCalculator() {
       };
     });
     
-    setTenorRows(initialRows);
+    // 저장된 값이 있으면 복원, 없으면 새로 생성
+    if (savedRows) {
+      try {
+        const restored = JSON.parse(savedRows);
+        setTenorRows(restored);
+      } catch {
+        setTenorRows(initialRows);
+      }
+    } else {
+      setTenorRows(initialRows);
+    }
   }, []);
 
   useEffect(() => {
@@ -253,8 +266,17 @@ export default function ForwardRateCalculator() {
         return row;
       });
       setTenorRows(updatedRows);
+      // DB에서 받은 데이터를 localStorage에 저장
+      localStorage.setItem('forwardCalc_tenorRows', JSON.stringify(updatedRows));
     }
   }, [swapPoints]);
+
+  // tenorRows 변경 시 localStorage 저장
+  useEffect(() => {
+    if (tenorRows.length > 0) {
+      localStorage.setItem('forwardCalc_tenorRows', JSON.stringify(tenorRows));
+    }
+  }, [tenorRows]);
 
   const updateTenorField = (index: number, field: keyof TenorRow, value: string) => {
     const newRows = [...tenorRows];
