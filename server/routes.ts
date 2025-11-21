@@ -17,6 +17,7 @@ import {
   insertQuoteRequestSchema,
   insertTradeSchema,
   insertAutoApprovalSettingSchema,
+  insertSwapPointSchema,
 } from "@shared/schema";
 import session from "express-session";
 import passport from "passport";
@@ -992,12 +993,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/swap-points", isAdmin, async (req, res) => {
     try {
       const userId = (req.user as any)?.id || 'system';
-      const swapPointData: InsertSwapPoint = {
+      
+      const validated = insertSwapPointSchema.parse({
         ...req.body,
         uploadedBy: userId,
-      };
+      });
       
-      const created = await storage.createSwapPoint(swapPointData);
+      const created = await storage.createSwapPoint(validated);
       res.json(created);
     } catch (error) {
       console.error("Create swap point error:", error);
@@ -1040,7 +1042,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Store in database
       const results = [];
       for (const point of swapPoints) {
-        const created = await storage.createSwapPoint(point);
+        const validated = insertSwapPointSchema.parse(point);
+        const created = await storage.createSwapPoint(validated);
         results.push(created);
       }
 

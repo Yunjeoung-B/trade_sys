@@ -149,7 +149,9 @@ export const swapPoints = pgTable("swap_points", {
   tenor: varchar("tenor"), // 1M, 3M, 6M, 1Y, etc. or null for specific dates
   settlementDate: timestamp("settlement_date"), // specific settlement date
   days: integer("days"), // number of days from spot
-  swapPoint: decimal("swap_point", { precision: 12, scale: 6 }).notNull(), // swap point value
+  swapPoint: decimal("swap_point", { precision: 12, scale: 6 }).notNull(), // mid swap point value
+  bidPrice: decimal("bid_price", { precision: 12, scale: 6 }), // bid swap point
+  askPrice: decimal("ask_price", { precision: 12, scale: 6 }), // ask swap point
   source: varchar("source").default("excel"), // excel, api, manual
   uploadedBy: varchar("uploaded_by").references(() => users.id),
   uploadedAt: timestamp("uploaded_at").defaultNow(),
@@ -237,6 +239,8 @@ export const insertSwapPointSchema = createInsertSchema(swapPoints).omit({
   updatedAt: true,
 }).extend({
   swapPoint: z.union([z.string(), z.number()]).transform(val => String(val)),
+  bidPrice: z.union([z.string(), z.number(), z.null()]).transform(val => val === null ? null : String(val)).optional(),
+  askPrice: z.union([z.string(), z.number(), z.null()]).transform(val => val === null ? null : String(val)).optional(),
   settlementDate: z.union([z.string(), z.date(), z.null()]).transform(val => 
     val === null ? null : (typeof val === 'string' ? new Date(val) : val)
   ).optional(),
