@@ -227,6 +227,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Save manual spot rate (for Forward Rate Calculator)
+  app.post("/api/market-rates/manual", isAdmin, async (req, res) => {
+    try {
+      const { currencyPairId, buyRate, sellRate, source } = req.body;
+      
+      if (!currencyPairId || !buyRate || !sellRate) {
+        return res.status(400).json({ message: "Currency pair ID, buy rate, and sell rate are required" });
+      }
+      
+      const rateData = {
+        currencyPairId,
+        buyRate: buyRate.toString(),
+        sellRate: sellRate.toString(),
+        source: source || "manual",
+      };
+      
+      const rate = await storage.updateMarketRate(rateData);
+      res.json(rate);
+    } catch (error: any) {
+      console.error("Manual market rate save error:", error);
+      res.status(400).json({ message: error.message || "Failed to save manual rate" });
+    }
+  });
+
   // Customer rates with spread applied (for client users)
   // Bulk API - get all currency pairs' customer rates for a product type
   app.get("/api/customer-rates/:productType", isAuthenticated, async (req, res) => {

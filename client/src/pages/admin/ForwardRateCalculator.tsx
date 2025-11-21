@@ -166,6 +166,38 @@ export default function ForwardRateCalculator() {
     },
   });
 
+  const saveSpotMutation = useMutation({
+    mutationFn: async () => {
+      const rate = parseFloat(spotRate);
+      if (isNaN(rate)) {
+        throw new Error("유효한 Spot Rate를 입력해주세요.");
+      }
+      
+      const data = {
+        currencyPairId: selectedPairId,
+        buyRate: rate,
+        sellRate: rate,
+        source: "manual",
+      };
+      
+      return apiRequest("POST", "/api/market-rates/manual", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/market-rates"] });
+      toast({
+        title: "저장 완료",
+        description: `Spot Rate ${spotRate}이(가) 저장되었습니다.`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "저장 실패",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   useEffect(() => {
     const newSpotDate = getSpotDate();
     setSpotDate(newSpotDate);
@@ -403,15 +435,27 @@ export default function ForwardRateCalculator() {
                   
                   <div>
                     <Label className="text-white mb-2 block">Spot Rate (현물환율)</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={spotRate}
-                      onChange={(e) => setSpotRate(e.target.value)}
-                      className="bg-white/20 border-white/30 text-white rounded-2xl"
-                      placeholder="1350.00"
-                      data-testid="input-spot-rate"
-                    />
+                    <div className="flex gap-2">
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={spotRate}
+                        onChange={(e) => setSpotRate(e.target.value)}
+                        className="bg-white/20 border-white/30 text-white rounded-2xl flex-1"
+                        placeholder="1350.00"
+                        data-testid="input-spot-rate"
+                      />
+                      <Button
+                        onClick={() => saveSpotMutation.mutate()}
+                        disabled={!selectedPairId || saveSpotMutation.isPending}
+                        variant="outline"
+                        className="bg-teal-600 hover:bg-teal-700 text-white border-0 rounded-2xl"
+                        data-testid="button-save-spot"
+                      >
+                        <Save className="h-4 w-4 mr-1" />
+                        저장
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
