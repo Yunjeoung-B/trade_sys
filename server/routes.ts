@@ -328,7 +328,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Quote preview - calculate theoretical rates before requesting quote
   app.post("/api/quotes/preview", isAuthenticated, async (req: any, res) => {
     try {
-      const { currencyPairId, productType, settlementDate, nearDate, farDate } = req.body;
+      const { currencyPairId, productType, settlementDate, nearDate, farDate, direction, tenor } = req.body;
 
       if (!currencyPairId || !productType) {
         return res.status(400).json({ message: "Currency pair and product type are required" });
@@ -365,12 +365,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Calculate theoretical rate
         const theoreticalRate = calculateTheoreticalRate(spotRate, swapPoint);
 
-        // Get applicable spread
+        // Get applicable spread (tenor from request or default)
         const spread = await getApplicableSpread(
           req.user.id,
           currencyPairId,
           productType,
-          undefined, // No specific tenor for forward
+          tenor,
           storage
         );
 
@@ -385,6 +385,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           spread,
           customerRate,
           settlementDate,
+          direction,
+          tenor,
         });
 
       } else if (productType === "SWAP") {

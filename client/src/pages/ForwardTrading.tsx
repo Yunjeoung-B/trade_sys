@@ -78,6 +78,37 @@ export default function ForwardTrading() {
     dataUpdatedAt,
   } = useCustomerRate("Forward", selectedPairData?.id, tenor);
 
+  // Get theoretical rate preview from server
+  const { data: quotePreview, isLoading: isPreviewLoading, isError: isPreviewError, error: previewError } = useQuery<{
+    productType: string;
+    spotRate: number;
+    swapPoint: number;
+    theoreticalRate: number;
+    spread: number;
+    customerRate: number;
+    settlementDate: string;
+    direction?: string;
+    tenor?: string;
+  } | null>({
+    queryKey: ['/api/quotes/preview', selectedPairData?.id, valueDate?.toISOString(), direction, tenor],
+    queryFn: async () => {
+      if (!selectedPairData?.id || !valueDate) return null;
+      
+      const response = await apiRequest('POST', '/api/quotes/preview', {
+        currencyPairId: selectedPairData.id,
+        productType: 'FORWARD',
+        settlementDate: valueDate.toISOString().split('T')[0],
+        direction,
+        tenor,
+      });
+      return response as any;
+    },
+    enabled: !!selectedPairData?.id && !!valueDate,
+    staleTime: 10000, // 10 seconds
+    refetchInterval: 30000, // Refetch every 30 seconds
+    retry: 1, // Only retry once to avoid excessive API calls
+  });
+
   const mutation = useMutation({
     mutationFn: async (requestData: any) => {
       return apiRequest("POST", "/api/quote-requests", requestData);
@@ -104,24 +135,15 @@ export default function ForwardTrading() {
   const lastUpdated = dataUpdatedAt ? new Date(dataUpdatedAt) : null;
   const isTrulyStale = dataUpdatedAt && dataUpdatedAt > 0 && lastUpdated && (Date.now() - lastUpdated.getTime() > 30000);
 
-  // SWAP POINT 계산 (만기일까지의 기간에 따라)
-  const calculateSwapPoints = (spotRate: number, valueDate: Date) => {
-    if (!valueDate) return 0;
-    const today = new Date();
-    const daysToMaturity = Math.ceil((valueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    // 간단한 스왑포인트 계산 (실제로는 금리 차이에 따라 계산)
-    return daysToMaturity * 0.05; // 예시: 일당 0.05 포인트
-  };
+  // Use theoretical rates from quote preview
+  const spotRate = quotePreview?.spotRate || customerBuyRate || 0;
+  const swapPoint = quotePreview?.swapPoint || 0;
+  const theoreticalRate = quotePreview?.theoreticalRate || spotRate;
+  const customerRate = quotePreview?.customerRate || theoreticalRate;
   
-  const spotBuyRate = customerBuyRate || 0;
-  const spotSellRate = customerSellRate || 0;
-  
-  const swapPointsBuy = hasValidRates ? calculateSwapPoints(spotBuyRate, valueDate) : 0;
-  const swapPointsSell = hasValidRates ? calculateSwapPoints(spotSellRate, valueDate) : 0;
-  
-  // 선물환 레이트 = SPOT + SWAP POINTS
-  const buyRate = spotBuyRate + swapPointsBuy;
-  const sellRate = spotSellRate + swapPointsSell;
+  // For display purposes
+  const buyRate = customerRate;
+  const sellRate = customerRate;
 
   const handleTrade = () => {
     if (!amount) {
@@ -142,6 +164,16 @@ export default function ForwardTrading() {
       return;
     }
 
+    // Require valid quote preview before submission
+    if (!quotePreview || isPreviewError || isPreviewLoading) {
+      toast({
+        title: "환율 정보 필요",
+        description: "선물환율 정보를 불러오는 중이거나 조회할 수 없습니다. 잠시 후 다시 시도해주세요.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!hasValidRates) {
       toast({
         title: "환율 정보 없음",
@@ -151,6 +183,7 @@ export default function ForwardTrading() {
       return;
     }
 
+    // Include preview data in submission to ensure consistency
     mutation.mutate({
       productType: "Forward",
       currencyPairId: selectedPairData.id,
@@ -162,6 +195,11 @@ export default function ForwardTrading() {
       validityType: orderType === "LIMIT" ? validityType : undefined,
       validUntilTime: orderType === "LIMIT" && validityType === "TIME" ? validUntilTime : undefined,
       valueDate: valueDate.toISOString().split('T')[0],
+      // Include preview data for approval workflow
+      previewRate: quotePreview.customerRate,
+      theoreticalRate: quotePreview.theoreticalRate,
+      swapPoint: quotePreview.swapPoint,
+      spread: quotePreview.spread,
     });
   };
 
@@ -441,6 +479,54 @@ export default function ForwardTrading() {
                   </Popover>
                 </div>
               </div>
+
+              {/* Theoretical Rate Preview */}
+              {quotePreview && !isPreviewLoading && (
+                <div className="bg-blue-50/50 border border-blue-200 rounded-2xl p-4 mb-4">
+                  <div className="text-sm font-semibold text-blue-900 mb-3">선물환 예상 환율 정보</div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-600">현물환율 (Spot)</span>
+                      <span className="font-medium text-gray-900">{quotePreview.spotRate?.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-600">스왑포인트 (Swap Point)</span>
+                      <span className="font-medium text-gray-900">{quotePreview.swapPoint?.toFixed(4)}</span>
+                    </div>
+                    <div className="flex justify-between text-xs border-t border-blue-200 pt-2">
+                      <span className="text-gray-600">이론 환율 (Theoretical)</span>
+                      <span className="font-medium text-gray-900">{quotePreview.theoreticalRate?.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-600">스프레드 (Spread)</span>
+                      <span className="font-medium text-gray-900">{quotePreview.spread?.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-xs border-t border-blue-300 pt-2">
+                      <span className="text-blue-900 font-semibold">고객 환율 (Customer Rate)</span>
+                      <span className="font-bold text-blue-900">{quotePreview.customerRate?.toFixed(2)}</span>
+                    </div>
+                  </div>
+                  <div className="mt-3 text-xs text-gray-500 italic">
+                    * 실제 거래 환율은 관리자 승인 후 확정됩니다
+                  </div>
+                </div>
+              )}
+
+              {isPreviewLoading && valueDate && (
+                <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 mb-4 text-center">
+                  <div className="text-sm text-gray-600">환율 정보를 불러오는 중...</div>
+                </div>
+              )}
+
+              {isPreviewError && valueDate && (
+                <div className="bg-red-50/50 border border-red-200 rounded-2xl p-4 mb-4">
+                  <div className="text-sm font-semibold text-red-900 mb-2">환율 정보 조회 실패</div>
+                  <div className="text-xs text-red-700">
+                    선택한 결제일에 대한 Swap Point 정보를 찾을 수 없습니다.
+                    관리자에게 문의하거나 다른 결제일을 선택해주세요.
+                  </div>
+                </div>
+              )}
 
               {/* Step 5: Amount Input */}
               <div className="flex items-center mb-6">
