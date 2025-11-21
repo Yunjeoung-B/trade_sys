@@ -200,6 +200,13 @@ export default function QuoteApprovals() {
     return pair?.symbol || "";
   };
 
+  const getBaseCurrencyFromPair = (pairId: string) => {
+    const pair = currencyPairs?.find(p => p.id === pairId);
+    if (!pair) return "USD";
+    const [baseCurrency] = pair.symbol.split('/');
+    return baseCurrency || "USD";
+  };
+
   const getUserName = (userId: string) => {
     const user = users?.find(u => u.id === userId);
     return user?.username || userId;
@@ -511,15 +518,18 @@ export default function QuoteApprovals() {
                               <div>Near: {Number(request.nearAmount || 0).toLocaleString()} {request.nearAmountCurrency || "USD"}</div>
                               <div>Far: {Number(request.farAmount || 0).toLocaleString()} {request.farAmountCurrency || "USD"}</div>
                               <div className="mt-1 text-slate-400">
-                                <div>{request.nearDate ? new Date(request.nearDate).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' }) : "-"}</div>
-                                <div>{request.farDate ? new Date(request.farDate).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' }) : "-"}</div>
+                                <div>결제: {request.nearDate ? new Date(request.nearDate).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', year: '2-digit' }) : "-"}</div>
+                                <div>만기: {request.farDate ? new Date(request.farDate).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', year: '2-digit' }) : "-"}</div>
                               </div>
                             </div>
                           ) : (
                             <div>
-                              <div>{Number(request.amount).toLocaleString()} {request.amountCurrency || "USD"}</div>
-                              <div className="text-slate-400">
-                                {request.tenor || (request.nearDate ? new Date(request.nearDate).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' }) : "-")}
+                              <div className="font-semibold">{getBaseCurrencyFromPair(request.currencyPairId)} {Number(request.amount).toLocaleString()}</div>
+                              <div className="text-slate-400 mt-1">
+                                {request.tenor && request.nearDate 
+                                  ? `${request.tenor} (${new Date(request.nearDate).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', year: '2-digit' })})`
+                                  : (request.nearDate ? new Date(request.nearDate).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', year: '2-digit' }) : "-")
+                                }
                               </div>
                             </div>
                           )}
