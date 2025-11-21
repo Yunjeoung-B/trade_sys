@@ -93,6 +93,7 @@ export interface IStorage {
   deleteSwapPoint(id: string): Promise<void>;
   getSwapPointByTenor(currencyPairId: string, tenor: string): Promise<SwapPoint | undefined>;
   getSwapPointByDays(currencyPairId: string, days: number): Promise<SwapPoint | undefined>;
+  getSwapPointsByCurrencyPair(currencyPairId: string): Promise<SwapPoint[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -715,6 +716,14 @@ export class DatabaseStorage implements IStorage {
       .from(swapPoints)
       .where(and(eq(swapPoints.currencyPairId, currencyPairId), eq(swapPoints.days, days)));
     return swapPoint;
+  }
+
+  async getSwapPointsByCurrencyPair(currencyPairId: string): Promise<SwapPoint[]> {
+    return await db
+      .select()
+      .from(swapPoints)
+      .where(eq(swapPoints.currencyPairId, currencyPairId))
+      .orderBy(swapPoints.days);
   }
 }
 

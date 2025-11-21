@@ -100,14 +100,19 @@ export function getDaysBetween(startDate: Date, endDate: Date): number {
 /**
  * Convert tenor to approximate days from spot
  * @param tenor - Tenor string like "ON", "TN", "1M", "2M", "3M", etc.
+ * 
+ * Days are calculated relative to Spot (T+2):
+ * - ON (T+1) is 1 day before Spot → -1
+ * - TN (T+2) is same as Spot → 0
+ * - 1M, 2M, etc. are after Spot → positive values
  */
 export function tenorToApproxDays(tenor: string): number {
   const tenorUpper = tenor.toUpperCase();
   
-  // Special cases
+  // Special cases (relative to Spot date)
   if (tenorUpper === "SPOT") return 0;
-  if (tenorUpper === "ON") return 1;
-  if (tenorUpper === "TN") return 2;
+  if (tenorUpper === "ON") return -1;  // T+1, one day before Spot (T+2)
+  if (tenorUpper === "TN") return 0;   // T+2, same as Spot
   
   // Parse month tenors (1M, 2M, etc.)
   const monthMatch = tenorUpper.match(/^(\d+)M$/);
