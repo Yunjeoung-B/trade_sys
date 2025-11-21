@@ -113,7 +113,10 @@ function calculateDaysFromSpot(spotDate: Date, tenor: string): number {
 
 export default function ForwardRateCalculator() {
   const { toast } = useToast();
-  const [selectedPairId, setSelectedPairId] = useState<string>("");
+  const [selectedPairId, setSelectedPairId] = useState<string>(() => {
+    // Load from localStorage or use empty string
+    return localStorage.getItem('forwardCalc_selectedPairId') || "";
+  });
   const [spotRate, setSpotRate] = useState<string>("1350.00");
   const [spotDate, setSpotDate] = useState<Date>(getSpotDate());
   const [tenorRows, setTenorRows] = useState<TenorRow[]>([]);
@@ -128,6 +131,22 @@ export default function ForwardRateCalculator() {
   const { data: currencyPairs = [] } = useQuery<CurrencyPair[]>({
     queryKey: ["/api/currency-pairs"],
   });
+
+  // Auto-select first currency pair if none selected
+  useEffect(() => {
+    if (!selectedPairId && currencyPairs.length > 0) {
+      const firstPairId = currencyPairs[0].id;
+      setSelectedPairId(firstPairId);
+      localStorage.setItem('forwardCalc_selectedPairId', firstPairId);
+    }
+  }, [currencyPairs, selectedPairId]);
+
+  // Save selectedPairId to localStorage whenever it changes
+  useEffect(() => {
+    if (selectedPairId) {
+      localStorage.setItem('forwardCalc_selectedPairId', selectedPairId);
+    }
+  }, [selectedPairId]);
 
   const { data: swapPoints = [], isLoading: loadingSwapPoints } = useQuery<SwapPoint[]>({
     queryKey: ["/api/swap-points", selectedPairId],
