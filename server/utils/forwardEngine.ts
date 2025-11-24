@@ -67,12 +67,21 @@ export async function getSwapPointForDate(
   const spotDate = getSpotDate();
   const targetDays = getDaysBetween(spotDate, settlementDate);
 
+  console.log(`[SwapPoint Debug] ====== START CALCULATION ======`);
+  console.log(`[SwapPoint Debug] Settlement Date: ${new Date(settlementDate).toISOString().split('T')[0]}`);
+  console.log(`[SwapPoint Debug] Spot Date: ${spotDate.toISOString().split('T')[0]}`);
+  console.log(`[SwapPoint Debug] Target Days (Date-based): ${targetDays}`);
+  console.log(`[SwapPoint Debug] Tenor: ${tenor || 'none'}`);
+
   // Get all swap points for this currency pair
   const allSwapPoints = await storage.getSwapPointsByCurrencyPair(currencyPairId);
   
   if (!allSwapPoints || allSwapPoints.length === 0) {
+    console.log(`[SwapPoint Debug] No swap points found in database`);
     return null;
   }
+
+  console.log(`[SwapPoint Debug] Total swap points in DB: ${allSwapPoints.length}`);
 
   // Group by settlementDate and keep only the latest for each date
   const pointsByDate = new Map<string, typeof allSwapPoints[0]>();
@@ -96,6 +105,8 @@ export async function getSwapPointForDate(
         ? calculateTenorDays(spotDate, sp.tenor)
         : getDaysBetween(spotDate, new Date(sp.settlementDate!));
       
+      console.log(`[SwapPoint Debug] Data Point: tenor=${sp.tenor}, date=${sp.settlementDate}, swapPoint=${sp.swapPoint}, calculatedDays=${calculatedDays}`);
+      
       return {
         ...sp,
         calculatedDays,
@@ -103,7 +114,10 @@ export async function getSwapPointForDate(
     })
     .sort((a, b) => a.calculatedDays - b.calculatedDays);
 
+  console.log(`[SwapPoint Debug] Sorted points by days: ${pointsWithDays.map(p => `${p.calculatedDays}days(${p.swapPoint})`).join(', ')}`);
+
   if (pointsWithDays.length === 0) {
+    console.log(`[SwapPoint Debug] No points after processing`);
     return null;
   }
 
@@ -147,6 +161,9 @@ export async function getSwapPointForDate(
     }
   }
 
+  console.log(`[SwapPoint Debug] Lower bracket: ${lower ? `${lower.calculatedDays}days(${lower.swapPoint})` : 'none'}`);
+  console.log(`[SwapPoint Debug] Upper bracket: ${upper ? `${upper.calculatedDays}days(${upper.swapPoint})` : 'none'}`);
+
   // Perform linear interpolation (same as ForwardRateCalculator)
   if (lower && upper) {
     const lowerSwap = parseFloat(lower.swapPoint);
@@ -156,27 +173,36 @@ export async function getSwapPointForDate(
     
     if (lowerDays === upperDays) {
       // Exact match or same days
+      console.log(`[SwapPoint Debug] RESULT: Exact match at ${lowerDays} days = ${lowerSwap}`);
       return lowerSwap;
     }
     
     // Linear interpolation formula (same as UI)
-    return linearInterpolate(
+    const result = linearInterpolate(
       targetDays,
       lowerDays,
       lowerSwap,
       upperDays,
       upperSwap
     );
+    
+    console.log(`[SwapPoint Debug] Interpolation formula: (${targetDays}-${lowerDays})/(${upperDays}-${lowerDays}) * (${upperSwap}-${lowerSwap}) + ${lowerSwap} = ${result}`);
+    console.log(`[SwapPoint Debug] RESULT: Interpolated = ${result}`);
+    
+    return result;
   }
 
   // Fallback to single point if only one available
   if (lower) {
+    console.log(`[SwapPoint Debug] RESULT: Only lower bracket available = ${lower.swapPoint}`);
     return parseFloat(lower.swapPoint);
   }
   if (upper) {
+    console.log(`[SwapPoint Debug] RESULT: Only upper bracket available = ${upper.swapPoint}`);
     return parseFloat(upper.swapPoint);
   }
 
+  console.log(`[SwapPoint Debug] RESULT: No interpolation possible, returning null`);
   return null;
 }
 
