@@ -55,6 +55,9 @@ export default function ForwardTradingCustomer() {
     }
   }, []);
 
+  // Placeholder for swap point info display
+  // Swap points will be shown after quote request is submitted and approved
+
   const [baseCurrency, quoteCurrency] = selectedPair.split('/');
 
   const { data: currencyPairs = [] } = useQuery<CurrencyPair[]>({
