@@ -244,12 +244,17 @@ export default function ForwardRateCalculator() {
   });
 
   useEffect(() => {
+    // Clear all forwardCalc localStorage data to ensure fresh start
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith('forwardCalc_')) {
+        localStorage.removeItem(key);
+      }
+    });
+    
     const newSpotDate = getSpotDate();
     setSpotDate(newSpotDate);
     
-    // localStorage에서 저장된 tenorRows 복원
-    const savedRows = localStorage.getItem('forwardCalc_tenorRows');
-    
+    // Always recalculate from scratch to ensure consistency
     const initialRows: TenorRow[] = standardTenors.map(tenor => {
       const settlementDate = calculateSettlementDate(newSpotDate, tenor);
       const daysFromSpot = calculateDaysFromSpot(newSpotDate, tenor);
@@ -264,17 +269,7 @@ export default function ForwardRateCalculator() {
       };
     });
     
-    // 저장된 값이 있으면 복원, 없으면 새로 생성
-    if (savedRows) {
-      try {
-        const restored = JSON.parse(savedRows);
-        setTenorRows(restored);
-      } catch {
-        setTenorRows(initialRows);
-      }
-    } else {
-      setTenorRows(initialRows);
-    }
+    setTenorRows(initialRows);
   }, []);
 
   useEffect(() => {
