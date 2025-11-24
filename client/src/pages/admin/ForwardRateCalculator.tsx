@@ -18,6 +18,7 @@ import type { CurrencyPair, SwapPoint } from "@shared/schema";
 
 interface TenorRow {
   tenor: string;
+  startDate: string;
   settlementDate: string;
   daysFromSpot: number;
   swapPoint: string;
@@ -25,9 +26,8 @@ interface TenorRow {
   askPrice: string;
 }
 
-// IMPORTANT: Exclude ON and TN from standard tenors
-// Per requirement: ON/TN are pre-SPOT settlement dates and not reflected in SPOT-based calculations
-const standardTenors = ["Spot", "1M", "2M", "3M", "6M", "9M", "12M"];
+// Standard tenors including ON/TN for complete swap point management
+const standardTenors = ["ON", "TN", "Spot", "1M", "2M", "3M", "6M", "9M", "12M"];
 
 // Helper functions for date calculations
 function addBusinessDays(date: Date, days: number): Date {
@@ -76,8 +76,8 @@ function calculateSettlementDate(spotDate: Date, tenor: string): Date {
   const tenorUpper = tenor.toUpperCase();
   
   if (tenorUpper === "SPOT") return new Date(spotDate);
-  if (tenorUpper === "ON") return addBusinessDays(new Date(), 1); // 익영업일 (T+1)
-  if (tenorUpper === "TN") return new Date(spotDate); // TN은 Spot 기준일로 고정
+  if (tenorUpper === "ON") return addBusinessDays(new Date(), 1); // T+1
+  if (tenorUpper === "TN") return new Date(spotDate); // SPOT date
   
   const monthMatch = tenorUpper.match(/^(\d+)M$/);
   if (monthMatch) {
@@ -93,6 +93,17 @@ function calculateSettlementDate(spotDate: Date, tenor: string): Date {
   }
   
   return new Date(spotDate);
+}
+
+// Calculate start date for tenor (value date)
+function calculateStartDate(tenor: string): Date {
+  const tenorUpper = tenor.toUpperCase();
+  
+  if (tenorUpper === "ON") return new Date(); // Today
+  if (tenorUpper === "TN") return addBusinessDays(new Date(), 1); // T+1
+  
+  // For all others (Spot, 1M, etc): start date is today
+  return new Date();
 }
 
 function calculateDaysFromSpot(spotDate: Date, tenor: string): number {
@@ -187,6 +198,7 @@ export default function ForwardRateCalculator() {
       const data = {
         currencyPairId: selectedPairId,
         tenor: row.tenor,
+        startDate: row.startDate ? new Date(row.startDate) : null,
         settlementDate: row.settlementDate ? new Date(row.settlementDate) : null,
         days: row.daysFromSpot,
         swapPoint: parseFloat(row.swapPoint),
@@ -273,10 +285,12 @@ export default function ForwardRateCalculator() {
         console.log(`[Initialize] localStorage 파싱 실패, 기본값 생성`);
         initialRows = standardTenors.map(tenor => {
           const settlementDate = calculateSettlementDate(newSpotDate, tenor);
+          const startDate = calculateStartDate(tenor);
           const daysFromSpot = calculateDaysFromSpot(newSpotDate, tenor);
           
           return {
             tenor,
+            startDate: formatDateForInput(startDate),
             settlementDate: tenor === "Spot" ? formatDateForInput(newSpotDate) : formatDateForInput(settlementDate),
             daysFromSpot,
             swapPoint: "0",
@@ -289,10 +303,12 @@ export default function ForwardRateCalculator() {
       console.log(`[Initialize] localStorage에 저장된 데이터 없음, 기본값 생성`);
       initialRows = standardTenors.map(tenor => {
         const settlementDate = calculateSettlementDate(newSpotDate, tenor);
+        const startDate = calculateStartDate(tenor);
         const daysFromSpot = calculateDaysFromSpot(newSpotDate, tenor);
         
         return {
           tenor,
+          startDate: formatDateForInput(startDate),
           settlementDate: tenor === "Spot" ? formatDateForInput(newSpotDate) : formatDateForInput(settlementDate),
           daysFromSpot,
           swapPoint: "0",
@@ -351,6 +367,8 @@ export default function ForwardRateCalculator() {
       row.daysFromSpot = days;
       const newDate = addDays(spotDate, days);
       row.settlementDate = formatDateForInput(newDate);
+    } else if (field === "startDate") {
+      row.startDate = value;
     } else {
       row[field] = value;
     }
@@ -525,10 +543,12 @@ export default function ForwardRateCalculator() {
     
     const updatedRows = tenorRows.map(row => {
       const settlementDate = calculateSettlementDate(newSpotDate, row.tenor);
+      const startDate = calculateStartDate(row.tenor);
       const daysFromSpot = calculateDaysFromSpot(newSpotDate, row.tenor);
       
       return {
         ...row,
+        startDate: formatDateForInput(startDate),
         settlementDate: row.tenor === "Spot" ? formatDateForInput(newSpotDate) : formatDateForInput(settlementDate),
         daysFromSpot,
       };
@@ -548,10 +568,10 @@ export default function ForwardRateCalculator() {
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-white mb-2">
-              선도환율 계산기 (Forward Rate Calculator)
+              이론가환율 (Forward Rate Calculator)
             </h1>
             <p className="text-blue-200">
-              Swap Point를 관리하고 특정 결제일의 이론 선도환율을 계산합니다
+              ON/TN/Spot/선물 스왑포인트를 관리하고 이론 선도환율을 계산합니다
             </p>
           </div>
         </div>
@@ -633,6 +653,7 @@ export default function ForwardRateCalculator() {
                   <thead>
                     <tr className="border-b border-white/20">
                       <th className="text-left py-2 px-2">Tenor</th>
+                      <th className="text-left py-2 px-2">Start Date</th>
                       <th className="text-left py-2 px-2">Settlement Date</th>
                       <th className="text-left py-2 px-2">Days (from Spot)</th>
                       <th className="text-left py-2 px-2">Swap Point</th>
@@ -640,9 +661,19 @@ export default function ForwardRateCalculator() {
                     </tr>
                   </thead>
                   <tbody>
-                    {tenorRows.filter(row => row.tenor !== "ON" && row.tenor !== "TN").map((row, index) => (
+                    {tenorRows.map((row, index) => (
                       <tr key={row.tenor} className="border-b border-white/10">
                         <td className="py-2 px-2 font-semibold">{row.tenor}</td>
+                        <td className="py-2 px-2">
+                          <Input
+                            type="date"
+                            value={row.startDate}
+                            onChange={(e) => updateTenorField(index, "startDate", e.target.value)}
+                            className="bg-white/10 border-white/20 text-white text-xs rounded-xl"
+                            disabled={["Spot", "ON", "TN"].includes(row.tenor)}
+                            data-testid={`input-start-date-${row.tenor}`}
+                          />
+                        </td>
                         <td className="py-2 px-2">
                           <Input
                             type="date"

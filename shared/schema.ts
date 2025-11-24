@@ -146,8 +146,9 @@ export const autoApprovalSettings = pgTable("auto_approval_settings", {
 export const swapPoints = pgTable("swap_points", {
   id: varchar("id").primaryKey(),
   currencyPairId: varchar("currency_pair_id").references(() => currencyPairs.id),
-  tenor: varchar("tenor"), // 1M, 3M, 6M, 1Y, etc. or null for specific dates
-  settlementDate: timestamp("settlement_date"), // specific settlement date
+  tenor: varchar("tenor"), // ON, TN, SPOT, 1M, 3M, 6M, 1Y, etc.
+  startDate: timestamp("start_date"), // value date (start of swap period)
+  settlementDate: timestamp("settlement_date"), // specific settlement date (end of swap period)
   days: integer("days"), // number of days from spot
   swapPoint: decimal("swap_point", { precision: 12, scale: 6 }).notNull(), // mid swap point value
   bidPrice: decimal("bid_price", { precision: 12, scale: 6 }), // bid swap point
@@ -273,6 +274,9 @@ export const insertSwapPointSchema = createInsertSchema(swapPoints).omit({
   swapPoint: z.union([z.string(), z.number()]).transform(val => String(val)),
   bidPrice: z.union([z.string(), z.number(), z.null()]).transform(val => val === null ? null : String(val)).optional(),
   askPrice: z.union([z.string(), z.number(), z.null()]).transform(val => val === null ? null : String(val)).optional(),
+  startDate: z.union([z.string(), z.date(), z.null()]).transform(val => 
+    val === null ? null : (typeof val === 'string' ? new Date(val) : val)
+  ).optional(),
   settlementDate: z.union([z.string(), z.date(), z.null()]).transform(val => 
     val === null ? null : (typeof val === 'string' ? new Date(val) : val)
   ).optional(),

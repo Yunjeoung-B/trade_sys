@@ -72,6 +72,14 @@ UI Style: Gradient backgrounds (slate-800 → blue-900 → purple-900), rounded-
   - Currency pair-scoped queries with proper cache invalidation
   - Real-time Infomax Forward API integration displaying MID_PRICE data
   - Admin-only access controls on all swap points endpoints
+- **이론가환율 (Theoretical Forward Rate Calculator)**: Redesigned admin interface for managing complete swap point curve including ON/TN
+  - **ON/TN Support**: Now includes ON (T+1), TN (T+2), SPOT, and forward tenors (1M-12M)
+  - **Start Date Field**: Added startDate for swap period tracking (ON: today, TN: T+1, others: today)
+  - **Settlement Date Mapping**: ON → T+1 settlement, TN → SPOT settlement
+  - **Business Days**: Calculated via addBusinessDays function with weekend skipping (extendable to US/KR holidays)
+  - **Upper Bracket Validation**: Settlement dates beyond 12M (366 days max) return 400 error
+  - **Linear Interpolation**: Automatic swap point calculation for intermediate dates (e.g., 365D calculated from 3M/12M spread)
+  - **Data Persistence**: startDate and settlementDate both saved to database for accurate settlement tracking
 
 ## Business Logic Architecture
 - **Quote Calculation**: Layered pricing model combining source rates with group-specific spreads, product spreads, currency spreads, and tenor spreads
