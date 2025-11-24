@@ -348,93 +348,57 @@ export default function ForwardRateCalculator() {
       return;
     }
 
-    if (!targetSettlementDate) {
-      toast({
-        title: "입력 오류",
-        description: "Target Settlement Date를 먼저 선택해주세요.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Convert settlement dates to TODAY's spot date basis (동일한 로직)
-    const todaySpotDate = getSpotDate();
-    const targetSettlementDateObj = new Date(targetSettlementDate);
-    const targetDaysFromTodaySpot = getDaysBetween(todaySpotDate, targetSettlementDateObj);
-
+    // tenorRows의 daysFromSpot 기반 보간 (ForwardRateCalculator 표준 방식)
     const validTenors = tenorRows
-      .filter(t => t.tenor !== "Spot" && t.settlementDate)
-      .map(t => {
-        const settlementDateObj = new Date(t.settlementDate);
-        const daysFromTodaySpot = getDaysBetween(todaySpotDate, settlementDateObj);
-        return {
-          ...t,
-          daysFromTodaySpot,
-          swapPointNum: parseFloat(t.swapPoint || "0"),
-        };
-      })
-      .sort((a, b) => a.daysFromTodaySpot - b.daysFromTodaySpot);
+      .filter(t => t.tenor !== "Spot")
+      .map(t => ({
+        ...t,
+        days: t.daysFromSpot,
+        swapPointNum: parseFloat(t.swapPoint || "0"),
+      }))
+      .sort((a, b) => a.days - b.days);
 
-    if (validTenors.length < 1) {
+    if (validTenors.length < 2) {
       toast({
         title: "데이터 부족",
-        description: "최소 1개 이상의 테너 데이터가 필요합니다.",
+        description: "최소 2개 이상의 테너 데이터가 필요합니다.",
         variant: "destructive",
       });
       return;
     }
 
-    // Find exact match first
-    const exactMatch = validTenors.find(t => t.daysFromTodaySpot === targetDaysFromTodaySpot);
-    if (exactMatch) {
-      const forwardRate = spot + exactMatch.swapPointNum / 100;
-      setCalculatedResult({
-        days: targetDaysFromTodaySpot,
-        interpolatedSwapPoint: exactMatch.swapPointNum,
-        forwardRate,
-      });
-      return;
-    }
+    let lowerTenor = validTenors[0];
+    let upperTenor = validTenors[validTenors.length - 1];
 
-    // Find bracketing points for interpolation
-    let lower = null;
-    let upper = null;
-
-    for (const tenor of validTenors) {
-      if (tenor.daysFromTodaySpot <= targetDaysFromTodaySpot) {
-        lower = tenor;
-      }
-      if (tenor.daysFromTodaySpot >= targetDaysFromTodaySpot && !upper) {
-        upper = tenor;
+    // Find bracketing tenors
+    for (let i = 0; i < validTenors.length - 1; i++) {
+      if (target >= validTenors[i].days && target <= validTenors[i + 1].days) {
+        lowerTenor = validTenors[i];
+        upperTenor = validTenors[i + 1];
         break;
       }
     }
 
-    let interpolatedSwapPoint = 0;
-
-    if (lower && upper && lower.daysFromTodaySpot !== upper.daysFromTodaySpot) {
-      // Linear interpolation
-      const ratio = (targetDaysFromTodaySpot - lower.daysFromTodaySpot) /
-                    (upper.daysFromTodaySpot - lower.daysFromTodaySpot);
-      interpolatedSwapPoint = lower.swapPointNum +
-                              (upper.swapPointNum - lower.swapPointNum) * ratio;
-    } else if (lower) {
-      interpolatedSwapPoint = lower.swapPointNum;
-    } else if (upper) {
-      interpolatedSwapPoint = upper.swapPointNum;
-    } else {
-      toast({
-        title: "계산 불가",
-        description: "적절한 보간 데이터를 찾을 수 없습니다.",
-        variant: "destructive",
-      });
-      return;
+    if (target < validTenors[0].days) {
+      lowerTenor = validTenors[0];
+      upperTenor = validTenors[1];
+    } else if (target > validTenors[validTenors.length - 1].days) {
+      lowerTenor = validTenors[validTenors.length - 2];
+      upperTenor = validTenors[validTenors.length - 1];
     }
+
+    // Linear interpolation
+    const interpolatedSwapPoint =
+      lowerTenor.days === upperTenor.days
+        ? lowerTenor.swapPointNum
+        : lowerTenor.swapPointNum +
+          ((upperTenor.swapPointNum - lowerTenor.swapPointNum) * (target - lowerTenor.days)) /
+            (upperTenor.days - lowerTenor.days);
 
     const forwardRate = spot + interpolatedSwapPoint / 100;
 
     setCalculatedResult({
-      days: targetDaysFromTodaySpot,
+      days: target,
       interpolatedSwapPoint,
       forwardRate,
     });

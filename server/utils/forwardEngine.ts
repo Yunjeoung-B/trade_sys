@@ -16,27 +16,65 @@ function linearInterpolate(
 }
 
 /**
+ * Calculate days from spot date for a tenor (using ForwardRateCalculator logic)
+ * This ensures consistent calculation across UI and backend
+ */
+function calculateTenorDays(spotDate: Date, tenor: string): number {
+  const tenorUpper = tenor.toUpperCase();
+  
+  if (tenorUpper === "SPOT") return 0;
+  
+  // ON: today to next business day
+  if (tenorUpper === "ON") {
+    // Simplified: ON = 1 day from today (calendar days)
+    return 1;
+  }
+  
+  // TN: Spot date
+  if (tenorUpper === "TN") {
+    return getDaysBetween(new Date(), spotDate);
+  }
+  
+  // Month tenors (1M, 3M, etc)
+  const monthMatch = tenorUpper.match(/^(\d+)M$/);
+  if (monthMatch) {
+    const months = parseInt(monthMatch[1]);
+    const futureDate = new Date(spotDate);
+    futureDate.setMonth(futureDate.getMonth() + months);
+    
+    // Skip weekends
+    while (futureDate.getDay() === 0 || futureDate.getDay() === 6) {
+      futureDate.setDate(futureDate.getDate() + 1);
+    }
+    
+    return getDaysBetween(spotDate, futureDate);
+  }
+  
+  return 0;
+}
+
+/**
  * Get swap point for a specific settlement date using linear interpolation
- * Calculates days from TODAY's spot date and interpolates using stored data
+ * Uses tenor-based days calculation (consistent with ForwardRateCalculator)
  */
 export async function getSwapPointForDate(
   currencyPairId: string,
   settlementDate: Date,
-  storage: IStorage
+  storage: IStorage,
+  tenor?: string
 ): Promise<number | null> {
-  // Calculate TODAY's spot date and target days
+  // Get the base spot date (T+2)
   const spotDate = getSpotDate();
   const targetDays = getDaysBetween(spotDate, settlementDate);
 
-  // Get all swap points for this currency pair with settlement dates
+  // Get all swap points for this currency pair
   const allSwapPoints = await storage.getSwapPointsByCurrencyPair(currencyPairId);
   
   if (!allSwapPoints || allSwapPoints.length === 0) {
     return null;
   }
 
-  // Calculate days for each stored swap point based on TODAY's spot date
-  // Group by settlementDate and keep only the latest (by createdAt) for each date
+  // Group by settlementDate and keep only the latest for each date
   const pointsByDate = new Map<string, typeof allSwapPoints[0]>();
   
   for (const sp of allSwapPoints) {
@@ -45,66 +83,70 @@ export async function getSwapPointForDate(
     const dateKey = new Date(sp.settlementDate).toISOString().split('T')[0];
     const existing = pointsByDate.get(dateKey);
     
-    // Keep the most recently created/updated record for this settlement date
     if (!existing || new Date(sp.updatedAt || sp.createdAt || 0) > new Date(existing.updatedAt || existing.createdAt || 0)) {
       pointsByDate.set(dateKey, sp);
     }
   }
   
-  const pointsWithCurrentDays = Array.from(pointsByDate.values())
-    .map(sp => ({
-      ...sp,
-      currentDays: getDaysBetween(spotDate, new Date(sp.settlementDate!))
-    }))
-    .sort((a, b) => a.currentDays - b.currentDays);
+  // Convert to array with calculated days (using tenor if available, or settlement date)
+  const pointsWithDays = Array.from(pointsByDate.values())
+    .map(sp => {
+      // Use tenor-based days if tenor is available in swap point, otherwise calculate from settlement date
+      let calculatedDays = sp.tenor 
+        ? calculateTenorDays(spotDate, sp.tenor)
+        : getDaysBetween(spotDate, new Date(sp.settlementDate!));
+      
+      return {
+        ...sp,
+        calculatedDays,
+      };
+    })
+    .sort((a, b) => a.calculatedDays - b.calculatedDays);
 
-  if (pointsWithCurrentDays.length === 0) {
+  if (pointsWithDays.length === 0) {
     return null;
   }
 
   // Find exact match first
-  const exactMatch = pointsWithCurrentDays.find(sp => sp.currentDays === targetDays);
+  const exactMatch = pointsWithDays.find(sp => sp.calculatedDays === targetDays);
   if (exactMatch) {
     return parseFloat(exactMatch.swapPoint);
   }
 
-  // Find bracketing points for interpolation using TODAY's calculated days
+  // Find bracketing points for interpolation
   let lower = null;
   let upper = null;
 
-  for (const point of pointsWithCurrentDays) {
-    if (point.currentDays <= targetDays) {
+  for (const point of pointsWithDays) {
+    if (point.calculatedDays <= targetDays) {
       lower = point;
     }
     
-    if (point.currentDays >= targetDays && !upper) {
+    if (point.calculatedDays >= targetDays && !upper) {
       upper = point;
       break;
     }
   }
 
-  // If we have both bracketing points, interpolate by days
-  if (lower && upper && lower.currentDays !== upper.currentDays) {
+  // Interpolate if we have bracketing points
+  if (lower && upper && lower.calculatedDays !== upper.calculatedDays) {
     const lowerSwap = parseFloat(lower.swapPoint);
     const upperSwap = parseFloat(upper.swapPoint);
     
     return linearInterpolate(
       targetDays,
-      lower.currentDays,
+      lower.calculatedDays,
       lowerSwap,
-      upper.currentDays,
+      upper.calculatedDays,
       upperSwap
     );
   }
 
-  // If we only have lower point (extrapolate not recommended, return null)
-  if (lower && !upper) {
-    return null;
-  }
-
-  // If we only have upper point (before first tenor)
-  if (!lower && upper) {
-    return null;
+  // Return lower point if available, otherwise upper point
+  if (lower) {
+    return parseFloat(lower.swapPoint);
+  } else if (upper) {
+    return parseFloat(upper.swapPoint);
   }
 
   return null;
