@@ -689,8 +689,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // For Swap: calculate swap point difference between far and near dates
       if (request.productType === "Swap" && request.nearDate && request.farDate) {
-        nearSwapPoint = await getSwapPointForDate(request.currencyPairId, new Date(request.nearDate), storage);
-        farSwapPoint = await getSwapPointForDate(request.currencyPairId, new Date(request.farDate), storage);
+        nearSwapPoint = await getSwapPointForDate(request.currencyPairId, new Date(request.nearDate), storage, request.tenor);
+        farSwapPoint = await getSwapPointForDate(request.currencyPairId, new Date(request.farDate), storage, request.tenor);
         
         console.log(`[Settlement Details] Swap nearDate: ${request.nearDate}, nearSwapPoint: ${nearSwapPoint}, farDate: ${request.farDate}, farSwapPoint: ${farSwapPoint}`);
         
@@ -698,7 +698,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           swapPointDifference = farSwapPoint - nearSwapPoint;
         }
       }
-      // Forward only has one settlement date, so no swap point difference is calculated
+      // Forward: calculate swap point for settlement date
+      if (request.productType === "Forward" && request.nearDate) {
+        nearSwapPoint = await getSwapPointForDate(request.currencyPairId, new Date(request.nearDate), storage, request.tenor);
+        console.log(`[Settlement Details] Forward nearDate: ${request.nearDate}, swapPoint: ${nearSwapPoint}`);
+      }
 
       // Calculate spread for the far date (maturity)
       let spread: number | null = null;
