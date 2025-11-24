@@ -54,6 +54,8 @@ interface SettlementDetails {
   farForwardRate?: number;
   nearForwardRateError?: string;
   farForwardRateError?: string;
+  nearDays?: number;
+  farDays?: number;
 }
 
 interface CurrencyPair {
@@ -184,14 +186,9 @@ export default function QuoteApprovals() {
               if (data.nearDate) {
                 const nearSettlementDate = new Date(data.nearDate);
                 const nearDays = getDaysBetween(spotDate, nearSettlementDate);
-                console.log(`[호가 승인] Near Date 계산:`, {
-                  spotDate: spotDate.toISOString().split('T')[0],
-                  nearDate: data.nearDate.split('T')[0],
-                  nearDays,
-                  baseRate
-                });
                 const nearResult = calculateForwardRate(nearDays, baseRate, tenorData, spotDate, nearSettlementDate);
                 
+                data.nearDays = nearDays;
                 data.nearForwardRate = nearResult.forwardRate;
                 data.nearForwardRateError = nearResult.error;
               }
@@ -200,14 +197,9 @@ export default function QuoteApprovals() {
               if (data.farDate) {
                 const farSettlementDate = new Date(data.farDate);
                 const farDays = getDaysBetween(spotDate, farSettlementDate);
-                console.log(`[호가 승인] Far Date 계산:`, {
-                  spotDate: spotDate.toISOString().split('T')[0],
-                  farDate: data.farDate.split('T')[0],
-                  farDays,
-                  baseRate
-                });
                 const farResult = calculateForwardRate(farDays, baseRate, tenorData, spotDate, farSettlementDate);
                 
+                data.farDays = farDays;
                 data.farForwardRate = farResult.forwardRate;
                 data.farForwardRateError = farResult.error;
               }
@@ -661,9 +653,12 @@ export default function QuoteApprovals() {
                             <div>
                               <div className="font-semibold">{getBaseCurrencyFromPair(request.currencyPairId)} {Number(request.amount).toLocaleString()}</div>
                               <div className="text-slate-400 mt-1">
-                                {request.tenor && request.nearDate 
-                                  ? `${request.tenor} (${request.nearDate.split('T')[0]})`
-                                  : (request.nearDate ? request.nearDate.split('T')[0] : "-")
+                                {expandedDetails[request.id]?.nearDays !== undefined && request.nearDate
+                                  ? `${expandedDetails[request.id].nearDays}D (${request.nearDate.split('T')[0]})`
+                                  : (request.tenor && request.nearDate 
+                                    ? `${request.tenor} (${request.nearDate.split('T')[0]})`
+                                    : (request.nearDate ? request.nearDate.split('T')[0] : "-")
+                                  )
                                 }
                               </div>
                             </div>
