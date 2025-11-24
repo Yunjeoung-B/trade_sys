@@ -116,16 +116,7 @@ export default function QuoteApprovals() {
       // Load settlement details only when expanded
       if (!expandedDetails[requestId]) {
         try {
-          // Get spot date from ForwardRateCalculator (localStorage)
-          const storedSpotDate = localStorage.getItem('forwardCalc_spotDate');
-          const url = new URL(`/api/quote-requests/${requestId}/settlement-details`, window.location.origin);
-          
-          // Add spotDate query parameter if available
-          if (storedSpotDate) {
-            url.searchParams.append('spotDate', storedSpotDate);
-          }
-          
-          const response = await fetch(url.toString());
+          const response = await fetch(`/api/quote-requests/${requestId}/settlement-details`);
           if (response.ok) {
             const data = await response.json();
             setExpandedDetails(prev => ({ ...prev, [requestId]: data }));

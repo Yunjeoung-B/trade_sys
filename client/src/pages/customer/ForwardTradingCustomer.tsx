@@ -256,10 +256,11 @@ export default function ForwardTradingCustomer() {
   };
 
   const submitQuoteRequest = () => {
-    if (!selectedPairData || !spotDate) return;
+    if (!selectedPairData) return;
 
-    // Calculate tenor based on SPOT date
-    const tenorDays = Math.ceil((valueDate.getTime() - spotDate.getTime()) / (1000 * 60 * 60 * 24));
+    // Use spotDate if available, otherwise use current date + 2 business days
+    const referenceSpotDate = spotDate || new Date();
+    const tenorDays = Math.ceil((valueDate.getTime() - referenceSpotDate.getTime()) / (1000 * 60 * 60 * 24));
 
     quoteRequestMutation.mutate({
       productType: "Forward",
