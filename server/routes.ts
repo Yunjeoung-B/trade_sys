@@ -519,50 +519,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...req.body,
         userId: req.user.id,
       });
-
-      // Calculate swap points at creation time (for Forward and Swap products)
-      let nearSwapPoint: number | null = null;
-      let farSwapPoint: number | null = null;
-      const spotDate = getSpotDate();
-
-      if (requestData.productType === "Forward" && requestData.nearDate) {
-        const nearDateObj = typeof requestData.nearDate === 'string' ? new Date(requestData.nearDate) : requestData.nearDate;
-        nearSwapPoint = await getSwapPointForDate(
-          requestData.currencyPairId,
-          nearDateObj,
-          storage,
-          requestData.tenor,
-          spotDate
-        );
-      } else if (requestData.productType === "Swap" && requestData.nearDate && requestData.farDate) {
-        const nearDateObj = typeof requestData.nearDate === 'string' ? new Date(requestData.nearDate) : requestData.nearDate;
-        const farDateObj = typeof requestData.farDate === 'string' ? new Date(requestData.farDate) : requestData.farDate;
-        
-        nearSwapPoint = await getSwapPointForDate(
-          requestData.currencyPairId,
-          nearDateObj,
-          storage,
-          requestData.tenor,
-          spotDate
-        );
-        farSwapPoint = await getSwapPointForDate(
-          requestData.currencyPairId,
-          farDateObj,
-          storage,
-          requestData.tenor,
-          spotDate
-        );
-      }
-
-      // Add calculated swap points and spot date to request data
-      const enhancedRequestData = {
-        ...requestData,
-        nearSwapPoint: nearSwapPoint !== null ? nearSwapPoint : undefined,
-        farSwapPoint: farSwapPoint !== null ? farSwapPoint : undefined,
-        spotDate,
-      };
-
-      const request = await storage.createQuoteRequest(enhancedRequestData as any);
+      const request = await storage.createQuoteRequest(requestData);
       res.json(request);
     } catch (error: any) {
       console.error("Quote request creation error:", error);
@@ -706,7 +663,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get settlement details for a quote request (return calculated swap points)
+  // Get settlement details for a quote request (swap points and spread)
   app.get("/api/quote-requests/:id/settlement-details", isAdmin, async (req: any, res) => {
     try {
       const { id } = req.params;
@@ -727,19 +684,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
 
-      // Return swap points that were calculated at creation time
+      // Calculate swap points for display
       let nearSwapPoint: number | null = null;
       let farSwapPoint: number | null = null;
       let swapPointDifference: number | null = null;
 
-      if (request.productType === "Swap") {
-        nearSwapPoint = request.nearSwapPoint || null;
-        farSwapPoint = request.farSwapPoint || null;
+      const spotDate = getSpotDate();
+
+      // For Swap: calculate swap points for both near and far dates
+      if (request.productType === "Swap" && request.nearDate && request.farDate) {
+        const nearDateObj = typeof request.nearDate === 'string' ? new Date(request.nearDate) : request.nearDate;
+        const farDateObj = typeof request.farDate === 'string' ? new Date(request.farDate) : request.farDate;
+        
+        nearSwapPoint = await getSwapPointForDate(
+          request.currencyPairId,
+          nearDateObj,
+          storage,
+          request.tenor,
+          spotDate
+        );
+        farSwapPoint = await getSwapPointForDate(
+          request.currencyPairId,
+          farDateObj,
+          storage,
+          request.tenor,
+          spotDate
+        );
+        
         if (nearSwapPoint !== null && farSwapPoint !== null) {
           swapPointDifference = farSwapPoint - nearSwapPoint;
         }
-      } else if (request.productType === "Forward") {
-        nearSwapPoint = request.nearSwapPoint || null;
+      } else if (request.productType === "Forward" && request.nearDate) {
+        // For Forward: calculate swap point for settlement date
+        const nearDateObj = typeof request.nearDate === 'string' ? new Date(request.nearDate) : request.nearDate;
+        nearSwapPoint = await getSwapPointForDate(
+          request.currencyPairId,
+          nearDateObj,
+          storage,
+          request.tenor,
+          spotDate
+        );
       }
 
       // Calculate spread for the far date (maturity)

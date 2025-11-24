@@ -98,9 +98,6 @@ export const quoteRequests = pgTable("quote_requests", {
   hedgeCompleted: boolean("hedge_completed").default(false),
   nearSpread: decimal("near_spread", { precision: 8, scale: 4 }),
   farSpread: decimal("far_spread", { precision: 8, scale: 4 }),
-  nearSwapPoint: decimal("near_swap_point", { precision: 12, scale: 6 }), // Calculated at creation
-  farSwapPoint: decimal("far_swap_point", { precision: 12, scale: 6 }), // Calculated at creation
-  spotDate: timestamp("spot_date"), // Reference SPOT date for calculations
   status: varchar("status").default("REQUESTED"), // REQUESTED, QUOTE_READY, CONFIRMED, EXPIRED
   approvedBy: varchar("approved_by").references(() => users.id),
   approvedAt: timestamp("approved_at"),
