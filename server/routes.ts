@@ -515,11 +515,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/quote-requests", isAuthenticated, async (req: any, res) => {
     try {
+      console.log("[Quote Request] Received:", { 
+        productType: req.body.productType, 
+        nearDate: req.body.nearDate,
+        farDate: req.body.farDate,
+        tenor: req.body.tenor,
+        amount: req.body.amount 
+      });
       const requestData = insertQuoteRequestSchema.parse({
         ...req.body,
         userId: req.user.id,
       });
+      console.log("[Quote Request] Parsed:", { 
+        productType: requestData.productType, 
+        nearDate: requestData.nearDate,
+        farDate: requestData.farDate,
+        status: "REQUESTED"
+      });
       const request = await storage.createQuoteRequest(requestData);
+      console.log("[Quote Request] Created:", { 
+        id: request.id, 
+        productType: request.productType,
+        status: request.status
+      });
       res.json(request);
     } catch (error: any) {
       console.error("Quote request creation error:", error);

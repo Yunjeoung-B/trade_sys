@@ -47,7 +47,7 @@ export default function ForwardTradingCustomer() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Show info dialog on first visit & Load SPOT date from ForwardRateCalculator
+  // Show info dialog on first visit & Load SPOT date from market rates
   useEffect(() => {
     const hasSeenIntro = localStorage.getItem("forward-trading-intro-seen");
     if (!hasSeenIntro) {
@@ -55,15 +55,18 @@ export default function ForwardTradingCustomer() {
       setShowInfoDialog(true);
     }
     
-    // Get SPOT date from ForwardRateCalculator (localStorage)
-    const storedSpotDate = localStorage.getItem('forwardCalc_spotDate');
-    if (storedSpotDate) {
-      const spotDateObj = new Date(storedSpotDate);
-      setSpotDate(spotDateObj);
-      // Set valueDate to SPOT + 1 day (T+3) as default
-      setValueDate(addDays(spotDateObj, 1));
+    // Get SPOT date from market rates (most recent data)
+    if (marketRates && marketRates.length > 0) {
+      // Find the most recent market rate
+      const latestRate = marketRates[0];
+      if (latestRate && latestRate.spotDate) {
+        const spotDateObj = new Date(latestRate.spotDate);
+        setSpotDate(spotDateObj);
+        // Set valueDate to SPOT + 1 day (T+3) as default
+        setValueDate(addDays(spotDateObj, 1));
+      }
     }
-  }, []);
+  }, [marketRates]);
 
   // Placeholder for swap point info display
   // Swap points will be shown after quote request is submitted and approved
@@ -72,6 +75,12 @@ export default function ForwardTradingCustomer() {
 
   const { data: currencyPairs = [] } = useQuery<CurrencyPair[]>({
     queryKey: ["/api/currency-pairs"],
+  });
+
+  // Fetch market rates to get latest SPOT date
+  const { data: marketRates = [] } = useQuery<any[]>({
+    queryKey: ["/api/market-rates"],
+    refetchInterval: 10000,
   });
 
   // Fetch approved quotes (QUOTE_READY)
