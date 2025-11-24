@@ -258,14 +258,24 @@ export async function getSwapPointForDate(
     return result;
   }
 
-  // Fallback to single point if only one available
-  if (lower) {
-    console.log(`[SwapPoint Debug] RESULT: Only lower bracket available = ${lower.swapPoint}`);
-    return parseFloat(lower.swapPoint);
+  // Handle insufficient bracket cases
+  if (lower && !upper && lower.calculatedDays < targetDays) {
+    // Target date exceeds the highest available data point
+    const maxDays = pointsWithDays[pointsWithDays.length - 1].calculatedDays;
+    console.log(`[SwapPoint Debug] ERROR: Target date (${targetDays} days) exceeds maximum available data (${maxDays} days)`);
+    throw new Error(`Settlement date exceeds maximum available swap point data. Maximum: ${maxDays} days, Requested: ${targetDays} days`);
   }
-  if (upper) {
+  
+  if (upper && !lower) {
+    // Only upper bracket available - use it as-is (SPOT-based, lower = 0)
     console.log(`[SwapPoint Debug] RESULT: Only upper bracket available = ${upper.swapPoint}`);
     return parseFloat(upper.swapPoint);
+  }
+
+  if (lower) {
+    // Should not reach here, but fallback to lower if only that exists
+    console.log(`[SwapPoint Debug] RESULT: Only lower bracket available = ${lower.swapPoint}`);
+    return parseFloat(lower.swapPoint);
   }
 
   console.log(`[SwapPoint Debug] RESULT: No interpolation possible, returning null`);

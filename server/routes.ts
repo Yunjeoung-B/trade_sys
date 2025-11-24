@@ -480,7 +480,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     } catch (error: any) {
       console.error("Quote preview error:", error);
-      res.status(500).json({ message: error.message || "Failed to calculate quote preview" });
+      // Return 400 for client errors (e.g., settlement date out of range)
+      const statusCode = error.message?.includes("exceeds maximum") ? 400 : 500;
+      res.status(statusCode).json({ message: error.message || "Failed to calculate quote preview" });
     }
   });
 
@@ -769,9 +771,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         swapPointDifference,
         spread
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Settlement details error:", error);
-      res.status(500).json({ message: "Failed to calculate settlement details" });
+      // Return 400 for client errors (e.g., settlement date out of range)
+      const statusCode = error.message?.includes("exceeds maximum") ? 400 : 500;
+      const message = error.message?.includes("exceeds maximum") 
+        ? error.message 
+        : "Failed to calculate settlement details";
+      res.status(statusCode).json({ message });
     }
   });
 
