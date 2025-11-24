@@ -604,13 +604,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get customer rates for quote requests (admin only)
   app.get("/api/quote-requests/customer-rates", isAdmin, async (req: any, res) => {
     try {
-      const pendingRequests = await storage.getPendingQuoteRequests();
+      const allRequests = await storage.getAllQuoteRequests();
       const customerRates: Record<string, { baseRate: number; spread: number; customerRate: number }> = {};
       
       // Get all latest market rates
       const allMarketRates = await storage.getLatestMarketRates();
       
-      for (const request of pendingRequests) {
+      for (const request of allRequests) {
         try {
           // Skip if currencyPairId is null
           if (!request.currencyPairId) continue;
