@@ -398,15 +398,24 @@ export default function ForwardRateCalculator() {
       return;
     }
 
-    // tenorRows의 daysFromSpot 기반 보간 (ForwardRateCalculator 표준 방식) - SPOT 이후
-    // IMPORTANT: Filter out ON and TN (pre-SPOT settlement dates)
-    // Per requirement: ON/TN are not reflected in SPOT-based calculations
+    // Target이 음수면 Spot 미만이므로 계산 불가
+    if (target < 0) {
+      toast({
+        title: "범위 초과",
+        description: "Spot 이후(0일 이상)의 날짜만 계산 가능합니다.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // tenorRows의 daysFromSpot 기반 보간 (ForwardRateCalculator 표준 방식)
+    // IMPORTANT: Spot(0일) 포함, ON/TN(음수 days) 제외
     const validTenors = tenorRows
-      .filter(t => t.tenor !== "Spot" && t.tenor !== "ON" && t.tenor !== "TN")
+      .filter(t => t.tenor !== "ON" && t.tenor !== "TN")  // Spot은 포함!
       .map(t => ({
         ...t,
-        days: t.daysFromSpot,
-        swapPointNum: parseFloat(t.swapPoint || "0"),
+        days: t.tenor === "Spot" ? 0 : t.daysFromSpot,
+        swapPointNum: t.tenor === "Spot" ? 0 : parseFloat(t.swapPoint || "0"),
       }))
       .sort((a, b) => a.days - b.days);
 
