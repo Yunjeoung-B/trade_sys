@@ -176,10 +176,52 @@ export async function getSwapPointForDate(
     }
   }
 
+  // Handle SPOT-before dates with special logic
+  if (targetDays < 0) {
+    // For SPOT-before settlement dates, use simple rule:
+    // T+1 (ON, -1 days from SPOT): swap = -TN
+    // T (TODAY, -2 days from SPOT): swap = -(ON + TN)
+    // Between: interpolation
+    
+    const onPoint = pointsWithDays.find(p => p.calculatedDays === -1);
+    const tnPoint = pointsWithDays.find(p => p.calculatedDays === 0);
+    
+    if (onPoint && tnPoint) {
+      const onSwap = parseFloat(onPoint.swapPoint);
+      const tnSwap = parseFloat(tnPoint.swapPoint);
+      
+      if (targetDays === -1) {
+        // T+1 (ON): -TN
+        const result = -tnSwap;
+        console.log(`[SwapPoint Debug] SPOT-before T+1: -TN = ${result}`);
+        return result;
+      } else if (targetDays === -2) {
+        // T (TODAY): -(ON + TN)
+        const result = -(onSwap + tnSwap);
+        console.log(`[SwapPoint Debug] SPOT-before T: -(ON + TN) = ${result}`);
+        return result;
+      } else if (targetDays > -2 && targetDays < -1) {
+        // Between TODAY and ON: interpolate
+        const lowerSwap = -(onSwap + tnSwap); // TODAY
+        const upperSwap = -tnSwap; // ON
+        const daysFromToday = targetDays + 2; // TODAY = 0
+        
+        const result = lowerSwap + (upperSwap - lowerSwap) * daysFromToday / 1;
+        console.log(`[SwapPoint Debug] SPOT-before interpolation: (${targetDays}+2)/1 * (${upperSwap}-(${lowerSwap})) + ${lowerSwap} = ${result}`);
+        return result;
+      } else if (targetDays < -2) {
+        // Before TODAY: use TODAY swap
+        const result = -(onSwap + tnSwap);
+        console.log(`[SwapPoint Debug] SPOT-before (before TODAY): -(ON + TN) = ${result}`);
+        return result;
+      }
+    }
+  }
+
   console.log(`[SwapPoint Debug] Lower bracket: ${lower ? `${lower.calculatedDays}days(${lower.swapPoint})` : 'none'}`);
   console.log(`[SwapPoint Debug] Upper bracket: ${upper ? `${upper.calculatedDays}days(${upper.swapPoint})` : 'none'}`);
 
-  // Perform linear interpolation (same as ForwardRateCalculator)
+  // Perform linear interpolation (same as ForwardRateCalculator) for SPOT-after dates
   if (lower && upper) {
     const lowerSwap = parseFloat(lower.swapPoint);
     const upperSwap = parseFloat(upper.swapPoint);
