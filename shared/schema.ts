@@ -88,7 +88,6 @@ export const quoteRequests = pgTable("quote_requests", {
   validityType: varchar("validity_type"), // DAY or TIME
   validUntilTime: varchar("valid_until_time"), // HH:MM format
   tenor: varchar("tenor"), // 1M, 3M, 6M, 1Y, etc.
-  spotDate: timestamp("spot_date"), // Spot date at the time of quote creation (T+2)
   nearDate: timestamp("near_date"), // for swaps and forwards (value date)
   farDate: timestamp("far_date"), // for swaps
   nearRate: decimal("near_rate", { precision: 12, scale: 4 }), // for swaps
@@ -210,9 +209,6 @@ export const insertQuoteRequestSchema = createInsertSchema(quoteRequests).omit({
 }).extend({
   amount: z.union([z.string(), z.number()]).transform(val => String(val)),
   limitRate: z.union([z.string(), z.number(), z.null()]).transform(val => val === null ? null : String(val)).optional(),
-  spotDate: z.union([z.string(), z.date(), z.null()]).transform(val => 
-    val === null ? null : (typeof val === 'string' ? new Date(val) : val)
-  ).optional(),
   nearDate: z.union([z.string(), z.date(), z.null()]).transform(val => 
     val === null ? null : (typeof val === 'string' ? new Date(val) : val)
   ).optional(),

@@ -56,23 +56,20 @@ function calculateTenorDays(spotDate: Date, tenor: string): number {
 /**
  * Get swap point for a specific settlement date using linear interpolation
  * Uses tenor-based days calculation (consistent with ForwardRateCalculator)
- * @param referenceSpotDate - Optional spot date reference (typically from quote creation time)
- *                           If provided, uses this instead of recalculating T+2
  */
 export async function getSwapPointForDate(
   currencyPairId: string,
   settlementDate: Date,
   storage: IStorage,
-  tenor?: string,
-  referenceSpotDate?: Date
+  tenor?: string
 ): Promise<number | null> {
-  // Use provided spot date or calculate T+2 from today
-  const spotDate = referenceSpotDate || getSpotDate();
+  // Get the base spot date (T+2)
+  const spotDate = getSpotDate();
   const targetDays = getDaysBetween(spotDate, settlementDate);
 
   console.log(`[SwapPoint Debug] ====== START CALCULATION ======`);
   console.log(`[SwapPoint Debug] Settlement Date: ${new Date(settlementDate).toISOString().split('T')[0]}`);
-  console.log(`[SwapPoint Debug] Spot Date: ${spotDate.toISOString().split('T')[0]} ${referenceSpotDate ? '(reference)' : '(current T+2)'}`);
+  console.log(`[SwapPoint Debug] Spot Date: ${spotDate.toISOString().split('T')[0]}`);
   console.log(`[SwapPoint Debug] Target Days (Date-based): ${targetDays}`);
   console.log(`[SwapPoint Debug] Tenor: ${tenor || 'none'}`);
 

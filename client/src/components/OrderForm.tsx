@@ -23,27 +23,6 @@ interface CurrencyPair {
   quoteCurrency: string;
 }
 
-// Helper function to add business days
-function addBusinessDays(date: Date, days: number): Date {
-  const result = new Date(date);
-  let remaining = days;
-  
-  while (remaining > 0) {
-    result.setDate(result.getDate() + 1);
-    const dayOfWeek = result.getDay();
-    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-      remaining--;
-    }
-  }
-  
-  return result;
-}
-
-// Helper function to calculate spot date (T+2)
-function getSpotDate(baseDate: Date = new Date()): Date {
-  return addBusinessDays(baseDate, 2);
-}
-
 export default function OrderForm({ 
   productType, 
   title, 
@@ -116,15 +95,11 @@ export default function OrderForm({
       }
     }
 
-    // Calculate current spot date (T+2) to store with the quote
-    const currentSpotDate = getSpotDate();
-
     const orderData: any = {
       productType,
       currencyPairId,
       direction,
       amount: parseFloat(amount),
-      spotDate: currentSpotDate, // Store spot date at quote creation time
     };
 
     if (productType === "Forward" || productType === "Swap") {
