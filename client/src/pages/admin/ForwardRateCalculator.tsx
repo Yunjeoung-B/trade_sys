@@ -14,7 +14,7 @@ import {
 import { Calculator, Save, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import type { CurrencyPair, SwapPoint } from "@shared/schema";
+import type { CurrencyPair, SwapPoint, OnTnRate } from "@shared/schema";
 
 interface TenorRow {
   tenor: string;
@@ -161,6 +161,16 @@ export default function ForwardRateCalculator() {
     upperSwapPoint?: number;
   } | null>(null);
 
+  // 현물환율 계산용
+  const [spotRateCalcDate, setSpotRateCalcDate] = useState<string>("");
+  const [spotRateCalcResult, setSpotRateCalcResult] = useState<{
+    date: string;
+    days: number;
+    swapPoint: number;
+    forwardRate: number;
+    calculation: string;
+  } | null>(null);
+
   const { data: currencyPairs = [] } = useQuery<CurrencyPair[]>({
     queryKey: ["/api/currency-pairs"],
   });
@@ -186,6 +196,11 @@ export default function ForwardRateCalculator() {
 
   const { data: swapPoints = [], isLoading: loadingSwapPoints } = useQuery<SwapPoint[]>({
     queryKey: ["/api/swap-points", selectedPairId],
+    enabled: !!selectedPairId,
+  });
+
+  const { data: onTnRates = [] } = useQuery<OnTnRate[]>({
+    queryKey: ["/api/on-tn-rates", selectedPairId],
     enabled: !!selectedPairId,
   });
 
@@ -589,6 +604,90 @@ export default function ForwardRateCalculator() {
     });
   };
 
+  // 현물환율 계산 함수
+  const calculateSpotRateSwapPoint = () => {
+    if (!spotRateCalcDate) {
+      toast({
+        title: "날짜 입력 필요",
+        description: "날짜를 선택해주세요.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const today = new Date();
+    const calcDate = new Date(spotRateCalcDate);
+    const spot = new Date(spotDate);
+
+    // 범위 체크: Today ~ Spot Date만 허용
+    if (calcDate < today || calcDate > spot) {
+      toast({
+        title: "범위 오류",
+        description: `날짜는 ${formatDateForInput(today)} ~ ${formatDateForInput(spot)} 사이여야 합니다.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // ON/TN rates 찾기
+    const onRate = onTnRates.find(r => r.tenor === "ON");
+    const tnRate = onTnRates.find(r => r.tenor === "TN");
+
+    if (!onRate || !tnRate) {
+      toast({
+        title: "데이터 부족",
+        description: "ON/TN 데이터가 없습니다.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const onSwapPoint = parseFloat(onRate.swapPoint);
+    const tnSwapPoint = parseFloat(tnRate.swapPoint);
+    const onDays = onRate.settlementDate ? getDaysBetween(today, new Date(onRate.settlementDate)) : 1;
+    const tnDays = tnRate.settlementDate ? getDaysBetween(new Date(onRate.settlementDate), new Date(tnRate.settlementDate)) : 1;
+
+    const daysFromToday = getDaysBetween(today, calcDate);
+
+    // Calculate swap point using linear interpolation
+    // Today = -(ON + TN) at days=(ON+TN)days
+    // Spot = 0 at days=0
+    let swapPoint: number;
+    let calculation: string;
+
+    if (daysFromToday === 0) {
+      // Today
+      swapPoint = -(onSwapPoint + tnSwapPoint);
+      calculation = `Today: -(ON + TN) = -(${onSwapPoint} + ${tnSwapPoint}) = ${swapPoint}`;
+    } else if (daysFromToday === tnDays) {
+      // TN date (Spot - 1 business day)
+      swapPoint = -tnSwapPoint;
+      calculation = `TN Date: -TN = -${tnSwapPoint} = ${swapPoint}`;
+    } else if (daysFromToday === onDays + tnDays) {
+      // Spot date
+      swapPoint = 0;
+      calculation = `Spot Date: 0`;
+    } else {
+      // Interpolation between Today and Spot
+      const totalDays = onDays + tnDays;
+      const startSwapPoint = -(onSwapPoint + tnSwapPoint); // Today
+      const endSwapPoint = 0; // Spot
+      swapPoint = startSwapPoint + ((endSwapPoint - startSwapPoint) * daysFromToday) / totalDays;
+      calculation = `보간: ${startSwapPoint} + ((${endSwapPoint} - ${startSwapPoint}) * ${daysFromToday}) / ${totalDays} = ${swapPoint.toFixed(6)}`;
+    }
+
+    const spotRateNum = parseFloat(spotRate);
+    const forwardRate = spotRateNum + swapPoint / 100;
+
+    setSpotRateCalcResult({
+      date: spotRateCalcDate,
+      days: daysFromToday,
+      swapPoint: parseFloat(swapPoint.toFixed(6)),
+      forwardRate: parseFloat(forwardRate.toFixed(4)),
+      calculation,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-800 via-blue-900 to-purple-900 p-6">
       <div className="max-w-7xl mx-auto">
@@ -850,6 +949,98 @@ export default function ForwardRateCalculator() {
                   <li>• 선형보간으로 중간값 계산</li>
                   <li>• Forward = Spot + Swap Point/100</li>
                 </ul>
+              </div>
+            </Card>
+          </div>
+
+          {/* 현물환율 계산 패널 */}
+          <div className="lg:col-span-1">
+            <Card className="bg-white/10 backdrop-blur-md border-white/20 rounded-3xl p-6 sticky top-6">
+              <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+                <Calculator className="h-6 w-6 text-teal-400" />
+                현물환율 계산
+              </h2>
+              
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-white mb-2 block text-sm">계산 날짜</Label>
+                  <div className="text-xs text-blue-200 mb-2">
+                    {formatDateForInput(new Date())} ~ {formatDateForInput(spotDate)}
+                  </div>
+                  <Input
+                    type="date"
+                    value={spotRateCalcDate}
+                    onChange={(e) => setSpotRateCalcDate(e.target.value)}
+                    min={formatDateForInput(new Date())}
+                    max={formatDateForInput(spotDate)}
+                    className="bg-white/20 border-white/30 text-white rounded-2xl"
+                    data-testid="input-spot-rate-calc-date"
+                  />
+                </div>
+
+                <Button
+                  onClick={calculateSpotRateSwapPoint}
+                  disabled={!onTnRates.length || !spotRateCalcDate}
+                  className="w-full bg-gradient-to-r from-teal-500 to-blue-600 hover:from-teal-600 hover:to-blue-700 text-white rounded-2xl"
+                  data-testid="button-calc-spot-rate"
+                >
+                  <Calculator className="mr-2 h-4 w-4" />
+                  계산
+                </Button>
+
+                {spotRateCalcResult && (
+                  <div className="bg-white/20 rounded-2xl p-4 space-y-3 border border-teal-400/30">
+                    <h3 className="font-semibold text-teal-300 mb-3">📊 계산 결과</h3>
+                    
+                    <div className="bg-white/5 rounded-xl p-3 space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-blue-200 text-sm">날짜:</span>
+                        <span className="text-white font-mono">{spotRateCalcResult.date}</span>
+                      </div>
+                      
+                      <div className="flex justify-between">
+                        <span className="text-blue-200 text-sm">Days:</span>
+                        <span className="text-white font-mono">{spotRateCalcResult.days}</span>
+                      </div>
+                      
+                      <div className="flex justify-between">
+                        <span className="text-blue-200 text-sm">Swap Point:</span>
+                        <span className="text-white font-mono">{spotRateCalcResult.swapPoint.toFixed(6)}</span>
+                      </div>
+                    </div>
+
+                    <div className="border-t border-white/20 pt-3">
+                      <p className="text-blue-200 text-xs mb-1">Forward Rate</p>
+                      <p className="text-teal-300 font-mono text-xl font-bold" data-testid="result-spot-rate">
+                        {spotRateCalcResult.forwardRate.toFixed(4)}
+                      </p>
+                    </div>
+
+                    <div className="bg-blue-900/40 rounded-xl p-2">
+                      <p className="text-xs text-blue-300 font-mono break-all">
+                        {spotRateCalcResult.calculation}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="mt-6 p-3 bg-blue-900/30 rounded-2xl">
+                  <h4 className="text-xs font-semibold text-white mb-2">📖 계산 방식</h4>
+                  <ul className="text-xs text-blue-200 space-y-1">
+                    <li>• Today (T+0): -(ON + TN)</li>
+                    <li>• TN Date: -TN</li>
+                    <li>• Spot (T+2): 0</li>
+                    <li>• 중간: 선형 보간</li>
+                  </ul>
+                </div>
+
+                {!onTnRates.length && (
+                  <div className="p-3 bg-orange-900/30 rounded-xl border border-orange-400/30">
+                    <p className="text-xs text-orange-300">
+                      ⚠️ ON/TN 데이터가 없습니다. 왼쪽에서 추가해주세요.
+                    </p>
+                  </div>
+                )}
               </div>
             </Card>
           </div>
