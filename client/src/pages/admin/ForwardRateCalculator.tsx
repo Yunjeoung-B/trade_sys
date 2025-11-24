@@ -25,7 +25,9 @@ interface TenorRow {
   askPrice: string;
 }
 
-const standardTenors = ["Spot", "ON", "TN", "1M", "2M", "3M", "6M", "9M", "12M"];
+// IMPORTANT: Exclude ON and TN from standard tenors
+// Per requirement: ON/TN are pre-SPOT settlement dates and not reflected in SPOT-based calculations
+const standardTenors = ["Spot", "1M", "2M", "3M", "6M", "9M", "12M"];
 
 // Helper functions for date calculations
 function addBusinessDays(date: Date, days: number): Date {
