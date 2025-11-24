@@ -159,6 +159,20 @@ export const swapPoints = pgTable("swap_points", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Swap points history (변경 내역 기록)
+export const swapPointsHistory = pgTable("swap_points_history", {
+  id: varchar("id").primaryKey(),
+  currencyPairId: varchar("currency_pair_id").references(() => currencyPairs.id),
+  tenor: varchar("tenor"),
+  settlementDate: timestamp("settlement_date"),
+  previousSwapPoint: decimal("previous_swap_point", { precision: 12, scale: 6 }), // 이전 값
+  newSwapPoint: decimal("new_swap_point", { precision: 12, scale: 6 }).notNull(), // 새로운 값
+  changeReason: varchar("change_reason"), // 변경 사유: "manual_update", "excel_upload" 등
+  changedBy: varchar("changed_by").references(() => users.id),
+  changedAt: timestamp("changed_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -246,6 +260,18 @@ export const insertSwapPointSchema = createInsertSchema(swapPoints).omit({
   ).optional(),
 });
 
+export const insertSwapPointsHistorySchema = createInsertSchema(swapPointsHistory).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  previousSwapPoint: z.union([z.string(), z.number(), z.null()]).transform(val => val === null ? null : String(val)).optional(),
+  newSwapPoint: z.union([z.string(), z.number()]).transform(val => String(val)),
+  changedAt: z.union([z.string(), z.date()]).transform(val => typeof val === 'string' ? new Date(val) : val).optional(),
+  settlementDate: z.union([z.string(), z.date(), z.null()]).transform(val => 
+    val === null ? null : (typeof val === 'string' ? new Date(val) : val)
+  ).optional(),
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -270,6 +296,9 @@ export type InsertAutoApprovalSetting = z.infer<typeof insertAutoApprovalSetting
 
 export type SwapPoint = typeof swapPoints.$inferSelect;
 export type InsertSwapPoint = z.infer<typeof insertSwapPointSchema>;
+
+export type SwapPointsHistory = typeof swapPointsHistory.$inferSelect;
+export type InsertSwapPointsHistory = z.infer<typeof insertSwapPointsHistorySchema>;
 
 // Infomax API Status Schema
 export const infomaxStatusSchema = z.object({

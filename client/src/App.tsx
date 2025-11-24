@@ -25,6 +25,7 @@ import ExcelMonitoring from "@/pages/admin/ExcelMonitoring";
 import FXSpotMonitoring from "@/pages/admin/FXSpotMonitoring";
 import FXSwapMonitoring from "@/pages/admin/FXSwapMonitoring";
 import ForwardRateCalculator from "@/pages/admin/ForwardRateCalculator";
+import SwapPointsHistoryPage from "@/pages/admin/SwapPointsHistoryPage";
 
 function Router() {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -105,6 +106,9 @@ function Router() {
           </Route>
           <Route path="/admin/excel">
             {user?.role === "admin" ? <ExcelMonitoring /> : <NotFound />}
+          </Route>
+          <Route path="/admin/swap-points-history">
+            {user?.role === "admin" ? <SwapPointsHistoryPage /> : <NotFound />}
           </Route>
         </Layout>
       )}

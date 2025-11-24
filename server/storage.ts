@@ -7,6 +7,7 @@ import {
   trades,
   autoApprovalSettings,
   swapPoints,
+  swapPointsHistory,
   type User,
   type InsertUser,
   type CurrencyPair,
@@ -23,6 +24,8 @@ import {
   type InsertAutoApprovalSetting,
   type SwapPoint,
   type InsertSwapPoint,
+  type SwapPointsHistory,
+  type InsertSwapPointsHistory,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, sql } from "drizzle-orm";
@@ -96,6 +99,8 @@ export interface IStorage {
   getSwapPointByTenor(currencyPairId: string, tenor: string): Promise<SwapPoint | undefined>;
   getSwapPointByDays(currencyPairId: string, days: number): Promise<SwapPoint | undefined>;
   getSwapPointsByCurrencyPair(currencyPairId: string): Promise<SwapPoint[]>;
+  getSwapPointsHistory(currencyPairId: string, limit?: number): Promise<SwapPointsHistory[]>;
+  createSwapPointsHistory(history: InsertSwapPointsHistory): Promise<SwapPointsHistory>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -741,6 +746,26 @@ export class DatabaseStorage implements IStorage {
       .from(swapPoints)
       .where(eq(swapPoints.currencyPairId, currencyPairId))
       .orderBy(swapPoints.days);
+  }
+
+  async getSwapPointsHistory(currencyPairId: string, limit: number = 100): Promise<SwapPointsHistory[]> {
+    return await db
+      .select()
+      .from(swapPointsHistory)
+      .where(eq(swapPointsHistory.currencyPairId, currencyPairId))
+      .orderBy(desc(swapPointsHistory.changedAt))
+      .limit(limit);
+  }
+
+  async createSwapPointsHistory(history: InsertSwapPointsHistory): Promise<SwapPointsHistory> {
+    const [record] = await db
+      .insert(swapPointsHistory)
+      .values({
+        id: generateId(),
+        ...history,
+      })
+      .returning();
+    return record;
   }
 }
 

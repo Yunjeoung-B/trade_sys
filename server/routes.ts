@@ -18,6 +18,7 @@ import {
   insertTradeSchema,
   insertAutoApprovalSettingSchema,
   insertSwapPointSchema,
+  insertSwapPointsHistorySchema,
 } from "@shared/schema";
 import session from "express-session";
 import passport from "passport";
@@ -1226,7 +1227,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create single swap point (admin only)
+  // Get swap points change history (admin only)
+  app.get("/api/swap-points-history", isAdmin, async (req, res) => {
+    try {
+      const currencyPairId = req.query.currencyPairId as string;
+      const limit = parseInt(req.query.limit as string) || 100;
+      
+      if (!currencyPairId) {
+        return res.status(400).json({ message: "Currency pair ID is required" });
+      }
+      
+      const history = await storage.getSwapPointsHistory(currencyPairId, limit);
+      res.json(history);
+    } catch (error) {
+      console.error("Get swap points history error:", error);
+      res.status(500).json({ message: "Failed to get swap points history" });
+    }
+  });
+
+  // Create single swap point (admin only) - 같은 settlement date 기존 데이터 삭제 후 저장
   app.post("/api/swap-points", isAdmin, async (req, res) => {
     try {
       const userId = (req.user as any)?.id || 'system';
@@ -1236,7 +1255,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         uploadedBy: userId,
       });
       
+      // 같은 settlement date의 기존 데이터 조회
+      const existingPoints = await storage.getSwapPointsByCurrencyPair(validated.currencyPairId);
+      const existingForDate = existingPoints.find(sp => {
+        if (!sp.settlementDate || !validated.settlementDate) return false;
+        const spDate = new Date(sp.settlementDate).toISOString().split('T')[0];
+        const valDate = new Date(validated.settlementDate).toISOString().split('T')[0];
+        return spDate === valDate;
+      });
+      
+      // 기존 데이터가 있으면 삭제
+      if (existingForDate) {
+        await storage.deleteSwapPoint(existingForDate.id);
+      }
+      
+      // 새 데이터 저장
       const created = await storage.createSwapPoint(validated);
+      
+      // 변경 내역 기록
+      await storage.createSwapPointsHistory({
+        currencyPairId: validated.currencyPairId,
+        tenor: validated.tenor || null,
+        settlementDate: validated.settlementDate || null,
+        previousSwapPoint: existingForDate ? parseFloat(existingForDate.swapPoint) : null,
+        newSwapPoint: parseFloat(created.swapPoint),
+        changeReason: "manual_update",
+        changedBy: userId,
+        changedAt: new Date(),
+      });
+      
       res.json(created);
     } catch (error) {
       console.error("Create swap point error:", error);
