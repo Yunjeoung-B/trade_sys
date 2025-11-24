@@ -47,7 +47,13 @@ export default function ForwardTradingCustomer() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Show info dialog on first visit & Load SPOT date from market rates
+  const [baseCurrency, quoteCurrency] = selectedPair.split('/');
+
+  const { data: currencyPairs = [] } = useQuery<CurrencyPair[]>({
+    queryKey: ["/api/currency-pairs"],
+  });
+
+  // Show info dialog on first visit & Calculate SPOT date (T+2)
   useEffect(() => {
     const hasSeenIntro = localStorage.getItem("forward-trading-intro-seen");
     if (!hasSeenIntro) {
@@ -55,33 +61,18 @@ export default function ForwardTradingCustomer() {
       setShowInfoDialog(true);
     }
     
-    // Get SPOT date from market rates (most recent data)
-    if (marketRates && marketRates.length > 0) {
-      // Find the most recent market rate
-      const latestRate = marketRates[0];
-      if (latestRate && latestRate.spotDate) {
-        const spotDateObj = new Date(latestRate.spotDate);
-        setSpotDate(spotDateObj);
-        // Set valueDate to SPOT + 1 day (T+3) as default
-        setValueDate(addDays(spotDateObj, 1));
-      }
-    }
-  }, [marketRates]);
+    // SPOT is always T+2 (2 business days from today)
+    // For simplicity, calculate as today + 2 calendar days
+    const today = new Date();
+    const spotDateObj = addDays(today, 2); // T+2 = SPOT
+    console.log("[Forward] SPOT date (T+2):", spotDateObj, "From today:", today);
+    setSpotDate(spotDateObj);
+    // Set valueDate to SPOT + 1 day (T+3) as default
+    setValueDate(addDays(spotDateObj, 1));
+  }, []);
 
   // Placeholder for swap point info display
   // Swap points will be shown after quote request is submitted and approved
-
-  const [baseCurrency, quoteCurrency] = selectedPair.split('/');
-
-  const { data: currencyPairs = [] } = useQuery<CurrencyPair[]>({
-    queryKey: ["/api/currency-pairs"],
-  });
-
-  // Fetch market rates to get latest SPOT date
-  const { data: marketRates = [] } = useQuery<any[]>({
-    queryKey: ["/api/market-rates"],
-    refetchInterval: 10000,
-  });
 
   // Fetch approved quotes (QUOTE_READY)
   const { data: approvedQuotes = [] } = useQuery<QuoteRequest[]>({
