@@ -46,7 +46,8 @@ function addBusinessDays(date: Date, days: number): Date {
 }
 
 function getSpotDate(baseDate: Date = new Date()): Date {
-  return addBusinessDays(baseDate, 2);
+  // SPOT = T+2 (오늘 + 2 calendar days, not business days)
+  return addDays(baseDate, 2);
 }
 
 function getDaysBetween(start: Date, end: Date): number {
