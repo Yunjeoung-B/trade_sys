@@ -404,8 +404,10 @@ export default function ForwardRateCalculator() {
     }
 
     // tenorRows의 daysFromSpot 기반 보간 (ForwardRateCalculator 표준 방식) - SPOT 이후
+    // IMPORTANT: Filter out ON and TN (pre-SPOT settlement dates)
+    // Per requirement: ON/TN are not reflected in SPOT-based calculations
     const validTenors = tenorRows
-      .filter(t => t.tenor !== "Spot")
+      .filter(t => t.tenor !== "Spot" && t.tenor !== "ON" && t.tenor !== "TN")
       .map(t => ({
         ...t,
         days: t.daysFromSpot,
