@@ -212,9 +212,10 @@ export const insertQuoteRequestSchema = createInsertSchema(quoteRequests).omit({
   nearDate: z.union([z.string(), z.date(), z.null()]).transform(val => {
     if (val === null) return null;
     if (typeof val === 'string') {
-      // If it's a date string like "2025-11-27", add UTC time
+      // If it's a date string like "2025-11-27", create UTC midnight explicitly
       if (val.length === 10 && val.includes('-')) {
-        return new Date(`${val}T00:00:00Z`);
+        const [year, month, day] = val.split('-').map(Number);
+        return new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
       }
       return new Date(val);
     }
@@ -223,9 +224,10 @@ export const insertQuoteRequestSchema = createInsertSchema(quoteRequests).omit({
   farDate: z.union([z.string(), z.date(), z.null()]).transform(val => {
     if (val === null) return null;
     if (typeof val === 'string') {
-      // If it's a date string like "2025-12-24", add UTC time
+      // If it's a date string like "2025-12-24", create UTC midnight explicitly
       if (val.length === 10 && val.includes('-')) {
-        return new Date(`${val}T00:00:00Z`);
+        const [year, month, day] = val.split('-').map(Number);
+        return new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
       }
       return new Date(val);
     }
