@@ -100,13 +100,11 @@ export async function getSwapPointForDate(
     }
   }
   
-  // Convert to array with calculated days (using tenor if available, or settlement date)
+  // Convert to array with calculated days (always SPOT-based, using settlement date)
   const pointsWithDays = Array.from(pointsByDate.values())
     .map(sp => {
-      // Use tenor-based days if tenor is available in swap point, otherwise calculate from settlement date
-      let calculatedDays = sp.tenor 
-        ? calculateTenorDays(spotDate, sp.tenor)
-        : getDaysBetween(spotDate, new Date(sp.settlementDate!));
+      // Calculate days from SPOT to settlement date (all calculations Spot-based)
+      const calculatedDays = getDaysBetween(spotDate, new Date(sp.settlementDate!));
       
       console.log(`[SwapPoint Debug] Data Point: tenor=${sp.tenor}, date=${sp.settlementDate}, swapPoint=${sp.swapPoint}, calculatedDays=${calculatedDays}`);
       
