@@ -577,7 +577,7 @@ export default function ForwardRateCalculator() {
                     </tr>
                   </thead>
                   <tbody>
-                    {tenorRows.map((row, index) => (
+                    {tenorRows.filter(row => row.tenor !== "ON" && row.tenor !== "TN").map((row, index) => (
                       <tr key={row.tenor} className="border-b border-white/10">
                         <td className="py-2 px-2 font-semibold">{row.tenor}</td>
                         <td className="py-2 px-2">
