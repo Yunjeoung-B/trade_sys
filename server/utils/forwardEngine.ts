@@ -17,13 +17,17 @@ function linearInterpolate(
 
 /**
  * Get swap point for a specific settlement date using linear interpolation
- * Uses settlement date for consistency (not affected by changing spot date)
+ * Calculates days from TODAY's spot date and interpolates using stored data
  */
 export async function getSwapPointForDate(
   currencyPairId: string,
   settlementDate: Date,
   storage: IStorage
 ): Promise<number | null> {
+  // Calculate TODAY's spot date and target days
+  const spotDate = getSpotDate();
+  const targetDays = getDaysBetween(spotDate, settlementDate);
+
   // Get all swap points for this currency pair with settlement dates
   const allSwapPoints = await storage.getSwapPointsByCurrencyPair(currencyPairId);
   
@@ -31,61 +35,50 @@ export async function getSwapPointForDate(
     return null;
   }
 
-  // Filter points with settlement dates and sort by settlement date
-  const validPoints = allSwapPoints
-    .filter(sp => sp.settlementDate !== null)
-    .sort((a, b) => {
-      const dateA = new Date(a.settlementDate!).getTime();
-      const dateB = new Date(b.settlementDate!).getTime();
-      return dateA - dateB;
-    });
+  // Calculate days for each stored swap point based on TODAY's spot date
+  const pointsWithCurrentDays = allSwapPoints
+    .filter(sp => sp.settlementDate !== null && sp.settlementDate !== undefined)
+    .map(sp => ({
+      ...sp,
+      currentDays: getDaysBetween(spotDate, new Date(sp.settlementDate!))
+    }))
+    .sort((a, b) => a.currentDays - b.currentDays);
 
-  if (validPoints.length === 0) {
+  if (pointsWithCurrentDays.length === 0) {
     return null;
   }
 
-  const targetTime = new Date(settlementDate).getTime();
-
-  // Find exact match first (exact settlement date)
-  const exactMatch = validPoints.find(sp => {
-    const pointTime = new Date(sp.settlementDate!).getTime();
-    return Math.abs(pointTime - targetTime) < 1000; // Within 1 second
-  });
-  
+  // Find exact match first
+  const exactMatch = pointsWithCurrentDays.find(sp => sp.currentDays === targetDays);
   if (exactMatch) {
     return parseFloat(exactMatch.swapPoint);
   }
 
-  // Find bracketing points for interpolation
+  // Find bracketing points for interpolation using TODAY's calculated days
   let lower = null;
   let upper = null;
 
-  for (const point of validPoints) {
-    const pointTime = new Date(point.settlementDate!).getTime();
-    
-    if (pointTime <= targetTime) {
+  for (const point of pointsWithCurrentDays) {
+    if (point.currentDays <= targetDays) {
       lower = point;
     }
     
-    if (pointTime >= targetTime && !upper) {
+    if (point.currentDays >= targetDays && !upper) {
       upper = point;
       break;
     }
   }
 
-  // If we have both bracketing points, interpolate by settlement date
-  if (lower && upper && lower.settlementDate !== upper.settlementDate) {
+  // If we have both bracketing points, interpolate by days
+  if (lower && upper && lower.currentDays !== upper.currentDays) {
     const lowerSwap = parseFloat(lower.swapPoint);
     const upperSwap = parseFloat(upper.swapPoint);
     
-    const lowerTime = new Date(lower.settlementDate!).getTime();
-    const upperTime = new Date(upper.settlementDate!).getTime();
-    
     return linearInterpolate(
-      targetTime,
-      lowerTime,
+      targetDays,
+      lower.currentDays,
       lowerSwap,
-      upperTime,
+      upper.currentDays,
       upperSwap
     );
   }
