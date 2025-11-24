@@ -51,8 +51,15 @@ function getSpotDate(baseDate: Date = new Date()): Date {
 }
 
 function getDaysBetween(start: Date, end: Date): number {
-  const diffTime = end.getTime() - start.getTime();
-  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  // Normalize to midnight to avoid time zone issues
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+  
+  startDate.setHours(0, 0, 0, 0);
+  endDate.setHours(0, 0, 0, 0);
+  
+  const diffTime = endDate.getTime() - startDate.getTime();
+  return Math.round(diffTime / (1000 * 60 * 60 * 24));
 }
 
 function addDays(date: Date, days: number): Date {
