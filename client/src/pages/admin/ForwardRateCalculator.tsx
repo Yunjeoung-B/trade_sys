@@ -412,6 +412,21 @@ export default function ForwardRateCalculator() {
 
     const forwardRate = spot + interpolatedSwapPoint / 100;
 
+    // DEBUG: 계산식 출력
+    console.log(`[ForwardRate 계산] ====== START ======`);
+    console.log(`[계산] Spot Rate: ${spot}`);
+    console.log(`[계산] Target Days: ${target}`);
+    console.log(`[계산] Lower Tenor: ${lowerTenor.tenor} (${lowerTenor.days}일, swapPoint=${lowerTenor.swapPointNum})`);
+    console.log(`[계산] Upper Tenor: ${upperTenor.tenor} (${upperTenor.days}일, swapPoint=${upperTenor.swapPointNum})`);
+    
+    const formula = `${lowerTenor.swapPointNum} + ((${upperTenor.swapPointNum} - ${lowerTenor.swapPointNum}) * (${target} - ${lowerTenor.days})) / (${upperTenor.days} - ${lowerTenor.days})`;
+    console.log(`[계산식] interpolatedSwapPoint = ${formula}`);
+    console.log(`[계산식] = ${lowerTenor.swapPointNum} + (${upperTenor.swapPointNum - lowerTenor.swapPointNum} * ${target - lowerTenor.days}) / ${upperTenor.days - lowerTenor.days}`);
+    console.log(`[계산식] = ${lowerTenor.swapPointNum} + ${(upperTenor.swapPointNum - lowerTenor.swapPointNum) * (target - lowerTenor.days)} / ${upperTenor.days - lowerTenor.days}`);
+    console.log(`[계산] Interpolated Swap Point: ${interpolatedSwapPoint}`);
+    console.log(`[계산] Forward Rate = ${spot} + ${interpolatedSwapPoint}/100 = ${forwardRate}`);
+    console.log(`[ForwardRate 계산] ====== END ======`);
+
     setCalculatedResult({
       days: target,
       interpolatedSwapPoint,
