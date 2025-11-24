@@ -107,45 +107,73 @@ export async function getSwapPointForDate(
     return null;
   }
 
-  // Find exact match first
-  const exactMatch = pointsWithDays.find(sp => sp.calculatedDays === targetDays);
-  if (exactMatch) {
-    return parseFloat(exactMatch.swapPoint);
-  }
-
-  // Find bracketing points for interpolation
+  // Find bracketing points for interpolation (same logic as ForwardRateCalculator)
   let lower = null;
   let upper = null;
 
-  for (const point of pointsWithDays) {
-    if (point.calculatedDays <= targetDays) {
+  // First, look for exact match or bracketing range
+  for (let i = 0; i < pointsWithDays.length; i++) {
+    const point = pointsWithDays[i];
+    
+    if (point.calculatedDays === targetDays) {
+      // Exact match - but still interpolate if possible for consistency
+      lower = point;
+      upper = point;
+      break;
+    }
+    
+    if (point.calculatedDays < targetDays) {
       lower = point;
     }
     
     if (point.calculatedDays >= targetDays && !upper) {
       upper = point;
-      break;
+      if (lower) break; // We have both now
     }
   }
 
-  // Interpolate if we have bracketing points
-  if (lower && upper && lower.calculatedDays !== upper.calculatedDays) {
+  // If we only have one side, find the next point for interpolation
+  if (lower && !upper && lower.calculatedDays < targetDays) {
+    const nextIndex = pointsWithDays.indexOf(lower) + 1;
+    if (nextIndex < pointsWithDays.length) {
+      upper = pointsWithDays[nextIndex];
+    }
+  }
+  
+  if (!lower && upper && upper.calculatedDays > targetDays) {
+    const prevIndex = pointsWithDays.indexOf(upper) - 1;
+    if (prevIndex >= 0) {
+      lower = pointsWithDays[prevIndex];
+    }
+  }
+
+  // Perform linear interpolation (same as ForwardRateCalculator)
+  if (lower && upper) {
     const lowerSwap = parseFloat(lower.swapPoint);
     const upperSwap = parseFloat(upper.swapPoint);
+    const lowerDays = lower.calculatedDays;
+    const upperDays = upper.calculatedDays;
     
+    if (lowerDays === upperDays) {
+      // Exact match or same days
+      return lowerSwap;
+    }
+    
+    // Linear interpolation formula (same as UI)
     return linearInterpolate(
       targetDays,
-      lower.calculatedDays,
+      lowerDays,
       lowerSwap,
-      upper.calculatedDays,
+      upperDays,
       upperSwap
     );
   }
 
-  // Return lower point if available, otherwise upper point
+  // Fallback to single point if only one available
   if (lower) {
     return parseFloat(lower.swapPoint);
-  } else if (upper) {
+  }
+  if (upper) {
     return parseFloat(upper.swapPoint);
   }
 
