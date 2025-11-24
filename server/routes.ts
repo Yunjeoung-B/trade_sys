@@ -695,8 +695,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // For Swap: calculate swap point difference between far and near dates
       if (request.productType === "Swap" && request.nearDate && request.farDate) {
-        nearSwapPoint = await getSwapPointForDate(request.currencyPairId, new Date(request.nearDate), storage, request.tenor, referenceSpotDate);
-        farSwapPoint = await getSwapPointForDate(request.currencyPairId, new Date(request.farDate), storage, request.tenor, referenceSpotDate);
+        // Handle both Date objects and strings (avoid double conversion)
+        const nearDateObj = typeof request.nearDate === 'string' ? new Date(request.nearDate) : request.nearDate;
+        const farDateObj = typeof request.farDate === 'string' ? new Date(request.farDate) : request.farDate;
+        
+        nearSwapPoint = await getSwapPointForDate(request.currencyPairId, nearDateObj, storage, request.tenor, referenceSpotDate);
+        farSwapPoint = await getSwapPointForDate(request.currencyPairId, farDateObj, storage, request.tenor, referenceSpotDate);
         
         console.log(`[Settlement Details] Swap nearDate: ${request.nearDate}, nearSwapPoint: ${nearSwapPoint}, farDate: ${request.farDate}, farSwapPoint: ${farSwapPoint}`);
         
@@ -706,7 +710,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       // Forward: calculate swap point for settlement date
       if (request.productType === "Forward" && request.nearDate) {
-        nearSwapPoint = await getSwapPointForDate(request.currencyPairId, new Date(request.nearDate), storage, request.tenor, referenceSpotDate);
+        // Handle both Date objects and strings (avoid double conversion)
+        const nearDateObj = typeof request.nearDate === 'string' ? new Date(request.nearDate) : request.nearDate;
+        
+        nearSwapPoint = await getSwapPointForDate(request.currencyPairId, nearDateObj, storage, request.tenor, referenceSpotDate);
         console.log(`[Settlement Details] Forward nearDate: ${request.nearDate}, swapPoint: ${nearSwapPoint}`);
       }
 
