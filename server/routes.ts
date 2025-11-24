@@ -19,6 +19,7 @@ import {
   insertAutoApprovalSettingSchema,
   insertSwapPointSchema,
   insertSwapPointsHistorySchema,
+  insertOnTnRateSchema,
 } from "@shared/schema";
 import session from "express-session";
 import passport from "passport";
@@ -1339,6 +1340,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Create swap point error:", error);
       const errorMessage = error?.message || "Failed to create swap point";
+      res.status(400).json({ message: errorMessage });
+    }
+  });
+
+  // ON/TN Rates (현물환율 계산용)
+  app.get("/api/on-tn-rates", isAdmin, async (req, res) => {
+    try {
+      const currencyPairId = req.query.currencyPairId as string;
+      const onTnRates = await storage.getOnTnRates(currencyPairId);
+      res.json(onTnRates);
+    } catch (error) {
+      console.error("Get ON/TN rates error:", error);
+      res.status(500).json({ message: "Failed to get ON/TN rates" });
+    }
+  });
+
+  // Save ON/TN Rate (admin only)
+  app.post("/api/on-tn-rates", isAdmin, async (req, res) => {
+    try {
+      const userId = (req.user as any)?.id || 'system';
+      
+      const validated = insertOnTnRateSchema.parse({
+        ...req.body,
+        uploadedBy: userId,
+      });
+      
+      // 같은 tenor + currencyPair의 기존 데이터 조회
+      const existingRates = await storage.getOnTnRates(validated.currencyPairId);
+      const existingForTenor = existingRates?.find(r => r.tenor === validated.tenor);
+      
+      // 기존 데이터가 있으면 삭제
+      if (existingForTenor) {
+        await storage.deleteOnTnRate(existingForTenor.id);
+      }
+      
+      // 새 데이터 저장
+      const created = await storage.createOnTnRate(validated);
+      res.json(created);
+    } catch (error: any) {
+      console.error("Create ON/TN rate error:", error);
+      const errorMessage = error?.message || "Failed to create ON/TN rate";
       res.status(400).json({ message: errorMessage });
     }
   });

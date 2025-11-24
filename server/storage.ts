@@ -8,6 +8,7 @@ import {
   autoApprovalSettings,
   swapPoints,
   swapPointsHistory,
+  onTnRates,
   type User,
   type InsertUser,
   type CurrencyPair,
@@ -26,6 +27,8 @@ import {
   type InsertSwapPoint,
   type SwapPointsHistory,
   type InsertSwapPointsHistory,
+  type OnTnRate,
+  type InsertOnTnRate,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, sql } from "drizzle-orm";
@@ -101,6 +104,11 @@ export interface IStorage {
   getSwapPointsByCurrencyPair(currencyPairId: string): Promise<SwapPoint[]>;
   getSwapPointsHistory(currencyPairId: string, limit?: number): Promise<SwapPointsHistory[]>;
   createSwapPointsHistory(history: InsertSwapPointsHistory): Promise<SwapPointsHistory>;
+
+  // ON/TN Rates (현물환율 계산용)
+  getOnTnRates(currencyPairId: string): Promise<OnTnRate[]>;
+  createOnTnRate(rate: InsertOnTnRate): Promise<OnTnRate>;
+  deleteOnTnRate(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -766,6 +774,29 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return record;
+  }
+
+  // ON/TN Rates implementation
+  async getOnTnRates(currencyPairId: string): Promise<OnTnRate[]> {
+    return await db
+      .select()
+      .from(onTnRates)
+      .where(eq(onTnRates.currencyPairId, currencyPairId));
+  }
+
+  async createOnTnRate(rate: InsertOnTnRate): Promise<OnTnRate> {
+    const [record] = await db
+      .insert(onTnRates)
+      .values({
+        id: generateId(),
+        ...rate,
+      })
+      .returning();
+    return record;
+  }
+
+  async deleteOnTnRate(id: string): Promise<void> {
+    await db.delete(onTnRates).where(eq(onTnRates.id, id));
   }
 }
 

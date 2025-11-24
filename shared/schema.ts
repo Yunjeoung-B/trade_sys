@@ -166,12 +166,29 @@ export const swapPointsHistory = pgTable("swap_points_history", {
   currencyPairId: varchar("currency_pair_id").references(() => currencyPairs.id),
   tenor: varchar("tenor"),
   settlementDate: timestamp("settlement_date"),
-  previousSwapPoint: decimal("previous_swap_point", { precision: 12, scale: 6 }), // 이전 값
-  newSwapPoint: decimal("new_swap_point", { precision: 12, scale: 6 }).notNull(), // 새로운 값
+  previousSwapPoint: varchar("previous_swap_point"), // Keep as varchar for compatibility
+  newSwapPoint: varchar("new_swap_point").notNull(), // Keep as varchar for compatibility
   changeReason: varchar("change_reason"), // 변경 사유: "manual_update", "excel_upload" 등
   changedBy: varchar("changed_by").references(() => users.id),
   changedAt: timestamp("changed_at").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
+});
+
+// ON/TN Rates (현물환율 계산용 - spot date 기준 today까지)
+export const onTnRates = pgTable("on_tn_rates", {
+  id: varchar("id").primaryKey(),
+  currencyPairId: varchar("currency_pair_id").references(() => currencyPairs.id),
+  tenor: varchar("tenor").notNull(), // ON or TN only
+  startDate: timestamp("start_date").notNull(), // ON: today, TN: T+1
+  settlementDate: timestamp("settlement_date").notNull(), // ON: T+1, TN: SPOT date
+  swapPoint: decimal("swap_point", { precision: 12, scale: 6 }).notNull(),
+  bidPrice: decimal("bid_price", { precision: 12, scale: 6 }),
+  askPrice: decimal("ask_price", { precision: 12, scale: 6 }),
+  source: varchar("source").default("manual"),
+  uploadedBy: varchar("uploaded_by").references(() => users.id),
+  uploadedAt: timestamp("uploaded_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Insert schemas
@@ -294,6 +311,19 @@ export const insertSwapPointsHistorySchema = createInsertSchema(swapPointsHistor
   ).optional(),
 });
 
+export const insertOnTnRateSchema = createInsertSchema(onTnRates).omit({
+  id: true,
+  uploadedAt: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  swapPoint: z.union([z.string(), z.number()]).transform(val => String(val)),
+  bidPrice: z.union([z.string(), z.number(), z.null()]).transform(val => val === null ? null : String(val)).optional(),
+  askPrice: z.union([z.string(), z.number(), z.null()]).transform(val => val === null ? null : String(val)).optional(),
+  startDate: z.union([z.string(), z.date()]).transform(val => typeof val === 'string' ? new Date(val) : val),
+  settlementDate: z.union([z.string(), z.date()]).transform(val => typeof val === 'string' ? new Date(val) : val),
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -321,6 +351,9 @@ export type InsertSwapPoint = z.infer<typeof insertSwapPointSchema>;
 
 export type SwapPointsHistory = typeof swapPointsHistory.$inferSelect;
 export type InsertSwapPointsHistory = z.infer<typeof insertSwapPointsHistorySchema>;
+
+export type OnTnRate = typeof onTnRates.$inferSelect;
+export type InsertOnTnRate = z.infer<typeof insertOnTnRateSchema>;
 
 // Infomax API Status Schema
 export const infomaxStatusSchema = z.object({

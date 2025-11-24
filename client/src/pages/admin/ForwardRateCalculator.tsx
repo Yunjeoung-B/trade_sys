@@ -195,6 +195,10 @@ export default function ForwardRateCalculator() {
         throw new Error("Swap Point 값을 입력해주세요.");
       }
       
+      // ON/TN은 별도의 on-tn-rates 엔드포인트로 저장
+      const isOnTn = ["ON", "TN"].includes(row.tenor);
+      const endpoint = isOnTn ? "/api/on-tn-rates" : "/api/swap-points";
+      
       const data = {
         currencyPairId: selectedPairId,
         tenor: row.tenor,
@@ -207,24 +211,26 @@ export default function ForwardRateCalculator() {
         source: "manual",
       };
       
-      const response = await apiRequest("POST", "/api/swap-points", data);
+      const response = await apiRequest("POST", endpoint, data);
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || "저장 실패");
       }
       return await response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/swap-points", selectedPairId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/on-tn-rates", selectedPairId] });
+      const tenor = data.tenor || "Swap Point";
       toast({
         title: "저장 완료",
-        description: "Swap Point가 저장되었습니다.",
+        description: `${tenor}가 저장되었습니다.`,
       });
     },
     onError: (error: any) => {
       toast({
         title: "저장 실패",
-        description: error.message || "Swap Point 저장에 실패했습니다.",
+        description: error.message || "저장에 실패했습니다.",
         variant: "destructive",
       });
     },
