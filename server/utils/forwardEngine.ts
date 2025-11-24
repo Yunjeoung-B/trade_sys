@@ -17,33 +17,41 @@ function linearInterpolate(
 
 /**
  * Get swap point for a specific settlement date using linear interpolation
+ * Uses settlement date for consistency (not affected by changing spot date)
  */
 export async function getSwapPointForDate(
   currencyPairId: string,
   settlementDate: Date,
   storage: IStorage
 ): Promise<number | null> {
-  const spotDate = getSpotDate();
-  const targetDays = getDaysBetween(spotDate, settlementDate);
-
-  // Get all swap points for this currency pair, ordered by days
+  // Get all swap points for this currency pair with settlement dates
   const allSwapPoints = await storage.getSwapPointsByCurrencyPair(currencyPairId);
   
   if (!allSwapPoints || allSwapPoints.length === 0) {
     return null;
   }
 
-  // Sort by days ascending
-  const sortedPoints = allSwapPoints
-    .filter(sp => sp.days !== null)
-    .sort((a, b) => (a.days || 0) - (b.days || 0));
+  // Filter points with settlement dates and sort by settlement date
+  const validPoints = allSwapPoints
+    .filter(sp => sp.settlementDate !== null)
+    .sort((a, b) => {
+      const dateA = new Date(a.settlementDate!).getTime();
+      const dateB = new Date(b.settlementDate!).getTime();
+      return dateA - dateB;
+    });
 
-  if (sortedPoints.length === 0) {
+  if (validPoints.length === 0) {
     return null;
   }
 
-  // Find exact match first
-  const exactMatch = sortedPoints.find(sp => sp.days === targetDays);
+  const targetTime = new Date(settlementDate).getTime();
+
+  // Find exact match first (exact settlement date)
+  const exactMatch = validPoints.find(sp => {
+    const pointTime = new Date(sp.settlementDate!).getTime();
+    return Math.abs(pointTime - targetTime) < 1000; // Within 1 second
+  });
+  
   if (exactMatch) {
     return parseFloat(exactMatch.swapPoint);
   }
@@ -52,41 +60,44 @@ export async function getSwapPointForDate(
   let lower = null;
   let upper = null;
 
-  for (const point of sortedPoints) {
-    const days = point.days || 0;
+  for (const point of validPoints) {
+    const pointTime = new Date(point.settlementDate!).getTime();
     
-    if (days <= targetDays) {
+    if (pointTime <= targetTime) {
       lower = point;
     }
     
-    if (days >= targetDays && !upper) {
+    if (pointTime >= targetTime && !upper) {
       upper = point;
       break;
     }
   }
 
-  // If we have both bracketing points, interpolate
-  if (lower && upper && lower.days !== upper.days) {
+  // If we have both bracketing points, interpolate by settlement date
+  if (lower && upper && lower.settlementDate !== upper.settlementDate) {
     const lowerSwap = parseFloat(lower.swapPoint);
     const upperSwap = parseFloat(upper.swapPoint);
     
+    const lowerTime = new Date(lower.settlementDate!).getTime();
+    const upperTime = new Date(upper.settlementDate!).getTime();
+    
     return linearInterpolate(
-      targetDays,
-      lower.days || 0,
+      targetTime,
+      lowerTime,
       lowerSwap,
-      upper.days || 0,
+      upperTime,
       upperSwap
     );
   }
 
   // If we only have lower point (extrapolate not recommended, return null)
   if (lower && !upper) {
-    return null; // Cannot extrapolate beyond available data
+    return null;
   }
 
   // If we only have upper point (before first tenor)
   if (!lower && upper) {
-    return null; // Cannot extrapolate before first tenor
+    return null;
   }
 
   return null;
