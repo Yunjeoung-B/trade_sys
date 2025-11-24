@@ -142,6 +142,12 @@ export default function ForwardRateCalculator() {
     days: number;
     interpolatedSwapPoint: number;
     forwardRate: number;
+    lowerTenor?: string;
+    lowerDays?: number;
+    lowerSwapPoint?: number;
+    upperTenor?: string;
+    upperDays?: number;
+    upperSwapPoint?: number;
   } | null>(null);
 
   const { data: currencyPairs = [] } = useQuery<CurrencyPair[]>({
@@ -254,38 +260,69 @@ export default function ForwardRateCalculator() {
     const newSpotDate = getSpotDate();
     setSpotDate(newSpotDate);
     
-    // Initialize with fresh structure (don't clear localStorage yet)
-    const initialRows: TenorRow[] = standardTenors.map(tenor => {
-      const settlementDate = calculateSettlementDate(newSpotDate, tenor);
-      const daysFromSpot = calculateDaysFromSpot(newSpotDate, tenor);
-      
-      return {
-        tenor,
-        settlementDate: tenor === "Spot" ? formatDateForInput(newSpotDate) : formatDateForInput(settlementDate),
-        daysFromSpot,
-        swapPoint: "0",
-        bidPrice: "",
-        askPrice: "",
-      };
-    });
+    // Try to restore from localStorage first
+    const savedRows = localStorage.getItem('forwardCalc_tenorRows');
+    let initialRows: TenorRow[];
+    
+    if (savedRows) {
+      try {
+        const parsed = JSON.parse(savedRows);
+        console.log(`[Initialize] localStorage에서 tenorRows 복구:`, parsed.map(r => `${r.tenor}=${r.swapPoint}`));
+        initialRows = parsed;
+      } catch (e) {
+        console.log(`[Initialize] localStorage 파싱 실패, 기본값 생성`);
+        initialRows = standardTenors.map(tenor => {
+          const settlementDate = calculateSettlementDate(newSpotDate, tenor);
+          const daysFromSpot = calculateDaysFromSpot(newSpotDate, tenor);
+          
+          return {
+            tenor,
+            settlementDate: tenor === "Spot" ? formatDateForInput(newSpotDate) : formatDateForInput(settlementDate),
+            daysFromSpot,
+            swapPoint: "0",
+            bidPrice: "",
+            askPrice: "",
+          };
+        });
+      }
+    } else {
+      console.log(`[Initialize] localStorage에 저장된 데이터 없음, 기본값 생성`);
+      initialRows = standardTenors.map(tenor => {
+        const settlementDate = calculateSettlementDate(newSpotDate, tenor);
+        const daysFromSpot = calculateDaysFromSpot(newSpotDate, tenor);
+        
+        return {
+          tenor,
+          settlementDate: tenor === "Spot" ? formatDateForInput(newSpotDate) : formatDateForInput(settlementDate),
+          daysFromSpot,
+          swapPoint: "0",
+          bidPrice: "",
+          askPrice: "",
+        };
+      });
+    }
     
     setTenorRows(initialRows);
   }, []);
 
   useEffect(() => {
     if (swapPoints.length > 0 && tenorRows.length > 0) {
+      console.log(`[SwapPoints Load] DB에서 받은 swapPoints: `, swapPoints.map(sp => `${sp.tenor}=${sp.swapPoint}`));
+      
       const updatedRows = tenorRows.map(row => {
         const existingPoint = swapPoints.find(sp => sp.tenor === row.tenor);
         if (existingPoint) {
+          console.log(`[SwapPoints Load] ${row.tenor} 업데이트: ${existingPoint.swapPoint}`);
           return {
             ...row,
-            swapPoint: existingPoint.swapPoint || "0",
+            swapPoint: existingPoint.swapPoint.toString() || "0",
             bidPrice: existingPoint.bidPrice || "",
             askPrice: existingPoint.askPrice || "",
           };
         }
         return row;
       });
+      console.log(`[SwapPoints Load] 최종 tenorRows:`, updatedRows.map(r => `${r.tenor}=${r.swapPoint}`));
       setTenorRows(updatedRows);
       // DB에서 받은 데이터를 localStorage에 저장
       localStorage.setItem('forwardCalc_tenorRows', JSON.stringify(updatedRows));
@@ -431,6 +468,12 @@ export default function ForwardRateCalculator() {
       days: target,
       interpolatedSwapPoint,
       forwardRate,
+      lowerTenor: lowerTenor.tenor,
+      lowerDays: lowerTenor.days,
+      lowerSwapPoint: lowerTenor.swapPointNum,
+      upperTenor: upperTenor.tenor,
+      upperDays: upperTenor.days,
+      upperSwapPoint: upperTenor.swapPointNum,
     });
   };
 
@@ -701,6 +744,22 @@ export default function ForwardRateCalculator() {
                       {calculatedResult.interpolatedSwapPoint.toFixed(4)}
                     </p>
                   </div>
+
+                  {calculatedResult.lowerTenor && (
+                    <div className="bg-white/5 rounded-xl p-3 space-y-2 text-xs">
+                      <p className="text-white font-semibold">보간 범위</p>
+                      <div className="flex justify-between">
+                        <div>
+                          <p className="text-blue-300">Lower: {calculatedResult.lowerTenor}</p>
+                          <p className="text-blue-200">{calculatedResult.lowerDays}일 (SP: {calculatedResult.lowerSwapPoint})</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-blue-300">Upper: {calculatedResult.upperTenor}</p>
+                          <p className="text-blue-200">{calculatedResult.upperDays}일 (SP: {calculatedResult.upperSwapPoint})</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="pt-3 border-t border-white/20">
                     <p className="text-blue-200 text-sm">Forward Rate (선도환율)</p>
