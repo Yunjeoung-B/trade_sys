@@ -661,6 +661,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get settlement details for a quote request (swap points and spread interpolation)
+  app.get("/api/quote-requests/:id/settlement-details", isAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const allRequests = await storage.getPendingQuoteRequests();
+      const request = allRequests.find(r => r.id === id);
+      
+      if (!request) {
+        return res.status(404).json({ message: "Quote request not found" });
+      }
+
+      if (!request.currencyPairId || !request.userId) {
+        return res.status(400).json({ message: "Invalid quote request data" });
+      }
+
+      const user = await storage.getUser(request.userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Calculate swap points for near and far dates
+      let nearSwapPoint: number | null = null;
+      let farSwapPoint: number | null = null;
+      let swapPointDifference: number | null = null;
+
+      if (request.productType === "Forward" && request.nearDate) {
+        nearSwapPoint = await getSwapPointForDate(request.currencyPairId, new Date(request.nearDate), storage);
+      } else if (request.productType === "Swap" && request.nearDate) {
+        nearSwapPoint = await getSwapPointForDate(request.currencyPairId, new Date(request.nearDate), storage);
+      }
+
+      if ((request.productType === "Swap" || request.productType === "Forward") && request.farDate) {
+        farSwapPoint = await getSwapPointForDate(request.currencyPairId, new Date(request.farDate), storage);
+      }
+
+      if (nearSwapPoint !== null && farSwapPoint !== null) {
+        swapPointDifference = farSwapPoint - nearSwapPoint;
+      }
+
+      // Calculate spread for the far date (maturity)
+      let spread: number | null = null;
+      if (request.farDate) {
+        try {
+          spread = await storage.getSpreadForUser(
+            request.productType,
+            request.currencyPairId,
+            user,
+            request.tenor ?? undefined
+          );
+        } catch (error) {
+          console.error("Spread calculation error:", error);
+        }
+      }
+
+      res.json({
+        quoteId: id,
+        productType: request.productType,
+        nearDate: request.nearDate,
+        farDate: request.farDate,
+        nearSwapPoint,
+        farSwapPoint,
+        swapPointDifference,
+        spread
+      });
+    } catch (error) {
+      console.error("Settlement details error:", error);
+      res.status(500).json({ message: "Failed to calculate settlement details" });
+    }
+  });
+
   // Trades
   app.get("/api/trades", isAuthenticated, async (req: any, res) => {
     try {

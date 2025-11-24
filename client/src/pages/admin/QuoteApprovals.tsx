@@ -39,6 +39,17 @@ interface CustomerRateInfo {
   customerRate: number;
 }
 
+interface SettlementDetails {
+  quoteId: string;
+  productType: string;
+  nearDate?: string;
+  farDate?: string;
+  nearSwapPoint: number | null;
+  farSwapPoint: number | null;
+  swapPointDifference: number | null;
+  spread: number | null;
+}
+
 interface CurrencyPair {
   id: string;
   symbol: string;
@@ -87,6 +98,30 @@ export default function QuoteApprovals() {
 
   const { data: customerRates } = useQuery<Record<string, CustomerRateInfo>>({
     queryKey: ["/api/quote-requests/customer-rates"],
+    enabled: (pendingRequests.length > 0),
+  });
+
+  const { data: settlementDetails } = useQuery<Record<string, SettlementDetails>>({
+    queryKey: ["/api/quote-requests/settlement-details-batch"],
+    queryFn: async () => {
+      if (!pendingRequests || pendingRequests.length === 0) return {};
+      
+      const details: Record<string, SettlementDetails> = {};
+      
+      for (const request of pendingRequests) {
+        try {
+          const response = await fetch(`/api/quote-requests/${request.id}/settlement-details`);
+          if (response.ok) {
+            const data = await response.json();
+            details[request.id] = data;
+          }
+        } catch (error) {
+          console.error(`Error fetching settlement details for ${request.id}:`, error);
+        }
+      }
+      
+      return details;
+    },
     enabled: (pendingRequests.length > 0),
   });
 
@@ -535,17 +570,47 @@ export default function QuoteApprovals() {
                           )}
                         </td>
                         <td className="py-3 text-right text-xs">
-                          {rateInfo ? (
-                            <div>
-                              <div className="font-semibold text-blue-300">
-                                {rateInfo.customerRate.toFixed(2)}
-                              </div>
-                              <div className="text-slate-400">
-                                Base: {rateInfo.baseRate.toFixed(2)}
-                              </div>
-                              <div className="text-orange-400">
-                                Spread: {rateInfo.spread.toFixed(2)}
-                              </div>
+                          {rateInfo || settlementDetails?.[request.id] ? (
+                            <div className="space-y-2">
+                              {rateInfo && (
+                                <>
+                                  <div className="font-semibold text-blue-300">
+                                    {rateInfo.customerRate.toFixed(2)}
+                                  </div>
+                                  <div className="text-slate-400 text-xs">
+                                    Base: {rateInfo.baseRate.toFixed(2)}
+                                  </div>
+                                </>
+                              )}
+                              
+                              {settlementDetails?.[request.id] && (
+                                <>
+                                  <div className="border-t border-white/10 pt-2">
+                                    <div className="text-teal-300 font-semibold">
+                                      Swap Point: {settlementDetails[request.id].swapPointDifference !== null 
+                                        ? settlementDetails[request.id].swapPointDifference!.toFixed(4)
+                                        : "-"
+                                      }
+                                    </div>
+                                    {settlementDetails[request.id].nearSwapPoint !== null && (
+                                      <div className="text-slate-400 text-xs">
+                                        결제: {settlementDetails[request.id].nearSwapPoint!.toFixed(4)}
+                                      </div>
+                                    )}
+                                    {settlementDetails[request.id].farSwapPoint !== null && (
+                                      <div className="text-slate-400 text-xs">
+                                        만기: {settlementDetails[request.id].farSwapPoint!.toFixed(4)}
+                                      </div>
+                                    )}
+                                  </div>
+                                  
+                                  {settlementDetails[request.id].spread !== null && (
+                                    <div className="text-orange-400 font-semibold">
+                                      스프레드: {settlementDetails[request.id].spread!.toFixed(2)}
+                                    </div>
+                                  )}
+                                </>
+                              )}
                             </div>
                           ) : (
                             <span className="text-slate-500">-</span>
