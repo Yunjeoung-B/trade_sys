@@ -251,17 +251,10 @@ export default function ForwardRateCalculator() {
   });
 
   useEffect(() => {
-    // Clear all forwardCalc localStorage data to ensure fresh start
-    Object.keys(localStorage).forEach(key => {
-      if (key.startsWith('forwardCalc_')) {
-        localStorage.removeItem(key);
-      }
-    });
-    
     const newSpotDate = getSpotDate();
     setSpotDate(newSpotDate);
     
-    // Always recalculate from scratch to ensure consistency
+    // Initialize with fresh structure (don't clear localStorage yet)
     const initialRows: TenorRow[] = standardTenors.map(tenor => {
       const settlementDate = calculateSettlementDate(newSpotDate, tenor);
       const daysFromSpot = calculateDaysFromSpot(newSpotDate, tenor);
