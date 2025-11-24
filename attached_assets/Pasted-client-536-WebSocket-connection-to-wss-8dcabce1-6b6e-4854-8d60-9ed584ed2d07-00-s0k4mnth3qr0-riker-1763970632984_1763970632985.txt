@@ -1,0 +1,219 @@
+client:536 WebSocket connection to 'wss://8dcabce1-6b6e-4854-8d60-9ed584ed2d07-00-s0k4mnth3qr0.riker.replit.dev/?token=Z4INU5O55kW4' failed: 
+setupWebSocket @ client:536
+(anonymous) @ client:531
+client:536 Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=Z4INU5O55kW4' is invalid.
+    at setupWebSocket (client:536:19)
+    at fallback (client:509:16)
+    at WebSocket.<anonymous> (client:555:7)
+setupWebSocket @ client:536
+fallback @ client:509
+(anonymous) @ client:555
+injected.js:37 [Initialize] localStorage에서 tenorRows 복구: (7) ['Spot=0', '1M=-215', '2M=-460', '3M=-670', '6M=-1250', '9M=-1700', '12M=-2110']
+injected.js:37 Warning: Each child in a list should have a unique "key" prop.
+
+Check the render method of `QuoteApprovals`. See https://reactjs.org/link/warning-keys for more information.
+    at QuoteApprovals (https://8dcabce1-6b6e-4854-8d60-9ed584ed2d07-00-s0k4mnth3qr0.riker.replit.dev/src/pages/admin/QuoteApprovals.tsx:32:39)
+    at Route (https://8dcabce1-6b6e-4854-8d60-9ed584ed2d07-00-s0k4mnth3qr0.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=fced5c29:323:16)
+    at div
+    at div
+    at div
+    at Layout (https://8dcabce1-6b6e-4854-8d60-9ed584ed2d07-00-s0k4mnth3qr0.riker.replit.dev/src/components/Layout.tsx:21:34)
+    at Switch (https://8dcabce1-6b6e-4854-8d60-9ed584ed2d07-00-s0k4mnth3qr0.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=fced5c29:379:17)
+    at Router (https://8dcabce1-6b6e-4854-8d60-9ed584ed2d07-00-s0k4mnth3qr0.riker.replit.dev/src/App.tsx?v=Q417atx26T9mRYRIp0jUY:48:48)
+    at Provider (https://8dcabce1-6b6e-4854-8d60-9ed584ed2d07-00-s0k4mnth3qr0.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-5SZQWSWC.js?v=fced5c29:48:15)
+    at TooltipProvider (https://8dcabce1-6b6e-4854-8d60-9ed584ed2d07-00-s0k4mnth3qr0.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=fced5c29:59:5)
+    at QueryClientProvider (https://8dcabce1-6b6e-4854-8d60-9ed584ed2d07-00-s0k4mnth3qr0.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=fced5c29:2805:3)
+    at App
+    at QueryClientProvider (https://8dcabce1-6b6e-4854-8d60-9ed584ed2d07-00-s0k4mnth3qr0.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=fced5c29:2805:3)
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+printWarning @ react_jsx-dev-runtime.js?v=fced5c29:64
+error @ react_jsx-dev-runtime.js?v=fced5c29:48
+validateExplicitKey @ react_jsx-dev-runtime.js?v=fced5c29:724
+validateChildKeys @ react_jsx-dev-runtime.js?v=fced5c29:737
+jsxWithValidation @ react_jsx-dev-runtime.js?v=fced5c29:855
+QuoteApprovals @ QuoteApprovals.tsx:591
+renderWithHooks @ chunk-RPCDYKBN.js?v=fced5c29:11548
+updateFunctionComponent @ chunk-RPCDYKBN.js?v=fced5c29:14582
+beginWork @ chunk-RPCDYKBN.js?v=fced5c29:15924
+beginWork$1 @ chunk-RPCDYKBN.js?v=fced5c29:19753
+performUnitOfWork @ chunk-RPCDYKBN.js?v=fced5c29:19198
+workLoopSync @ chunk-RPCDYKBN.js?v=fced5c29:19137
+renderRootSync @ chunk-RPCDYKBN.js?v=fced5c29:19116
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=fced5c29:18874
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=fced5c29:9119
+(anonymous) @ chunk-RPCDYKBN.js?v=fced5c29:18627
+setTimeout
+scheduleFn @ @tanstack_react-query.js?v=fced5c29:555
+flush @ @tanstack_react-query.js?v=fced5c29:569
+batch @ @tanstack_react-query.js?v=fced5c29:587
+dispatch_fn @ @tanstack_react-query.js?v=fced5c29:996
+setData @ @tanstack_react-query.js?v=fced5c29:696
+onSuccess @ @tanstack_react-query.js?v=fced5c29:897
+resolve @ @tanstack_react-query.js?v=fced5c29:456
+Promise.then
+run @ @tanstack_react-query.js?v=fced5c29:498
+start @ @tanstack_react-query.js?v=fced5c29:536
+fetch @ @tanstack_react-query.js?v=fced5c29:926
+executeFetch_fn @ @tanstack_react-query.js?v=fced5c29:2211
+onSubscribe @ @tanstack_react-query.js?v=fced5c29:1898
+subscribe @ @tanstack_react-query.js?v=fced5c29:24
+(anonymous) @ @tanstack_react-query.js?v=fced5c29:3022
+subscribeToStore @ chunk-RPCDYKBN.js?v=fced5c29:11984
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=fced5c29:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=fced5c29:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=fced5c29:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=fced5c29:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=fced5c29:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=fced5c29:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=fced5c29:19447
+commitRootImpl @ chunk-RPCDYKBN.js?v=fced5c29:19416
+commitRoot @ chunk-RPCDYKBN.js?v=fced5c29:19277
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=fced5c29:18895
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=fced5c29:9119
+(anonymous) @ chunk-RPCDYKBN.js?v=fced5c29:18627
+injected.js:37 Error loading swap points for 4c195055-9a09-408b-bea0-05e2f2a7cc85: SyntaxError: Failed to execute 'json' on 'Response': Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+    at loadSwapPoints (QuoteApprovals.tsx:118:41)
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+loadSwapPoints @ QuoteApprovals.tsx:122
+await in loadSwapPoints
+(anonymous) @ QuoteApprovals.tsx:129
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=fced5c29:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=fced5c29:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=fced5c29:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=fced5c29:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=fced5c29:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=fced5c29:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=fced5c29:19447
+commitRootImpl @ chunk-RPCDYKBN.js?v=fced5c29:19416
+commitRoot @ chunk-RPCDYKBN.js?v=fced5c29:19277
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=fced5c29:18895
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=fced5c29:9119
+(anonymous) @ chunk-RPCDYKBN.js?v=fced5c29:18627
+injected.js:37 Error loading swap points for 135c9465-21e3-497a-ab5a-94580d62477b: SyntaxError: Failed to execute 'json' on 'Response': Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+    at loadSwapPoints (QuoteApprovals.tsx:118:41)
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+loadSwapPoints @ QuoteApprovals.tsx:122
+await in loadSwapPoints
+(anonymous) @ QuoteApprovals.tsx:129
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=fced5c29:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=fced5c29:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=fced5c29:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=fced5c29:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=fced5c29:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=fced5c29:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=fced5c29:19447
+commitRootImpl @ chunk-RPCDYKBN.js?v=fced5c29:19416
+commitRoot @ chunk-RPCDYKBN.js?v=fced5c29:19277
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=fced5c29:18895
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=fced5c29:9119
+(anonymous) @ chunk-RPCDYKBN.js?v=fced5c29:18627
+injected.js:37 Error loading swap points for d402a352-d7b3-4d8e-a97e-142e324353da: SyntaxError: Failed to execute 'json' on 'Response': Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+    at loadSwapPoints (QuoteApprovals.tsx:118:41)
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+loadSwapPoints @ QuoteApprovals.tsx:122
+await in loadSwapPoints
+(anonymous) @ QuoteApprovals.tsx:129
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=fced5c29:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=fced5c29:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=fced5c29:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=fced5c29:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=fced5c29:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=fced5c29:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=fced5c29:19447
+commitRootImpl @ chunk-RPCDYKBN.js?v=fced5c29:19416
+commitRoot @ chunk-RPCDYKBN.js?v=fced5c29:19277
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=fced5c29:18895
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=fced5c29:9119
+(anonymous) @ chunk-RPCDYKBN.js?v=fced5c29:18627
+injected.js:37 Error loading swap points for afe815c7-92ea-4664-9522-4c7086b968b0: SyntaxError: Failed to execute 'json' on 'Response': Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+    at loadSwapPoints (QuoteApprovals.tsx:118:41)
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+loadSwapPoints @ QuoteApprovals.tsx:122
+await in loadSwapPoints
+(anonymous) @ QuoteApprovals.tsx:129
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=fced5c29:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=fced5c29:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=fced5c29:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=fced5c29:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=fced5c29:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=fced5c29:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=fced5c29:19447
+commitRootImpl @ chunk-RPCDYKBN.js?v=fced5c29:19416
+commitRoot @ chunk-RPCDYKBN.js?v=fced5c29:19277
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=fced5c29:18895
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=fced5c29:9119
+(anonymous) @ chunk-RPCDYKBN.js?v=fced5c29:18627
+injected.js:37 Error loading swap points for 0536b41b-467a-4811-a798-de5b85c3b404: SyntaxError: Failed to execute 'json' on 'Response': Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+    at loadSwapPoints (QuoteApprovals.tsx:118:41)
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+(anonymous) @ injected.js:37
+loadSwapPoints @ QuoteApprovals.tsx:122
+await in loadSwapPoints
+(anonymous) @ QuoteApprovals.tsx:129
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=fced5c29:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=fced5c29:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=fced5c29:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=fced5c29:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=fced5c29:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=fced5c29:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=fced5c29:19447
+commitRootImpl @ chunk-RPCDYKBN.js?v=fced5c29:19416
+commitRoot @ chunk-RPCDYKBN.js?v=fced5c29:19277
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=fced5c29:18895
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=fced5c29:9119
+(anonymous) @ chunk-RPCDYKBN.js?v=fced5c29:18627
+injected.js:37 Error loading swap points for 2a5f6ba9-ef38-4ae9-aaa0-e89c99ac2b59: SyntaxError: Failed to execute 'json' on 'Response': Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+    at loadSwapPoints (QuoteApprovals.tsx:118:41)

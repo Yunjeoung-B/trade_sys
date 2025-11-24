@@ -115,8 +115,15 @@ export default function QuoteApprovals() {
         try {
           const response = await fetch(`/api/swap-points/${pair.id}`);
           if (response.ok) {
-            const data = await response.json();
-            swapPointsMap[pair.id] = data;
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+              const data = await response.json();
+              swapPointsMap[pair.id] = data;
+            } else {
+              console.warn(`Invalid content type for swap points ${pair.id}:`, contentType);
+            }
+          } else {
+            console.warn(`Failed to load swap points for ${pair.id}: ${response.status}`);
           }
         } catch (error) {
           console.error(`Error loading swap points for ${pair.id}:`, error);
@@ -594,8 +601,8 @@ export default function QuoteApprovals() {
                       const rateInfo = customerRates?.[request.id];
                       
                       return (
-                        <> 
-                          <tr key={request.id} className="border-b border-slate-600 hover:bg-slate-700/30 text-white">
+                        <React.Fragment key={request.id}> 
+                          <tr className="border-b border-slate-600 hover:bg-slate-700/30 text-white">
                           <td className="py-3 text-center">
                             <Checkbox
                               checked={selectedQuotes.has(request.id)}
@@ -769,7 +776,7 @@ export default function QuoteApprovals() {
                           </td>
                         </tr>
                       )}
-                        </>
+                        </React.Fragment>
                       );
                     })}
                 </tbody>
