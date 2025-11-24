@@ -559,8 +559,8 @@ export default function QuoteApprovals() {
                               <div>Near: {Number(request.nearAmount || 0).toLocaleString()} {request.nearAmountCurrency || "USD"}</div>
                               <div>Far: {Number(request.farAmount || 0).toLocaleString()} {request.farAmountCurrency || "USD"}</div>
                               <div className="mt-1 text-slate-400">
-                                <div>결제: {request.nearDate ? new Date(request.nearDate).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', year: '2-digit' }) : "-"}</div>
-                                <div>만기: {request.farDate ? new Date(request.farDate).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', year: '2-digit' }) : "-"}</div>
+                                <div>결제: {request.nearDate ? request.nearDate.split('T')[0] : "-"}</div>
+                                <div>만기: {request.farDate ? request.farDate.split('T')[0] : "-"}</div>
                               </div>
                             </div>
                           ) : (
@@ -568,8 +568,8 @@ export default function QuoteApprovals() {
                               <div className="font-semibold">{getBaseCurrencyFromPair(request.currencyPairId)} {Number(request.amount).toLocaleString()}</div>
                               <div className="text-slate-400 mt-1">
                                 {request.tenor && request.nearDate 
-                                  ? `${request.tenor} (${new Date(request.nearDate).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', year: '2-digit' })})`
-                                  : (request.nearDate ? new Date(request.nearDate).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', year: '2-digit' }) : "-")
+                                  ? `${request.tenor} (${request.nearDate.split('T')[0]})`
+                                  : (request.nearDate ? request.nearDate.split('T')[0] : "-")
                                 }
                               </div>
                             </div>
