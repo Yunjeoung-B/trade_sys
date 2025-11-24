@@ -721,14 +721,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           request.currencyPairId,
           nearDateObj,
           storage,
-          request.tenor,
+          request.tenor ?? undefined,
           spotDate
         );
         farSwapPoint = await getSwapPointForDate(
           request.currencyPairId,
           farDateObj,
           storage,
-          request.tenor,
+          request.tenor ?? undefined,
           spotDate
         );
         
@@ -742,7 +742,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           request.currencyPairId,
           nearDateObj,
           storage,
-          request.tenor,
+          request.tenor ?? undefined,
           spotDate
         );
       }
@@ -1308,7 +1308,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       // 같은 settlement date의 기존 데이터 조회
-      const existingPoints = await storage.getSwapPointsByCurrencyPair(validated.currencyPairId);
+      const existingPoints = await storage.getSwapPointsByCurrencyPair(validated.currencyPairId || "");
       const existingForDate = existingPoints.find(sp => {
         if (!sp.settlementDate || !validated.settlementDate) return false;
         const spDate = new Date(sp.settlementDate).toISOString().split('T')[0];
@@ -1367,7 +1367,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       // 같은 tenor + currencyPair의 기존 데이터 조회
-      const existingRates = await storage.getOnTnRates(validated.currencyPairId);
+      const existingRates = await storage.getOnTnRates(validated.currencyPairId || "");
       const existingForTenor = existingRates?.find(r => r.tenor === validated.tenor);
       
       // 기존 데이터가 있으면 삭제
