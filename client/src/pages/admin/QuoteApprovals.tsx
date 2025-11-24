@@ -593,7 +593,7 @@ export default function QuoteApprovals() {
                               <div className="text-slate-400 text-xs">
                                 Base: {rateInfo.baseRate.toFixed(2)}
                               </div>
-                              {request.productType === "Swap" && (
+                              {(request.productType === "Swap" || request.productType === "Forward") && (
                                 <Button
                                   size="sm"
                                   variant="outline"
