@@ -262,6 +262,12 @@ export default function ForwardTradingCustomer() {
     const referenceSpotDate = spotDate || new Date();
     const tenorDays = Math.ceil((valueDate.getTime() - referenceSpotDate.getTime()) / (1000 * 60 * 60 * 24));
 
+    // Convert valueDate to UTC midnight (00:00:00.000Z) to preserve date without timezone conversion
+    const year = valueDate.getFullYear();
+    const month = String(valueDate.getMonth() + 1).padStart(2, '0');
+    const date = String(valueDate.getDate()).padStart(2, '0');
+    const utcMidnightDate = `${year}-${month}-${date}T00:00:00.000Z`;
+
     quoteRequestMutation.mutate({
       productType: "Forward",
       currencyPairId: selectedPairData.id,
@@ -272,7 +278,7 @@ export default function ForwardTradingCustomer() {
       limitRate: orderType === "LIMIT" ? parseFloat(limitRate) : null,
       validityType: orderType === "LIMIT" ? validityType : null,
       validUntilTime: orderType === "LIMIT" && validityType === "TIME" ? validUntilTime : null,
-      nearDate: valueDate.toISOString(),
+      nearDate: utcMidnightDate,
       tenor: `${tenorDays}D`,
     });
   };
