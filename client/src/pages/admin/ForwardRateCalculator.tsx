@@ -353,7 +353,47 @@ export default function ForwardRateCalculator() {
       return;
     }
 
-    // tenorRows의 daysFromSpot 기반 보간 (ForwardRateCalculator 표준 방식)
+    // Handle SPOT-before dates (target < 0) with special logic
+    if (target < 0) {
+      const onTenor = tenorRows.find(t => t.tenor === "ON");
+      const tnTenor = tenorRows.find(t => t.tenor === "TN");
+      
+      if (onTenor && tnTenor) {
+        const onSwap = parseFloat(onTenor.swapPoint || "0");
+        const tnSwap = parseFloat(tnTenor.swapPoint || "0");
+        
+        let interpolatedSwapPoint: number;
+        
+        if (target === -1) {
+          // T+1 (ON): -TN
+          interpolatedSwapPoint = -tnSwap;
+        } else if (target === -2) {
+          // T (TODAY): -(ON + TN)
+          interpolatedSwapPoint = -(onSwap + tnSwap);
+        } else if (target > -2 && target < -1) {
+          // Between TODAY and ON: interpolation
+          const lowerSwap = -(onSwap + tnSwap); // TODAY
+          const upperSwap = -tnSwap; // ON
+          const daysFromToday = target + 2; // TODAY = 0
+          interpolatedSwapPoint = lowerSwap + (upperSwap - lowerSwap) * daysFromToday / 1;
+        } else if (target < -2) {
+          // Before TODAY: use TODAY swap
+          interpolatedSwapPoint = -(onSwap + tnSwap);
+        } else {
+          return;
+        }
+        
+        const forwardRate = spot + interpolatedSwapPoint / 100;
+        setCalculatedResult({
+          days: target,
+          interpolatedSwapPoint,
+          forwardRate,
+        });
+        return;
+      }
+    }
+
+    // tenorRows의 daysFromSpot 기반 보간 (ForwardRateCalculator 표준 방식) - SPOT 이후
     const validTenors = tenorRows
       .filter(t => t.tenor !== "Spot")
       .map(t => ({
@@ -392,7 +432,7 @@ export default function ForwardRateCalculator() {
       upperTenor = validTenors[validTenors.length - 1];
     }
 
-    // Linear interpolation
+    // Linear interpolation for SPOT-after dates
     const interpolatedSwapPoint =
       lowerTenor.days === upperTenor.days
         ? lowerTenor.swapPointNum
