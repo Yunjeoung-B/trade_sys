@@ -583,7 +583,7 @@ export default function QuoteApprovals() {
                                 </>
                               )}
                               
-                              {settlementDetails?.[request.id] && (
+                              {settlementDetails?.[request.id] && request.productType === "Swap" && (
                                 <>
                                   <div className="border-t border-white/10 pt-2">
                                     <div className="text-teal-300 font-semibold">

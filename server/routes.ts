@@ -681,24 +681,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
 
-      // Calculate swap points for near and far dates
+      // Calculate swap points only for Swap products (has both near and far dates)
       let nearSwapPoint: number | null = null;
       let farSwapPoint: number | null = null;
       let swapPointDifference: number | null = null;
 
-      if (request.productType === "Forward" && request.nearDate) {
+      // For Swap: calculate swap point difference between far and near dates
+      if (request.productType === "Swap" && request.nearDate && request.farDate) {
         nearSwapPoint = await getSwapPointForDate(request.currencyPairId, new Date(request.nearDate), storage);
-      } else if (request.productType === "Swap" && request.nearDate) {
-        nearSwapPoint = await getSwapPointForDate(request.currencyPairId, new Date(request.nearDate), storage);
-      }
-
-      if ((request.productType === "Swap" || request.productType === "Forward") && request.farDate) {
         farSwapPoint = await getSwapPointForDate(request.currencyPairId, new Date(request.farDate), storage);
+        
+        console.log(`[Settlement Details] Swap nearDate: ${request.nearDate}, nearSwapPoint: ${nearSwapPoint}, farDate: ${request.farDate}, farSwapPoint: ${farSwapPoint}`);
+        
+        if (nearSwapPoint !== null && farSwapPoint !== null) {
+          swapPointDifference = farSwapPoint - nearSwapPoint;
+        }
       }
-
-      if (nearSwapPoint !== null && farSwapPoint !== null) {
-        swapPointDifference = farSwapPoint - nearSwapPoint;
-      }
+      // Forward only has one settlement date, so no swap point difference is calculated
 
       // Calculate spread for the far date (maturity)
       let spread: number | null = null;
