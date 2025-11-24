@@ -665,28 +665,30 @@ export default function QuoteApprovals() {
                           )}
                         </td>
                         <td className="py-3 text-right text-xs">
-                          {rateInfo ? (
-                            <div className="space-y-2">
-                              <div className="font-semibold text-blue-300">
-                                {rateInfo.customerRate.toFixed(2)}
-                              </div>
-                              <div className="text-slate-400 text-xs">
-                                Base: {rateInfo.baseRate.toFixed(2)}
-                              </div>
-                              {(request.productType === "Swap" || request.productType === "Forward") && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => toggleExpanded(request.id)}
-                                  className="text-xs mt-1 h-6"
-                                >
-                                  {expandedRows.has(request.id) ? "숨기기" : "상세보기"}
-                                </Button>
-                              )}
-                            </div>
-                          ) : (
-                            <span className="text-slate-500">-</span>
-                          )}
+                          <div className="space-y-2">
+                            {rateInfo ? (
+                              <>
+                                <div className="font-semibold text-blue-300">
+                                  {rateInfo.customerRate.toFixed(2)}
+                                </div>
+                                <div className="text-slate-400 text-xs">
+                                  Base: {rateInfo.baseRate.toFixed(2)}
+                                </div>
+                              </>
+                            ) : (
+                              <span className="text-slate-500">-</span>
+                            )}
+                            {(request.productType === "Swap" || request.productType === "Forward") && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => toggleExpanded(request.id)}
+                                className="text-xs mt-1 h-6"
+                              >
+                                {expandedRows.has(request.id) ? "숨기기" : "상세보기"}
+                              </Button>
+                            )}
+                          </div>
                         </td>
                         <td className="py-3 text-center">
                           <Input
