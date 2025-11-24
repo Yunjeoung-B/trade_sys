@@ -36,8 +36,22 @@ export async function getSwapPointForDate(
   }
 
   // Calculate days for each stored swap point based on TODAY's spot date
-  const pointsWithCurrentDays = allSwapPoints
-    .filter(sp => sp.settlementDate !== null && sp.settlementDate !== undefined)
+  // Group by settlementDate and keep only the latest (by createdAt) for each date
+  const pointsByDate = new Map<string, typeof allSwapPoints[0]>();
+  
+  for (const sp of allSwapPoints) {
+    if (!sp.settlementDate) continue;
+    
+    const dateKey = new Date(sp.settlementDate).toISOString().split('T')[0];
+    const existing = pointsByDate.get(dateKey);
+    
+    // Keep the most recently created/updated record for this settlement date
+    if (!existing || new Date(sp.updatedAt || sp.createdAt || 0) > new Date(existing.updatedAt || existing.createdAt || 0)) {
+      pointsByDate.set(dateKey, sp);
+    }
+  }
+  
+  const pointsWithCurrentDays = Array.from(pointsByDate.values())
     .map(sp => ({
       ...sp,
       currentDays: getDaysBetween(spotDate, new Date(sp.settlementDate!))
