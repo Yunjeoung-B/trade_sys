@@ -159,18 +159,26 @@ export default function ForwardRateCalculator() {
 
   const saveMutation = useMutation({
     mutationFn: async (row: TenorRow) => {
+      if (!row.swapPoint || isNaN(parseFloat(row.swapPoint))) {
+        throw new Error("Swap Point 값을 입력해주세요.");
+      }
+      
       const data = {
         currencyPairId: selectedPairId,
         tenor: row.tenor,
         settlementDate: row.settlementDate ? new Date(row.settlementDate) : null,
         days: row.daysFromSpot,
-        swapPoint: parseFloat(row.swapPoint) || 0,
+        swapPoint: parseFloat(row.swapPoint),
         bidPrice: row.bidPrice ? parseFloat(row.bidPrice) : null,
         askPrice: row.askPrice ? parseFloat(row.askPrice) : null,
         source: "manual",
       };
       
       const response = await apiRequest("POST", "/api/swap-points", data);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "저장 실패");
+      }
       return await response.json();
     },
     onSuccess: () => {
@@ -183,7 +191,7 @@ export default function ForwardRateCalculator() {
     onError: (error: any) => {
       toast({
         title: "저장 실패",
-        description: error.message,
+        description: error.message || "Swap Point 저장에 실패했습니다.",
         variant: "destructive",
       });
     },

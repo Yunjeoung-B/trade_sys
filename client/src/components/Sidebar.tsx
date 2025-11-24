@@ -43,6 +43,7 @@ const adminMenuItems = [
   { path: "/admin/forward-calculator", label: "선도환율 계산기", icon: Calculator },
   { path: "/admin/fx-spot", label: "가격모니터링 (FX SPOT)", icon: LineChart },
   { path: "/admin/fx-swap", label: "가격모니터링 (FX SWAP)", icon: RefreshCw },
+  { path: "/admin/swap-points-history", label: "SWAP 가격변동내역", icon: TrendingUp },
   { path: "/admin/spreads", label: "스프레드 설정", icon: Settings },
   { path: "/admin/approvals", label: "호가 승인 관리", icon: CheckCircle },
   { path: "/admin/users", label: "사용자 관리", icon: Users },

@@ -1277,17 +1277,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         currencyPairId: validated.currencyPairId,
         tenor: validated.tenor || null,
         settlementDate: validated.settlementDate || null,
-        previousSwapPoint: existingForDate ? parseFloat(existingForDate.swapPoint) : null,
-        newSwapPoint: parseFloat(created.swapPoint),
+        previousSwapPoint: existingForDate ? String(parseFloat(existingForDate.swapPoint)) : null,
+        newSwapPoint: String(parseFloat(created.swapPoint)),
         changeReason: "manual_update",
         changedBy: userId,
         changedAt: new Date(),
       });
       
       res.json(created);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Create swap point error:", error);
-      res.status(500).json({ message: "Failed to create swap point" });
+      const errorMessage = error?.message || "Failed to create swap point";
+      res.status(400).json({ message: errorMessage });
     }
   });
 
