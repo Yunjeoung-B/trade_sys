@@ -96,14 +96,14 @@ function calculateSettlementDate(spotDate: Date, tenor: string): Date {
 }
 
 // Calculate start date for tenor (value date)
-function calculateStartDate(tenor: string): Date {
+function calculateStartDate(spotDate: Date, tenor: string): Date {
   const tenorUpper = tenor.toUpperCase();
   
   if (tenorUpper === "ON") return new Date(); // Today
   if (tenorUpper === "TN") return addBusinessDays(new Date(), 1); // T+1
   
-  // For all others (Spot, 1M, etc): start date is today
-  return new Date();
+  // For all others (Spot, 1M~12M): start date is SPOT date
+  return new Date(spotDate);
 }
 
 function calculateDaysFromSpot(spotDate: Date, tenor: string): number {
@@ -280,12 +280,33 @@ export default function ForwardRateCalculator() {
       try {
         const parsed = JSON.parse(savedRows);
         console.log(`[Initialize] localStorage에서 tenorRows 복구:`, parsed.map((r: TenorRow) => `${r.tenor}=${r.swapPoint}`));
-        initialRows = parsed;
+        
+        // Merge with standardTenors to ensure ON/TN are included
+        initialRows = standardTenors.map(tenor => {
+          const existing = parsed.find((r: TenorRow) => r.tenor === tenor);
+          if (existing) {
+            return existing;
+          }
+          // Add missing tenor
+          const settlementDate = calculateSettlementDate(newSpotDate, tenor);
+          const startDate = calculateStartDate(newSpotDate, tenor);
+          const daysFromSpot = calculateDaysFromSpot(newSpotDate, tenor);
+          
+          return {
+            tenor,
+            startDate: formatDateForInput(startDate),
+            settlementDate: tenor === "Spot" ? formatDateForInput(newSpotDate) : formatDateForInput(settlementDate),
+            daysFromSpot,
+            swapPoint: "0",
+            bidPrice: "",
+            askPrice: "",
+          };
+        });
       } catch (e) {
         console.log(`[Initialize] localStorage 파싱 실패, 기본값 생성`);
         initialRows = standardTenors.map(tenor => {
           const settlementDate = calculateSettlementDate(newSpotDate, tenor);
-          const startDate = calculateStartDate(tenor);
+          const startDate = calculateStartDate(newSpotDate, tenor);
           const daysFromSpot = calculateDaysFromSpot(newSpotDate, tenor);
           
           return {
@@ -303,7 +324,7 @@ export default function ForwardRateCalculator() {
       console.log(`[Initialize] localStorage에 저장된 데이터 없음, 기본값 생성`);
       initialRows = standardTenors.map(tenor => {
         const settlementDate = calculateSettlementDate(newSpotDate, tenor);
-        const startDate = calculateStartDate(tenor);
+        const startDate = calculateStartDate(newSpotDate, tenor);
         const daysFromSpot = calculateDaysFromSpot(newSpotDate, tenor);
         
         return {
@@ -543,7 +564,7 @@ export default function ForwardRateCalculator() {
     
     const updatedRows = tenorRows.map(row => {
       const settlementDate = calculateSettlementDate(newSpotDate, row.tenor);
-      const startDate = calculateStartDate(row.tenor);
+      const startDate = calculateStartDate(newSpotDate, row.tenor);
       const daysFromSpot = calculateDaysFromSpot(newSpotDate, row.tenor);
       
       return {
