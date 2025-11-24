@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -184,6 +184,12 @@ export default function QuoteApprovals() {
               if (data.nearDate) {
                 const nearSettlementDate = new Date(data.nearDate);
                 const nearDays = getDaysBetween(spotDate, nearSettlementDate);
+                console.log(`[호가 승인] Near Date 계산:`, {
+                  spotDate: spotDate.toISOString().split('T')[0],
+                  nearDate: data.nearDate.split('T')[0],
+                  nearDays,
+                  baseRate
+                });
                 const nearResult = calculateForwardRate(nearDays, baseRate, tenorData, spotDate, nearSettlementDate);
                 
                 data.nearForwardRate = nearResult.forwardRate;
@@ -194,6 +200,12 @@ export default function QuoteApprovals() {
               if (data.farDate) {
                 const farSettlementDate = new Date(data.farDate);
                 const farDays = getDaysBetween(spotDate, farSettlementDate);
+                console.log(`[호가 승인] Far Date 계산:`, {
+                  spotDate: spotDate.toISOString().split('T')[0],
+                  farDate: data.farDate.split('T')[0],
+                  farDays,
+                  baseRate
+                });
                 const farResult = calculateForwardRate(farDays, baseRate, tenorData, spotDate, farSettlementDate);
                 
                 data.farForwardRate = farResult.forwardRate;
