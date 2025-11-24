@@ -176,6 +176,12 @@ export async function getSwapPointForDate(
     }
   }
 
+  // SPOT itself (0 days): swap point = 0
+  if (targetDays === 0) {
+    console.log(`[SwapPoint Debug] RESULT: SPOT date (0 days) = 0`);
+    return 0;
+  }
+
   // Handle SPOT-before dates with special logic
   if (targetDays < 0) {
     // For SPOT-before settlement dates, use simple rule:

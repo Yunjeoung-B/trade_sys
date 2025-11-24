@@ -353,6 +353,16 @@ export default function ForwardRateCalculator() {
       return;
     }
 
+    // SPOT itself (target = 0): swap point = 0
+    if (target === 0) {
+      setCalculatedResult({
+        days: 0,
+        interpolatedSwapPoint: 0,
+        forwardRate: spot,
+      });
+      return;
+    }
+
     // Handle SPOT-before dates (target < 0) with special logic
     if (target < 0) {
       const onTenor = tenorRows.find(t => t.tenor === "ON");
