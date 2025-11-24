@@ -126,6 +126,10 @@ export async function getSwapPointForDate(
   let lower = null;
   let upper = null;
 
+  // For SPOT-based settlement dates (targetDays >= 0), don't use TN/ON
+  // Instead treat it as 0 days with 0 swap point
+  const useSpotAsLower = targetDays >= 0;
+
   // First, look for exact match or bracketing range
   for (let i = 0; i < pointsWithDays.length; i++) {
     const point = pointsWithDays[i];
@@ -147,6 +151,11 @@ export async function getSwapPointForDate(
     }
   }
 
+  // If targeting SPOT-based date (>= 0 days), ignore TN/ON and use 0 as lower
+  if (useSpotAsLower && lower && lower.calculatedDays < 0) {
+    lower = null; // Ignore negative days points
+  }
+  
   // If we only have one side, find the next point for interpolation
   if (lower && !upper && lower.calculatedDays < targetDays) {
     const nextIndex = pointsWithDays.indexOf(lower) + 1;
@@ -156,9 +165,14 @@ export async function getSwapPointForDate(
   }
   
   if (!lower && upper && upper.calculatedDays > targetDays) {
-    const prevIndex = pointsWithDays.indexOf(upper) - 1;
-    if (prevIndex >= 0) {
-      lower = pointsWithDays[prevIndex];
+    // For SPOT-based date, use 0 as virtual lower point
+    if (useSpotAsLower && upper.calculatedDays >= 0) {
+      lower = { ...upper, calculatedDays: 0, swapPoint: 0 } as any;
+    } else {
+      const prevIndex = pointsWithDays.indexOf(upper) - 1;
+      if (prevIndex >= 0) {
+        lower = pointsWithDays[prevIndex];
+      }
     }
   }
 
