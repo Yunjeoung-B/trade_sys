@@ -36,6 +36,7 @@ export default function ForwardTradingCustomer() {
   const [limitRate, setLimitRate] = useState("");
   const [validityType, setValidityType] = useState<"DAY" | "TIME">("DAY");
   const [validUntilTime, setValidUntilTime] = useState("15:30");
+  const [spotDate, setSpotDate] = useState<Date | null>(null);
   const [valueDate, setValueDate] = useState<Date>(addDays(new Date(), 7));
   const [selectedQuoteId, setSelectedQuoteId] = useState<string | null>(null);
   const [quoteStatusOpen, setQuoteStatusOpen] = useState(true);
@@ -46,12 +47,21 @@ export default function ForwardTradingCustomer() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Show info dialog on first visit
+  // Show info dialog on first visit & Load SPOT date from ForwardRateCalculator
   useEffect(() => {
     const hasSeenIntro = localStorage.getItem("forward-trading-intro-seen");
     if (!hasSeenIntro) {
       setDialogType("intro");
       setShowInfoDialog(true);
+    }
+    
+    // Get SPOT date from ForwardRateCalculator (localStorage)
+    const storedSpotDate = localStorage.getItem('forwardCalc_spotDate');
+    if (storedSpotDate) {
+      const spotDateObj = new Date(storedSpotDate);
+      setSpotDate(spotDateObj);
+      // Set valueDate to SPOT + 1 day (T+3) as default
+      setValueDate(addDays(spotDateObj, 1));
     }
   }, []);
 
@@ -246,7 +256,10 @@ export default function ForwardTradingCustomer() {
   };
 
   const submitQuoteRequest = () => {
-    if (!selectedPairData) return;
+    if (!selectedPairData || !spotDate) return;
+
+    // Calculate tenor based on SPOT date
+    const tenorDays = Math.ceil((valueDate.getTime() - spotDate.getTime()) / (1000 * 60 * 60 * 24));
 
     quoteRequestMutation.mutate({
       productType: "Forward",
@@ -259,7 +272,7 @@ export default function ForwardTradingCustomer() {
       validityType: orderType === "LIMIT" ? validityType : null,
       validUntilTime: orderType === "LIMIT" && validityType === "TIME" ? validUntilTime : null,
       nearDate: valueDate.toISOString(),
-      tenor: `${Math.ceil((valueDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))}D`,
+      tenor: `${tenorDays}D`,
     });
   };
 
@@ -594,7 +607,7 @@ export default function ForwardTradingCustomer() {
                     mode="single"
                     selected={valueDate}
                     onSelect={(date) => date && setValueDate(date)}
-                    disabled={(date) => date <= addDays(new Date(), 2)}
+                    disabled={(date) => spotDate ? date <= spotDate : date <= addDays(new Date(), 2)}
                     initialFocus
                   />
                 </PopoverContent>
