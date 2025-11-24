@@ -119,7 +119,12 @@ export default function ForwardRateCalculator() {
   });
   const [spotRate, setSpotRate] = useState<string>("1350.00");
   const [lastSavedSpotRate, setLastSavedSpotRate] = useState<string>("");
-  const [spotDate, setSpotDate] = useState<Date>(getSpotDate());
+  const [spotDate, setSpotDate] = useState<Date>(() => {
+    const calculatedSpotDate = getSpotDate();
+    // Store spot date in localStorage for use in QuoteApprovals
+    localStorage.setItem('forwardCalc_spotDate', calculatedSpotDate.toISOString());
+    return calculatedSpotDate;
+  });
   const [tenorRows, setTenorRows] = useState<TenorRow[]>([]);
   const [targetSettlementDate, setTargetSettlementDate] = useState<string>("");
   const [targetDays, setTargetDays] = useState<string>("");

@@ -667,6 +667,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/quote-requests/:id/settlement-details", isAdmin, async (req: any, res) => {
     try {
       const { id } = req.params;
+      const { spotDate: spotDateParam } = req.query;
+      
+      // Get reference spot date from query parameter (from ForwardRateCalculator)
+      const referenceSpotDate = spotDateParam ? new Date(spotDateParam as string) : undefined;
+      
       const allRequests = await storage.getPendingQuoteRequests();
       const request = allRequests.find(r => r.id === id);
       
@@ -690,8 +695,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // For Swap: calculate swap point difference between far and near dates
       if (request.productType === "Swap" && request.nearDate && request.farDate) {
-        nearSwapPoint = await getSwapPointForDate(request.currencyPairId, new Date(request.nearDate), storage, request.tenor);
-        farSwapPoint = await getSwapPointForDate(request.currencyPairId, new Date(request.farDate), storage, request.tenor);
+        nearSwapPoint = await getSwapPointForDate(request.currencyPairId, new Date(request.nearDate), storage, request.tenor, referenceSpotDate);
+        farSwapPoint = await getSwapPointForDate(request.currencyPairId, new Date(request.farDate), storage, request.tenor, referenceSpotDate);
         
         console.log(`[Settlement Details] Swap nearDate: ${request.nearDate}, nearSwapPoint: ${nearSwapPoint}, farDate: ${request.farDate}, farSwapPoint: ${farSwapPoint}`);
         
@@ -701,7 +706,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       // Forward: calculate swap point for settlement date
       if (request.productType === "Forward" && request.nearDate) {
-        nearSwapPoint = await getSwapPointForDate(request.currencyPairId, new Date(request.nearDate), storage, request.tenor);
+        nearSwapPoint = await getSwapPointForDate(request.currencyPairId, new Date(request.nearDate), storage, request.tenor, referenceSpotDate);
         console.log(`[Settlement Details] Forward nearDate: ${request.nearDate}, swapPoint: ${nearSwapPoint}`);
       }
 
