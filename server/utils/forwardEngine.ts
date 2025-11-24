@@ -101,6 +101,8 @@ export async function getSwapPointForDate(
   }
   
   // Convert to array with calculated days (always SPOT-based, using settlement date)
+  // IMPORTANT: Filter out ON and TN (pre-SPOT settlement dates)
+  // Per requirement: ON/TN are not reflected in SPOT-based calculations
   const pointsWithDays = Array.from(pointsByDate.values())
     .map(sp => {
       // Calculate days from SPOT to settlement date (all calculations Spot-based)
@@ -113,6 +115,7 @@ export async function getSwapPointForDate(
         calculatedDays,
       };
     })
+    .filter(p => p.calculatedDays >= 0) // Filter out ON/TN (negative days, pre-SPOT)
     .sort((a, b) => a.calculatedDays - b.calculatedDays);
 
   console.log(`[SwapPoint Debug] Sorted points by days: ${pointsWithDays.map(p => `${p.calculatedDays}days(${p.swapPoint})`).join(', ')}`);
