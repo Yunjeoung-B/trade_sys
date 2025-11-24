@@ -209,12 +209,28 @@ export const insertQuoteRequestSchema = createInsertSchema(quoteRequests).omit({
 }).extend({
   amount: z.union([z.string(), z.number()]).transform(val => String(val)),
   limitRate: z.union([z.string(), z.number(), z.null()]).transform(val => val === null ? null : String(val)).optional(),
-  nearDate: z.union([z.string(), z.date(), z.null()]).transform(val => 
-    val === null ? null : (typeof val === 'string' ? new Date(val) : val)
-  ).optional(),
-  farDate: z.union([z.string(), z.date(), z.null()]).transform(val => 
-    val === null ? null : (typeof val === 'string' ? new Date(val) : val)
-  ).optional(),
+  nearDate: z.union([z.string(), z.date(), z.null()]).transform(val => {
+    if (val === null) return null;
+    if (typeof val === 'string') {
+      // If it's a date string like "2025-11-27", add UTC time
+      if (val.length === 10 && val.includes('-')) {
+        return new Date(`${val}T00:00:00Z`);
+      }
+      return new Date(val);
+    }
+    return val;
+  }).optional(),
+  farDate: z.union([z.string(), z.date(), z.null()]).transform(val => {
+    if (val === null) return null;
+    if (typeof val === 'string') {
+      // If it's a date string like "2025-12-24", add UTC time
+      if (val.length === 10 && val.includes('-')) {
+        return new Date(`${val}T00:00:00Z`);
+      }
+      return new Date(val);
+    }
+    return val;
+  }).optional(),
   nearRate: z.union([z.string(), z.number(), z.null()]).transform(val => val === null ? null : String(val)).optional(),
   nearAmount: z.union([z.string(), z.number(), z.null()]).transform(val => val === null ? null : String(val)).optional(),
   farAmount: z.union([z.string(), z.number(), z.null()]).transform(val => val === null ? null : String(val)).optional(),
