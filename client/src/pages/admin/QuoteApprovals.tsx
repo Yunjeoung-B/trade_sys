@@ -519,7 +519,8 @@ export default function QuoteApprovals() {
                       const rateInfo = customerRates?.[request.id];
                       
                       return (
-                        <tr key={request.id} className="border-b border-slate-600 hover:bg-slate-700/30 text-white">
+                        <> 
+                          <tr key={request.id} className="border-b border-slate-600 hover:bg-slate-700/30 text-white">
                           <td className="py-3 text-center">
                             <Checkbox
                               checked={selectedQuotes.has(request.id)}
@@ -665,8 +666,9 @@ export default function QuoteApprovals() {
                           </td>
                         </tr>
                       )}
-                    );
-                  })}
+                        </>
+                      );
+                    })}
                 </tbody>
               </table>
             </div>
