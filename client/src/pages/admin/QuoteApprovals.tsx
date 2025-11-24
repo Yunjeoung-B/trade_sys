@@ -101,29 +101,34 @@ export default function QuoteApprovals() {
     enabled: (pendingRequests.length > 0),
   });
 
-  const { data: settlementDetails } = useQuery<Record<string, SettlementDetails>>({
-    queryKey: ["/api/quote-requests/settlement-details-batch"],
-    queryFn: async () => {
-      if (!pendingRequests || pendingRequests.length === 0) return {};
+  // Store expanded rows and settlement details for on-demand loading
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [expandedDetails, setExpandedDetails] = useState<Record<string, SettlementDetails>>({});
+
+  const toggleExpanded = async (requestId: string) => {
+    const newExpanded = new Set(expandedRows);
+    
+    if (newExpanded.has(requestId)) {
+      newExpanded.delete(requestId);
+    } else {
+      newExpanded.add(requestId);
       
-      const details: Record<string, SettlementDetails> = {};
-      
-      for (const request of pendingRequests) {
+      // Load settlement details only when expanded
+      if (!expandedDetails[requestId]) {
         try {
-          const response = await fetch(`/api/quote-requests/${request.id}/settlement-details`);
+          const response = await fetch(`/api/quote-requests/${requestId}/settlement-details`);
           if (response.ok) {
             const data = await response.json();
-            details[request.id] = data;
+            setExpandedDetails(prev => ({ ...prev, [requestId]: data }));
           }
         } catch (error) {
-          console.error(`Error fetching settlement details for ${request.id}:`, error);
+          console.error(`Error fetching settlement details for ${requestId}:`, error);
         }
       }
-      
-      return details;
-    },
-    enabled: (pendingRequests.length > 0),
-  });
+    }
+    
+    setExpandedRows(newExpanded);
+  };
 
   const approveMutation = useMutation({
     mutationFn: ({ id, rate }: { id: string; rate: number }) =>
@@ -570,46 +575,23 @@ export default function QuoteApprovals() {
                           )}
                         </td>
                         <td className="py-3 text-right text-xs">
-                          {rateInfo || settlementDetails?.[request.id] ? (
+                          {rateInfo ? (
                             <div className="space-y-2">
-                              {rateInfo && (
-                                <>
-                                  <div className="font-semibold text-blue-300">
-                                    {rateInfo.customerRate.toFixed(2)}
-                                  </div>
-                                  <div className="text-slate-400 text-xs">
-                                    Base: {rateInfo.baseRate.toFixed(2)}
-                                  </div>
-                                </>
-                              )}
-                              
-                              {settlementDetails?.[request.id] && request.productType === "Swap" && (
-                                <>
-                                  <div className="border-t border-white/10 pt-2">
-                                    <div className="text-teal-300 font-semibold">
-                                      Swap Point: {settlementDetails[request.id].swapPointDifference !== null 
-                                        ? settlementDetails[request.id].swapPointDifference!.toFixed(4)
-                                        : "-"
-                                      }
-                                    </div>
-                                    {settlementDetails[request.id].nearSwapPoint !== null && (
-                                      <div className="text-slate-400 text-xs">
-                                        결제: {settlementDetails[request.id].nearSwapPoint!.toFixed(4)}
-                                      </div>
-                                    )}
-                                    {settlementDetails[request.id].farSwapPoint !== null && (
-                                      <div className="text-slate-400 text-xs">
-                                        만기: {settlementDetails[request.id].farSwapPoint!.toFixed(4)}
-                                      </div>
-                                    )}
-                                  </div>
-                                  
-                                  {settlementDetails[request.id].spread !== null && (
-                                    <div className="text-orange-400 font-semibold">
-                                      스프레드: {settlementDetails[request.id].spread!.toFixed(2)}
-                                    </div>
-                                  )}
-                                </>
+                              <div className="font-semibold text-blue-300">
+                                {rateInfo.customerRate.toFixed(2)}
+                              </div>
+                              <div className="text-slate-400 text-xs">
+                                Base: {rateInfo.baseRate.toFixed(2)}
+                              </div>
+                              {request.productType === "Swap" && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => toggleExpanded(request.id)}
+                                  className="text-xs mt-1 h-6"
+                                >
+                                  {expandedRows.has(request.id) ? "숨기기" : "상세보기"}
+                                </Button>
                               )}
                             </div>
                           ) : (
@@ -651,6 +633,38 @@ export default function QuoteApprovals() {
                           </div>
                         </td>
                       </tr>
+                      {expandedRows.has(request.id) && expandedDetails[request.id] && (
+                        <tr className="bg-slate-800/50 border-t border-white/10">
+                          <td colSpan={10} className="py-4 px-6">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                              {expandedDetails[request.id].nearSwapPoint !== null && (
+                                <div className="space-y-1">
+                                  <p className="text-slate-400 text-xs">결제 Swap Point</p>
+                                  <p className="text-teal-300 font-semibold">{expandedDetails[request.id].nearSwapPoint!.toFixed(4)}</p>
+                                </div>
+                              )}
+                              {expandedDetails[request.id].farSwapPoint !== null && (
+                                <div className="space-y-1">
+                                  <p className="text-slate-400 text-xs">만기 Swap Point</p>
+                                  <p className="text-teal-300 font-semibold">{expandedDetails[request.id].farSwapPoint!.toFixed(4)}</p>
+                                </div>
+                              )}
+                              {expandedDetails[request.id].swapPointDifference !== null && (
+                                <div className="space-y-1">
+                                  <p className="text-slate-400 text-xs">Swap Point 차액</p>
+                                  <p className="text-teal-300 font-semibold">{expandedDetails[request.id].swapPointDifference!.toFixed(4)}</p>
+                                </div>
+                              )}
+                              {expandedDetails[request.id].spread !== null && (
+                                <div className="space-y-1">
+                                  <p className="text-slate-400 text-xs">스프레드</p>
+                                  <p className="text-orange-400 font-semibold">{expandedDetails[request.id].spread!.toFixed(2)}</p>
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
                     );
                   })}
                 </tbody>
