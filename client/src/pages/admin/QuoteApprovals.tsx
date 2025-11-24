@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { CheckCircle, XCircle, Clock } from "lucide-react";
+import { CheckCircle, XCircle, Clock, AlertCircle } from "lucide-react";
+import { calculateForwardRate, getDaysBetween, getSpotDate, formatDateForInput, type TenorData } from "@/lib/forwardRateUtils";
+import type { SwapPoint } from "@shared/schema";
 
 interface QuoteRequest {
   id: string;
@@ -48,6 +50,10 @@ interface SettlementDetails {
   farSwapPoint: number | null;
   swapPointDifference: number | null;
   spread: number | null;
+  nearForwardRate?: number;
+  farForwardRate?: number;
+  nearForwardRateError?: string;
+  farForwardRateError?: string;
 }
 
 interface CurrencyPair {
@@ -77,6 +83,10 @@ export default function QuoteApprovals() {
   const [filterProductType, setFilterProductType] = useState<string>("all");
   const [filterDateFrom, setFilterDateFrom] = useState<string>("");
   const [filterDateTo, setFilterDateTo] = useState<string>("");
+  
+  // Forward rate calculation state
+  const [spotDate, setSpotDate] = useState<Date>(getSpotDate());
+  const [swapPointsByCurrency, setSwapPointsByCurrency] = useState<Record<string, SwapPoint[]>>({});
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -93,6 +103,31 @@ export default function QuoteApprovals() {
   const { data: users } = useQuery<User[]>({
     queryKey: ["/api/users"],
   });
+  
+  // Load swap points for each currency pair
+  useEffect(() => {
+    if (!currencyPairs || currencyPairs.length === 0) return;
+    
+    const loadSwapPoints = async () => {
+      const swapPointsMap: Record<string, SwapPoint[]> = {};
+      
+      for (const pair of currencyPairs) {
+        try {
+          const response = await fetch(`/api/swap-points/${pair.id}`);
+          if (response.ok) {
+            const data = await response.json();
+            swapPointsMap[pair.id] = data;
+          }
+        } catch (error) {
+          console.error(`Error loading swap points for ${pair.id}:`, error);
+        }
+      }
+      
+      setSwapPointsByCurrency(swapPointsMap);
+    };
+    
+    loadSwapPoints();
+  }, [currencyPairs]);
 
   const pendingRequests = quoteRequests?.filter(req => req.status === "REQUESTED") || [];
 
@@ -118,7 +153,47 @@ export default function QuoteApprovals() {
         try {
           const response = await fetch(`/api/quote-requests/${requestId}/settlement-details`);
           if (response.ok) {
-            const data = await response.json();
+            let data = await response.json();
+            
+            // Calculate forward rates for Near and Far dates
+            const request = quoteRequests?.find(r => r.id === requestId);
+            if (request && swapPointsByCurrency[request.currencyPairId]) {
+              const swapPoints = swapPointsByCurrency[request.currencyPairId];
+              const baseRate = parseFloat(request.quotedRate || "1350"); // Default spot rate
+              
+              // Build tenor data from swap points
+              const tenorData: TenorData[] = [
+                { tenor: "Spot", days: 0, swapPointNum: 0 },
+                ...swapPoints
+                  .filter(sp => sp.tenor)
+                  .map(sp => ({
+                    tenor: sp.tenor!,
+                    days: sp.days || 0,
+                    swapPointNum: Number(sp.swapPoint) || 0,
+                  })),
+              ];
+              
+              // Calculate near date forward rate
+              if (data.nearDate) {
+                const nearSettlementDate = new Date(data.nearDate);
+                const nearDays = getDaysBetween(spotDate, nearSettlementDate);
+                const nearResult = calculateForwardRate(nearDays, baseRate, tenorData, spotDate, nearSettlementDate);
+                
+                data.nearForwardRate = nearResult.forwardRate;
+                data.nearForwardRateError = nearResult.error;
+              }
+              
+              // Calculate far date forward rate
+              if (data.farDate) {
+                const farSettlementDate = new Date(data.farDate);
+                const farDays = getDaysBetween(spotDate, farSettlementDate);
+                const farResult = calculateForwardRate(farDays, baseRate, tenorData, spotDate, farSettlementDate);
+                
+                data.farForwardRate = farResult.forwardRate;
+                data.farForwardRateError = farResult.error;
+              }
+            }
+            
             setExpandedDetails(prev => ({ ...prev, [requestId]: data }));
           }
         } catch (error) {
@@ -644,10 +719,38 @@ export default function QuoteApprovals() {
                                   <p className="text-teal-300 font-semibold">{expandedDetails[request.id].nearSwapPoint!.toFixed(4)}</p>
                                 </div>
                               )}
+                              {expandedDetails[request.id].nearForwardRateError ? (
+                                <div className="space-y-1 border border-red-500/30 rounded p-2 bg-red-500/10">
+                                  <p className="text-slate-400 text-xs">결제 선도환율</p>
+                                  <div className="flex items-center gap-1 text-red-400 text-xs">
+                                    <AlertCircle className="w-3 h-3" />
+                                    <p>{expandedDetails[request.id].nearForwardRateError}</p>
+                                  </div>
+                                </div>
+                              ) : expandedDetails[request.id].nearForwardRate !== undefined && (
+                                <div className="space-y-1">
+                                  <p className="text-slate-400 text-xs">결제 선도환율</p>
+                                  <p className="text-blue-300 font-semibold">{expandedDetails[request.id].nearForwardRate!.toFixed(4)}</p>
+                                </div>
+                              )}
                               {expandedDetails[request.id].farSwapPoint !== null && (
                                 <div className="space-y-1">
                                   <p className="text-slate-400 text-xs">만기 Swap Point</p>
                                   <p className="text-teal-300 font-semibold">{expandedDetails[request.id].farSwapPoint!.toFixed(4)}</p>
+                                </div>
+                              )}
+                              {expandedDetails[request.id].farForwardRateError ? (
+                                <div className="space-y-1 border border-red-500/30 rounded p-2 bg-red-500/10">
+                                  <p className="text-slate-400 text-xs">만기 선도환율</p>
+                                  <div className="flex items-center gap-1 text-red-400 text-xs">
+                                    <AlertCircle className="w-3 h-3" />
+                                    <p>{expandedDetails[request.id].farForwardRateError}</p>
+                                  </div>
+                                </div>
+                              ) : expandedDetails[request.id].farForwardRate !== undefined && (
+                                <div className="space-y-1">
+                                  <p className="text-slate-400 text-xs">만기 선도환율</p>
+                                  <p className="text-blue-300 font-semibold">{expandedDetails[request.id].farForwardRate!.toFixed(4)}</p>
                                 </div>
                               )}
                               {expandedDetails[request.id].swapPointDifference !== null && (

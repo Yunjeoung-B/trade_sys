@@ -267,7 +267,7 @@ export default function ForwardRateCalculator() {
     if (savedRows) {
       try {
         const parsed = JSON.parse(savedRows);
-        console.log(`[Initialize] localStorage에서 tenorRows 복구:`, parsed.map(r => `${r.tenor}=${r.swapPoint}`));
+        console.log(`[Initialize] localStorage에서 tenorRows 복구:`, parsed.map((r: TenorRow) => `${r.tenor}=${r.swapPoint}`));
         initialRows = parsed;
       } catch (e) {
         console.log(`[Initialize] localStorage 파싱 실패, 기본값 생성`);
