@@ -1,4 +1,5 @@
 // Linear interpolation utility for swap points
+import { getTodayLocal } from "./dateUtils";
 
 export interface SwapPointData {
   days: number;
@@ -90,7 +91,7 @@ export function calculateCalendarDays(startDate: Date, endDate: Date): number {
 export function getSwapPointForDate(
   knownPoints: SwapPointData[],
   settlementDate: Date,
-  spotDate: Date = getSpotDate()
+  spotDate: Date = getSpotDate(getTodayLocal())
 ): number {
   const days = calculateCalendarDays(spotDate, settlementDate);
   return linearInterpolate(knownPoints, days);

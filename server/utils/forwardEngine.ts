@@ -1,5 +1,6 @@
 import { IStorage } from "../storage";
 import { getSpotDate, getDaysBetween } from "./settlement";
+import { getTodayLocal } from "./dateUtils";
 
 /**
  * Linear interpolation between two points
@@ -105,8 +106,8 @@ export async function getSwapPointForDate(
   tenor?: string,
   referenceSpotDate?: Date
 ): Promise<number | null> {
-  // Use provided spot date or calculate T+2 from today
-  const spotDate = referenceSpotDate || getSpotDate();
+  // Use provided spot date or calculate T+2 from today (KST timezone aware)
+  const spotDate = referenceSpotDate || getSpotDate(getTodayLocal());
   const targetDays = getDaysBetween(spotDate, settlementDate);
 
   console.log(`[SwapPoint Debug] ====== START CALCULATION ======`);

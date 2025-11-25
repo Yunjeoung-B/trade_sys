@@ -32,6 +32,7 @@ import {
   getApplicableSpread 
 } from "./utils/forwardEngine";
 import { getSpotDate } from "./utils/settlement";
+import { getTodayLocal } from "./utils/dateUtils";
 
 const execAsync = promisify(exec);
 
@@ -712,8 +713,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let swapPointDifference: number | null = null;
 
       // SPOT date is based on the request's nearDate (selected by customer)
-      // For now, use calculated SPOT date as reference
-      const spotDate = getSpotDate();
+      // For now, use calculated SPOT date as reference (KST timezone aware)
+      const spotDate = getSpotDate(getTodayLocal());
 
       // For Swap: calculate swap points for both near and far dates
       if (request.productType === "Swap" && request.nearDate && request.farDate) {
