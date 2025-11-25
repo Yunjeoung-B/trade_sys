@@ -713,19 +713,12 @@ export default function ForwardRateCalculator() {
     const today = getTodayLocal();
     const newSpotDate = getSpotDate(today);
     
-    // DEBUG
-    console.log("[갱신 버튼] Today:", formatDateForInput(today));
-    console.log("[갱신 버튼] New Spot Date:", formatDateForInput(newSpotDate));
-    
     setSpotDate(newSpotDate);
     
     const updatedRows = tenorRows.map(row => {
       const settlementDate = calculateSettlementDate(newSpotDate, row.tenor);
       const startDate = calculateStartDate(newSpotDate, row.tenor);
       const daysFromSpot = calculateDaysFromSpot(newSpotDate, row.tenor);
-      
-      // DEBUG: 각 만기별 settlement date 확인
-      console.log(`[${row.tenor}] Settlement: ${formatDateForInput(settlementDate)}, Days: ${daysFromSpot}`);
       
       return {
         ...row,
