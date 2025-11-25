@@ -168,10 +168,10 @@ export default function QuoteApprovals() {
           if (response.ok) {
             let data = await response.json();
             
-            // Use spotDate and tenorRows from API response (ForwardRateCalculator의 데이터와 동일)
+            // Use spotDate, baseRate, and tenorRows from API response (ForwardRateCalculator의 데이터와 동일)
             const apiSpotDate = data.spotDate ? new Date(data.spotDate) : spotDate;
             const apiTenorRows = data.tenorRows || [];
-            const baseRate = parseFloat("1350"); // Default spot rate
+            const baseRate = data.baseRate ?? parseFloat("1350"); // Use API baseRate or fallback
             
             // Build tenor data from API tenorRows (ForwardRateCalculator와 동일하게)
             const tenorData: TenorData[] = [

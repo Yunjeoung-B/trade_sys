@@ -845,6 +845,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const allSwapPoints = await storage.getSwapPointsByCurrencyPair(request.currencyPairId);
       const onTnRates = await storage.getOnTnRates(request.currencyPairId);
 
+      // Get market rate (baseRate) for this currency pair
+      const allMarketRates = await storage.getLatestMarketRates();
+      const marketRate = allMarketRates.find(rate => rate.currencyPairId === request.currencyPairId);
+      
+      // Determine base rate based on direction
+      const baseRate = marketRate 
+        ? (request.direction === "BUY" 
+          ? parseFloat(marketRate.buyRate) 
+          : parseFloat(marketRate.sellRate))
+        : 1350; // Fallback to default if no market rate
+
       res.json({
         quoteId: id,
         productType: request.productType,
@@ -854,6 +865,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         farSwapPoint,
         swapPointDifference,
         spread,
+        baseRate,
         spotDate: spotDate.toISOString(),
         tenorRows: allSwapPoints,
         onTnRates: onTnRates
