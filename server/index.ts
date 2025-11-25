@@ -2,6 +2,10 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { infomaxPoller } from "./services/infomaxPoller";
+import { verifyTimezone } from "./utils/dateUtils";
+
+// ✅ 전체 시스템을 KST (UTC+9)로 설정
+process.env.TZ = "Asia/Seoul";
 
 const app = express();
 app.use(express.json());
@@ -68,6 +72,9 @@ app.use((req, res, next) => {
     reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
+    
+    // ✅ 타임존 확인
+    verifyTimezone();
     
     infomaxPoller.start();
     log('Infomax poller started');

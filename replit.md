@@ -11,6 +11,15 @@ Logo assets: User provided dark/white mode compatible logo assets for dark/white
 Font preference: Nanum Gothic font family for Korean text support.
 UI Style: Gradient backgrounds (slate-800 → blue-900 → purple-900), rounded-3xl cards with transparency and backdrop-blur effects.
 
+# Recent Changes (Session 25-Nov-2025)
+
+## ✅ Complete KST Timezone Unification
+- **Backend**: `process.env.TZ = "Asia/Seoul"` set in server/index.ts at startup
+- **Backend Utilities**: Created server/utils/dateUtils.ts with getTodayLocal(), formatDateForInput(), verifyTimezone()
+- **Timezone Verification**: Server logs timezone confirmation on startup (UTC offset: -540 = KST ✓)
+- **Frontend**: formatDateString() updated to use local date methods (getFullYear/getMonth/getDate) instead of toISOString()
+- **Status**: System now unified to UTC+9 (KST) across frontend, backend, and database operations ✅
+
 # System Architecture
 
 ## Frontend Architecture
