@@ -632,9 +632,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const allRequests = await storage.getAllQuoteRequests();
       const customerRates: Record<string, { baseRate: number; spread: number; customerRate: number }> = {};
       
-      // Get all latest market rates
-      const allMarketRates = await storage.getLatestMarketRates();
-      
       for (const request of allRequests) {
         try {
           // Skip if currencyPairId is null
@@ -644,8 +641,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const user = await storage.getUser(request.userId);
           if (!user) continue;
           
-          // Find market rate for this currency pair
-          const marketRate = allMarketRates.find(rate => rate.currencyPairId === request.currencyPairId);
+          // Get latest market rate for this specific currency pair
+          const marketRate = await storage.getLatestMarketRateForCurrencyPair(request.currencyPairId);
           if (!marketRate) continue;
           
           // Determine base rate based on direction
