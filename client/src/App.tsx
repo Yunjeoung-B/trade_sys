@@ -8,7 +8,6 @@ import Layout from "@/components/Layout";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/Landing";
 import Login from "@/pages/Login";
-import UnderDevelopment from "@/pages/UnderDevelopment";
 import TradeStatus from "@/pages/TradeStatus";
 import SpotTradingCustomer from "@/pages/customer/SpotTradingCustomer";
 import ForwardTradingCustomer from "@/pages/customer/ForwardTradingCustomer";
@@ -53,23 +52,6 @@ function Router() {
           <Route path="/customer/swap" component={SwapTradingCustomer} />
           <Route path="/customer/mar" component={MARTradingCustomer} />
           <Route path="/trades" component={TradeStatus} />
-          
-          {/* 개발 중 화면 (관리자 전용) */}
-          <Route path="/spot">
-            {user?.role === "admin" ? <UnderDevelopment /> : <NotFound />}
-          </Route>
-          <Route path="/forward">
-            {user?.role === "admin" ? <UnderDevelopment /> : <NotFound />}
-          </Route>
-          <Route path="/swap">
-            {user?.role === "admin" ? <UnderDevelopment /> : <NotFound />}
-          </Route>
-          <Route path="/mar">
-            {user?.role === "admin" ? <UnderDevelopment /> : <NotFound />}
-          </Route>
-          <Route path="/rates">
-            {user?.role === "admin" ? <UnderDevelopment /> : <NotFound />}
-          </Route>
           
           {/* Admin routes - 관리자 권한 확인 */}
           <Route path="/admin">

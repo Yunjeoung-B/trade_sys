@@ -30,14 +30,6 @@ const customerMenuItems = [
 
 const clientMenuItems: typeof customerMenuItems = [];
 
-const adminDevMenuItems = [
-  { path: "/spot", label: "현물환 거래 (Spot)", icon: ArrowLeftRight },
-  { path: "/forward", label: "선물환 거래 (Forward)", icon: Calendar },
-  { path: "/swap", label: "스왑 거래 (Swap)", icon: RefreshCw },
-  { path: "/mar", label: "MAR 거래", icon: TrendingUp },
-  { path: "/rates", label: "환율조회", icon: BarChart3 },
-];
-
 const adminMenuItems = [
   { path: "/admin", label: "관리자 대시보드", icon: Gauge },
   { path: "/admin/forward-calculator", label: "선도환율 계산기", icon: Calculator },
@@ -58,7 +50,6 @@ export default function Sidebar() {
   if (!user) return null;
 
   const menuItems = user.role === "admin" ? adminMenuItems : clientMenuItems;
-  const showDevMenu = user.role === "admin";
 
   return (
     <div className="w-64 bg-slate-800/50 backdrop-blur-sm h-screen overflow-y-auto border-r border-slate-700/50">
@@ -125,41 +116,6 @@ export default function Sidebar() {
                 </Button>
               );
             })}
-          </div>
-        )}
-
-        {/* 개발 중 메뉴 (관리자 전용) */}
-        {showDevMenu && adminDevMenuItems.length > 0 && (
-          <div className="mt-6">
-            <div className="px-4 py-2 mb-2">
-              <h3 className="text-xs font-semibold text-orange-400 uppercase tracking-wider">
-                개발 중
-              </h3>
-            </div>
-            <div className="space-y-2">
-              {adminDevMenuItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = location === item.path;
-                
-                return (
-                  <Button
-                    key={item.path}
-                    variant="ghost"
-                    className={cn(
-                      "w-full justify-start text-left px-4 py-3 rounded-xl transition-all duration-200",
-                      isActive
-                        ? "bg-gradient-to-r from-orange-500/20 to-yellow-500/20 text-white font-semibold border border-orange-400/30 shadow-lg"
-                        : "text-slate-100 font-medium hover:text-white hover:bg-white/10"
-                    )}
-                    onClick={() => setLocation(item.path)}
-                    data-testid={`nav-${item.path}`}
-                  >
-                    <Icon className="mr-3 h-4 w-4" />
-                    {item.label}
-                  </Button>
-                );
-              })}
-            </div>
           </div>
         )}
       </div>
