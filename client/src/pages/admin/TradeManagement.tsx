@@ -15,9 +15,10 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Filter, Calendar } from "lucide-react";
+import { Filter, Calendar, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatCurrencyAmount } from "@/lib/currencyUtils";
+import { DealerConfirmationModal } from "@/components/DealerConfirmationModal";
 
 interface QuoteRequest {
   id: string;
@@ -46,6 +47,8 @@ interface CurrencyPair {
 export default function TradeManagement() {
   const [filterDate, setFilterDate] = useState<string>("");
   const [currencyPairs, setCurrencyPairs] = useState<Map<string, CurrencyPair>>(new Map());
+  const [selectedTrade, setSelectedTrade] = useState<QuoteRequest | null>(null);
+  const [showModal, setShowModal] = useState(false);
 
   // Fetch currency pairs for display
   const { data: currencyPairsList } = useQuery({
@@ -102,6 +105,16 @@ export default function TradeManagement() {
 
   const formatAmount = (amount: string | number) => {
     return formatCurrencyAmount(Math.abs(Number(amount)), "USD");
+  };
+
+  const handleViewDetails = (trade: QuoteRequest) => {
+    setSelectedTrade(trade);
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setSelectedTrade(null);
   };
 
   return (
@@ -161,6 +174,7 @@ export default function TradeManagement() {
                     <TableHead className="text-center font-semibold">호가</TableHead>
                     <TableHead className="text-center font-semibold">기간</TableHead>
                     <TableHead className="text-center font-semibold">상태</TableHead>
+                    <TableHead className="text-center font-semibold">상세보기</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -228,6 +242,18 @@ export default function TradeManagement() {
                               {statusConfig.label}
                             </Badge>
                           </TableCell>
+                          <TableCell className="text-center">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleViewDetails(trade)}
+                              className="rounded-lg"
+                              data-testid={`button-view-trade-${trade.id}`}
+                            >
+                              <Eye className="w-4 h-4 mr-2" />
+                              상세보기
+                            </Button>
+                          </TableCell>
                         </TableRow>
                       );
                     })
@@ -274,6 +300,16 @@ export default function TradeManagement() {
             </Card>
           ))}
         </div>
+
+        {/* Dealer Confirmation Modal */}
+        <DealerConfirmationModal
+          isOpen={showModal}
+          onClose={handleCloseModal}
+          trade={selectedTrade}
+          currencyPairDisplay={
+            selectedTrade ? getCurrencyPairDisplay(selectedTrade.currencyPairId) : ""
+          }
+        />
       </div>
     </div>
   );
