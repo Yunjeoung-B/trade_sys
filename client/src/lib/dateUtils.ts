@@ -64,6 +64,31 @@ export function formatDateString(date: Date): string {
 }
 
 /**
+ * Format datetime in KST (YYYY-MM-DD HH:mm:ss)
+ */
+export function formatDateTimeKST(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
+/**
+ * Format date and time for display in KST (YYYY-MM-DD HH:mm)
+ */
+export function formatDisplayDateTime(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${year}-${month}-${day} ${hours}:${minutes}`;
+}
+
+/**
  * Get today as local midnight (fixes timezone issue)
  * Returns date with hours/minutes/seconds = 0
  */

@@ -710,6 +710,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let farSwapPoint: number | null = null;
       let swapPointDifference: number | null = null;
 
+      // SPOT date is based on the request's nearDate (selected by customer)
+      // For now, use calculated SPOT date as reference
       const spotDate = getSpotDate();
 
       // For Swap: calculate swap points for both near and far dates
