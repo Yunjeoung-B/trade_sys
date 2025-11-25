@@ -57,6 +57,9 @@ interface SettlementDetails {
   farForwardRateError?: string;
   nearDays?: number;
   farDays?: number;
+  spotDate?: string;
+  tenorRows?: SwapPoint[];
+  onTnRates?: any[];
 }
 
 interface CurrencyPair {
@@ -165,45 +168,51 @@ export default function QuoteApprovals() {
           if (response.ok) {
             let data = await response.json();
             
-            // Calculate forward rates for Near and Far dates
-            const request = quoteRequests?.find(r => r.id === requestId);
-            if (request && swapPointsByCurrency[request.currencyPairId]) {
-              const swapPoints = swapPointsByCurrency[request.currencyPairId];
-              const baseRate = parseFloat(request.quotedRate || "1350"); // Default spot rate
+            // Use spotDate and tenorRows from API response (ForwardRateCalculator의 데이터와 동일)
+            const apiSpotDate = data.spotDate ? new Date(data.spotDate) : spotDate;
+            const apiTenorRows = data.tenorRows || [];
+            const baseRate = parseFloat("1350"); // Default spot rate
+            
+            // Build tenor data from API tenorRows (ForwardRateCalculator와 동일하게)
+            const tenorData: TenorData[] = [
+              { tenor: "Spot", days: 0, swapPointNum: 0 },
+              ...apiTenorRows
+                .filter((sp: any) => sp.tenor && sp.tenor !== "ON" && sp.tenor !== "TN")
+                .map((sp: any) => ({
+                  tenor: sp.tenor!,
+                  days: sp.days || sp.daysFromSpot || 0,
+                  swapPointNum: Number(sp.swapPoint) || 0,
+                }))
+                .sort((a: any, b: any) => a.days - b.days),
+            ];
+            
+            // Calculate near date forward rate using API spotDate
+            if (data.nearDate) {
+              const nearSettlementDate = new Date(data.nearDate);
+              const nearDays = getDaysBetween(apiSpotDate, nearSettlementDate);
+              const nearResult = calculateForwardRate(nearDays, baseRate, tenorData, apiSpotDate, nearSettlementDate);
               
-              // Build tenor data from swap points
-              const tenorData: TenorData[] = [
-                { tenor: "Spot", days: 0, swapPointNum: 0 },
-                ...swapPoints
-                  .filter(sp => sp.tenor)
-                  .map(sp => ({
-                    tenor: sp.tenor!,
-                    days: sp.days || 0,
-                    swapPointNum: Number(sp.swapPoint) || 0,
-                  })),
-              ];
+              data.nearDays = nearDays;
+              data.nearSwapPoint = nearResult.interpolatedSwapPoint;
+              data.nearForwardRate = nearResult.forwardRate;
+              data.nearForwardRateError = nearResult.error;
+            }
+            
+            // Calculate far date forward rate using API spotDate
+            if (data.farDate) {
+              const farSettlementDate = new Date(data.farDate);
+              const farDays = getDaysBetween(apiSpotDate, farSettlementDate);
+              const farResult = calculateForwardRate(farDays, baseRate, tenorData, apiSpotDate, farSettlementDate);
               
-              // Calculate near date forward rate
-              if (data.nearDate) {
-                const nearSettlementDate = new Date(data.nearDate);
-                const nearDays = getDaysBetween(spotDate, nearSettlementDate);
-                const nearResult = calculateForwardRate(nearDays, baseRate, tenorData, spotDate, nearSettlementDate);
-                
-                data.nearDays = nearDays;
-                data.nearForwardRate = nearResult.forwardRate;
-                data.nearForwardRateError = nearResult.error;
-              }
-              
-              // Calculate far date forward rate
-              if (data.farDate) {
-                const farSettlementDate = new Date(data.farDate);
-                const farDays = getDaysBetween(spotDate, farSettlementDate);
-                const farResult = calculateForwardRate(farDays, baseRate, tenorData, spotDate, farSettlementDate);
-                
-                data.farDays = farDays;
-                data.farForwardRate = farResult.forwardRate;
-                data.farForwardRateError = farResult.error;
-              }
+              data.farDays = farDays;
+              data.farSwapPoint = farResult.interpolatedSwapPoint;
+              data.farForwardRate = farResult.forwardRate;
+              data.farForwardRateError = farResult.error;
+            }
+            
+            // Recalculate swapPointDifference for Swap products
+            if (data.productType === "Swap" && data.nearSwapPoint !== null && data.farSwapPoint !== null) {
+              data.swapPointDifference = data.farSwapPoint - data.nearSwapPoint;
             }
             
             setExpandedDetails(prev => ({ ...prev, [requestId]: data }));

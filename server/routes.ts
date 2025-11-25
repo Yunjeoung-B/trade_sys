@@ -840,6 +840,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
+      // Get all swap points for this currency pair (for frontend linear interpolation)
+      const allSwapPoints = await storage.getSwapPointsByCurrencyPair(request.currencyPairId);
+      const onTnRates = await storage.getOnTnRates(request.currencyPairId);
+
       res.json({
         quoteId: id,
         productType: request.productType,
@@ -848,7 +852,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         nearSwapPoint,
         farSwapPoint,
         swapPointDifference,
-        spread
+        spread,
+        spotDate: spotDate.toISOString(),
+        tenorRows: allSwapPoints,
+        onTnRates: onTnRates
       });
     } catch (error: any) {
       console.error("Settlement details error:", error);
