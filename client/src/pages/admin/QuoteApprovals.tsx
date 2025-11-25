@@ -148,6 +148,7 @@ export default function QuoteApprovals() {
     queryKey: ["/api/quote-requests/customer-rates"],
     enabled: (pendingRequests.length > 0),
     refetchInterval: 3000, // Refresh every 3 seconds to get latest market rates
+    staleTime: 0, // Always consider data stale to fetch fresh rates
   });
 
   // Store expanded rows and settlement details for on-demand loading
