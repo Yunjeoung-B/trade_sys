@@ -29,6 +29,53 @@ interface TenorRow {
 // Standard tenors including ON/TN for complete swap point management
 const standardTenors = ["ON", "TN", "Spot", "1M", "2M", "3M", "6M", "9M", "12M"];
 
+// KR Holidays 2025-2026 (한국 기준 영업일)
+const KR_HOLIDAYS = [
+  "2025-01-01", // New Year
+  "2025-01-29", // Lunar New Year Eve
+  "2025-01-30", // Lunar New Year
+  "2025-01-31", // Lunar New Year
+  "2025-03-01", // Independence Movement Day
+  "2025-04-10", // Parliamentary Election
+  "2025-05-05", // Children's Day
+  "2025-05-15", // Buddha's Birthday
+  "2025-06-06", // Memorial Day
+  "2025-08-15", // Liberation Day
+  "2025-09-16", // Chuseok Eve
+  "2025-09-17", // Chuseok
+  "2025-09-18", // Chuseok
+  "2025-10-03", // National Foundation Day
+  "2025-10-09", // Hangul Day
+  "2025-12-25", // Christmas
+];
+
+// US Holidays 2025-2026 (미국 기준 - US holiday면 익영업일로)
+const US_HOLIDAYS = [
+  "2025-01-01", // New Year's Day
+  "2025-01-20", // MLK Jr. Day
+  "2025-02-17", // Presidents' Day
+  "2025-05-26", // Memorial Day
+  "2025-06-19", // Juneteenth
+  "2025-07-04", // Independence Day
+  "2025-09-01", // Labor Day
+  "2025-10-13", // Columbus Day
+  "2025-11-11", // Veterans Day
+  "2025-11-27", // Thanksgiving
+  "2025-12-25", // Christmas
+];
+
+function isKRHoliday(dateStr: string): boolean {
+  return KR_HOLIDAYS.includes(dateStr);
+}
+
+function isUSHoliday(dateStr: string): boolean {
+  return US_HOLIDAYS.includes(dateStr);
+}
+
+function formatDateString(date: Date): string {
+  return date.toISOString().split('T')[0];
+}
+
 // Helper functions for date calculations
 function addBusinessDays(date: Date, days: number): Date {
   const result = new Date(date);
@@ -37,17 +84,26 @@ function addBusinessDays(date: Date, days: number): Date {
   while (remaining > 0) {
     result.setDate(result.getDate() + 1);
     const dayOfWeek = result.getDay();
-    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+    const dateStr = formatDateString(result);
+    
+    // Skip weekends and KR holidays (기본)
+    if (dayOfWeek !== 0 && dayOfWeek !== 6 && !isKRHoliday(dateStr)) {
       remaining--;
     }
+  }
+  
+  // If final date is a US holiday, add 1 more business day (익영업일)
+  const finalDateStr = formatDateString(result);
+  if (isUSHoliday(finalDateStr)) {
+    return addBusinessDays(result, 1); // Recursively add 1 more day
   }
   
   return result;
 }
 
 function getSpotDate(baseDate: Date = new Date()): Date {
-  // SPOT = T+2 (오늘 + 2 calendar days, not business days)
-  return addDays(baseDate, 2);
+  // SPOT = T+2 business days (KR holidays 기준, US holiday면 익영업일로)
+  return addBusinessDays(baseDate, 2);
 }
 
 function getDaysBetween(start: Date, end: Date): number {
@@ -60,6 +116,31 @@ function getDaysBetween(start: Date, end: Date): number {
   
   const diffTime = endDate.getTime() - startDate.getTime();
   return Math.round(diffTime / (1000 * 60 * 60 * 24));
+}
+
+// Calculate business days between two dates (KR holidays 기준)
+function getBusinessDaysBetween(start: Date, end: Date): number {
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+  
+  startDate.setHours(0, 0, 0, 0);
+  endDate.setHours(0, 0, 0, 0);
+  
+  let businessDays = 0;
+  const current = new Date(startDate);
+  
+  while (current < endDate) {
+    current.setDate(current.getDate() + 1);
+    const dayOfWeek = current.getDay();
+    const dateStr = formatDateString(current);
+    
+    // Count if not weekend and not KR holiday
+    if (dayOfWeek !== 0 && dayOfWeek !== 6 && !isKRHoliday(dateStr)) {
+      businessDays++;
+    }
+  }
+  
+  return businessDays;
 }
 
 function addDays(date: Date, days: number): Date {
