@@ -108,7 +108,7 @@ function addBusinessDays(date: Date, days: number): Date {
   return result;
 }
 
-function getSpotDate(baseDate: Date = new Date()): Date {
+function getSpotDate(baseDate: Date = getTodayLocal()): Date {
   // SPOT = T+2 business days (KR holidays 기준, US holiday면 익영업일로)
   return addBusinessDays(baseDate, 2);
 }
