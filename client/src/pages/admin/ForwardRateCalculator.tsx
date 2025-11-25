@@ -684,7 +684,13 @@ export default function ForwardRateCalculator() {
   };
 
   const handleRefreshSpotDate = () => {
-    const newSpotDate = getSpotDate(getTodayLocal());
+    const today = getTodayLocal();
+    const newSpotDate = getSpotDate(today);
+    
+    // DEBUG
+    console.log("[갱신 버튼] Today:", formatDateForInput(today));
+    console.log("[갱신 버튼] New Spot Date:", formatDateForInput(newSpotDate));
+    
     setSpotDate(newSpotDate);
     
     const updatedRows = tenorRows.map(row => {
