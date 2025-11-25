@@ -54,6 +54,45 @@ function calculateTenorDays(spotDate: Date, tenor: string): number {
 }
 
 /**
+ * Get exact swap point for a specific settlement date from database (no interpolation)
+ * Used by quote approvals to show values entered in the forward rate calculator
+ * @returns Exact swap point from DB or null if not found
+ */
+export async function getExactSwapPointForDate(
+  currencyPairId: string,
+  settlementDate: Date,
+  storage: IStorage
+): Promise<number | null> {
+  try {
+    // Get settlement date as YYYY-MM-DD string
+    const targetDateStr = settlementDate.toISOString().split('T')[0];
+    
+    // Get all swap points for this currency pair
+    const allSwapPoints = await storage.getSwapPointsByCurrencyPair(currencyPairId);
+    
+    if (!allSwapPoints || allSwapPoints.length === 0) {
+      return null;
+    }
+    
+    // Find exact match for settlement date
+    for (const sp of allSwapPoints) {
+      if (!sp.settlementDate) continue;
+      
+      const spDateStr = new Date(sp.settlementDate).toISOString().split('T')[0];
+      if (spDateStr === targetDateStr) {
+        return parseFloat(sp.swapPoint);
+      }
+    }
+    
+    // No exact match found
+    return null;
+  } catch (error) {
+    console.error(`Error getting exact swap point: ${error}`);
+    return null;
+  }
+}
+
+/**
  * Get swap point for a specific settlement date using linear interpolation
  * Uses tenor-based days calculation (consistent with ForwardRateCalculator)
  * @param referenceSpotDate - Optional spot date reference (typically from ForwardRateCalculator)

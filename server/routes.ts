@@ -26,7 +26,8 @@ import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import connectPg from "connect-pg-simple";
 import { 
-  getSwapPointForDate, 
+  getSwapPointForDate,
+  getExactSwapPointForDate,
   calculateTheoreticalRate, 
   getApplicableSpread 
 } from "./utils/forwardEngine";
@@ -736,13 +737,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // SPOT date has 0 swap points
           nearSwapPoint = 0;
         } else {
-          nearSwapPoint = await getSwapPointForDate(
+          // First try to get exact swap point from database (entered in forward rate calculator)
+          nearSwapPoint = await getExactSwapPointForDate(
             request.currencyPairId,
             nearDateObj,
-            storage,
-            request.tenor ?? undefined,
-            spotDate
+            storage
           );
+          
+          // If exact match not found, use interpolated value
+          if (nearSwapPoint === null) {
+            nearSwapPoint = await getSwapPointForDate(
+              request.currencyPairId,
+              nearDateObj,
+              storage,
+              request.tenor ?? undefined,
+              spotDate
+            );
+          }
         }
         
         // Check if farDate is SPOT date itself (rare but possible)
@@ -752,13 +763,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // SPOT date has 0 swap points
           farSwapPoint = 0;
         } else {
-          farSwapPoint = await getSwapPointForDate(
+          // First try to get exact swap point from database (entered in forward rate calculator)
+          farSwapPoint = await getExactSwapPointForDate(
             request.currencyPairId,
             farDateObj,
-            storage,
-            request.tenor ?? undefined,
-            spotDate
+            storage
           );
+          
+          // If exact match not found, use interpolated value
+          if (farSwapPoint === null) {
+            farSwapPoint = await getSwapPointForDate(
+              request.currencyPairId,
+              farDateObj,
+              storage,
+              request.tenor ?? undefined,
+              spotDate
+            );
+          }
         }
         
         if (nearSwapPoint !== null && farSwapPoint !== null) {
@@ -784,13 +805,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // SPOT date has 0 swap points
           nearSwapPoint = 0;
         } else {
-          nearSwapPoint = await getSwapPointForDate(
+          // First try to get exact swap point from database (entered in forward rate calculator)
+          nearSwapPoint = await getExactSwapPointForDate(
             request.currencyPairId,
             nearDateObj,
-            storage,
-            request.tenor ?? undefined,
-            spotDate
+            storage
           );
+          
+          // If exact match not found, use interpolated value
+          if (nearSwapPoint === null) {
+            nearSwapPoint = await getSwapPointForDate(
+              request.currencyPairId,
+              nearDateObj,
+              storage,
+              request.tenor ?? undefined,
+              spotDate
+            );
+          }
         }
       }
 
