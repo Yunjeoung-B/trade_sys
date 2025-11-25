@@ -6,11 +6,12 @@ import { ko } from "date-fns/locale";
 import { formatCurrencyAmount } from "@/lib/currencyUtils";
 import { getTodayLocal, getSpotDate } from "@/lib/dateUtils";
 import { cn } from "@/lib/utils";
+import type { Trade } from "@shared/schema";
 
 interface DealerConfirmationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  trade: any;
+  trade: Trade;
   currencyPairDisplay: string;
   user?: any;
 }
@@ -24,7 +25,8 @@ export function DealerConfirmationModal({
 }: DealerConfirmationModalProps) {
   if (!trade) return null;
 
-  const formatAmount = (amount: string | number) => {
+  const formatAmount = (amount: string | number | undefined) => {
+    if (!amount) return "-";
     return formatCurrencyAmount(Math.abs(Number(amount)), "KRW");
   };
 
@@ -33,13 +35,13 @@ export function DealerConfirmationModal({
     return Number(rate).toFixed(4);
   };
 
-  const tradeDate = format(parseISO(trade.createdAt), "yyyy-MM-dd HH:mm:ss");
-  const valueDate = trade.nearDate ? format(parseISO(trade.nearDate), "yyyy-MM-dd") : "-";
+  const tradeDate = format(parseISO(String(trade.createdAt)), "yyyy-MM-dd HH:mm:ss");
+  const valueDate = trade.settlementDate ? format(parseISO(String(trade.settlementDate)), "yyyy-MM-dd") : "-";
   const spotDate = getSpotDate(new Date()).toISOString().split("T")[0];
 
   const getTransactionType = () => {
     if (trade.productType === "Spot") return "현물거래 (Spot FX)";
-    if (trade.productType === "Forward") return trade.tenor ? "선도거래 (Deliverable Forward)" : "-";
+    if (trade.productType === "Forward") return "선도거래 (Deliverable Forward)";
     if (trade.productType === "Swap") return "스왑거래 (FX Swap)";
     if (trade.productType === "MAR") return "일중단기 (MAR)";
     return trade.productType;
@@ -49,7 +51,7 @@ export function DealerConfirmationModal({
     const [base, quote] = currencyPairDisplay.split("/");
     const baseAmount = formatAmount(trade.amount);
     const quoteAmount = formatAmount(
-      Number(trade.amount) * Number(trade.quotedRate || 0)
+      Number(trade.amount) * Number(trade.rate || 0)
     );
 
     if (trade.direction === "BUY") {
@@ -153,7 +155,7 @@ export function DealerConfirmationModal({
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <p className="text-sm text-gray-600 mb-1">선도환율 (Forward Rate)</p>
-                  <p className="font-bold text-lg text-purple-600">{formatRate(trade.quotedRate)}</p>
+                  <p className="font-bold text-lg text-purple-600">{formatRate(trade.rate)}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600 mb-1">기준 스팟환율 (Spot Rate)</p>

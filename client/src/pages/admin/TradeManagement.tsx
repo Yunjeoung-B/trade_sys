@@ -19,81 +19,76 @@ import { Filter, Calendar, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatCurrencyAmount } from "@/lib/currencyUtils";
 import { DealerConfirmationModal } from "@/components/DealerConfirmationModal";
-
-interface QuoteRequest {
-  id: string;
-  userId: string;
-  productType: string;
-  currencyPairId: string;
-  direction: "BUY" | "SELL";
-  amount: string;
-  tenor?: string;
-  nearDate?: string;
-  farDate?: string;
-  nearAmount?: string;
-  farAmount?: string;
-  quotedRate?: string;
-  status: "REQUESTED" | "QUOTE_READY" | "CONFIRMED" | "EXPIRED";
-  createdAt: string;
-  expiresAt?: string;
-}
+import type { Trade } from "@shared/schema";
 
 interface CurrencyPair {
   id: string;
-  baseCode: string;
-  quoteCode: string;
+  baseCurrency: string;
+  quoteCurrency: string;
+  symbol: string;
 }
 
 export default function TradeManagement() {
   const [filterDate, setFilterDate] = useState<string>("");
   const [currencyPairs, setCurrencyPairs] = useState<Map<string, CurrencyPair>>(new Map());
-  const [selectedTrade, setSelectedTrade] = useState<QuoteRequest | null>(null);
+  const [selectedTrade, setSelectedTrade] = useState<Trade | null>(null);
   const [showModal, setShowModal] = useState(false);
 
   // Fetch currency pairs for display
-  const { data: currencyPairsList } = useQuery({
+  const { data: currencyPairsList = [] } = useQuery<CurrencyPair[]>({
     queryKey: ["/api/currency-pairs"],
   });
 
   useEffect(() => {
-    if (currencyPairsList && Array.isArray(currencyPairsList)) {
+    if (currencyPairsList && currencyPairsList.length > 0) {
       const map = new Map();
-      (currencyPairsList as CurrencyPair[]).forEach((pair: CurrencyPair) => {
+      currencyPairsList.forEach((pair: CurrencyPair) => {
         map.set(pair.id, pair);
       });
       setCurrencyPairs(map);
     }
-  }, [currencyPairsList]);
+  }, [currencyPairsList.length]);
 
-  // Fetch completed trades (CONFIRMED status only)
-  const { data: allTrades = [], isLoading } = useQuery({
-    queryKey: ["/api/quote-requests", "CONFIRMED"],
-    queryFn: async () => {
-      const res = await fetch("/api/quote-requests?status=CONFIRMED");
-      if (!res.ok) throw new Error("Failed to fetch trades");
-      return res.json();
-    },
+  // Fetch all active trades
+  const { data: allTrades = [], isLoading } = useQuery<Trade[]>({
+    queryKey: ["/api/trades"],
   });
 
   // Filter by date if provided
   const filteredTrades = filterDate
-    ? allTrades.filter((trade: QuoteRequest) => {
-        const tradeDate = format(parseISO(trade.createdAt), "yyyy-MM-dd");
+    ? allTrades.filter((trade: Trade) => {
+        if (!trade.createdAt) return false;
+        const tradeDate = format(parseISO(String(trade.createdAt)), "yyyy-MM-dd");
         return tradeDate === filterDate;
       })
     : allTrades;
 
   const getCurrencyPairDisplay = (currencyPairId: string) => {
     const pair = currencyPairs.get(currencyPairId);
-    return pair ? `${pair.baseCode}/${pair.quoteCode}` : currencyPairId;
+    return pair ? `${pair.symbol}` : currencyPairId;
   };
 
   const getStatusConfig = (status: string) => {
     switch (status) {
-      case "CONFIRMED":
+      case "active":
         return {
           label: "체결완료",
           color: "bg-green-100 text-green-800 border-green-200",
+        };
+      case "pending":
+        return {
+          label: "대기중",
+          color: "bg-yellow-100 text-yellow-800 border-yellow-200",
+        };
+      case "settled":
+        return {
+          label: "결제완료",
+          color: "bg-blue-100 text-blue-800 border-blue-200",
+        };
+      case "cancelled":
+        return {
+          label: "취소",
+          color: "bg-red-100 text-red-800 border-red-200",
         };
       default:
         return {
@@ -103,11 +98,12 @@ export default function TradeManagement() {
     }
   };
 
-  const formatAmount = (amount: string | number) => {
-    return formatCurrencyAmount(Math.abs(Number(amount)), "USD");
+  const formatAmount = (amount: string | number | undefined) => {
+    if (!amount) return "-";
+    return formatCurrencyAmount(Math.abs(Number(amount)), "KRW");
   };
 
-  const handleViewDetails = (trade: QuoteRequest) => {
+  const handleViewDetails = (trade: Trade) => {
     setSelectedTrade(trade);
     setShowModal(true);
   };
@@ -124,7 +120,7 @@ export default function TradeManagement() {
           <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
             거래 관리
           </h1>
-          <p className="text-gray-600">체결완료된 거래 내역 조회</p>
+          <p className="text-gray-600">체결 및 대기중인 거래 내역 조회</p>
         </div>
 
         {/* Filters */}
@@ -171,8 +167,8 @@ export default function TradeManagement() {
                     <TableHead className="text-center font-semibold">통화</TableHead>
                     <TableHead className="text-center font-semibold">방향</TableHead>
                     <TableHead className="text-center font-semibold">금액</TableHead>
-                    <TableHead className="text-center font-semibold">호가</TableHead>
-                    <TableHead className="text-center font-semibold">기간</TableHead>
+                    <TableHead className="text-center font-semibold">체결환율</TableHead>
+                    <TableHead className="text-center font-semibold">주문유형</TableHead>
                     <TableHead className="text-center font-semibold">상태</TableHead>
                     <TableHead className="text-center font-semibold">상세보기</TableHead>
                   </TableRow>
@@ -180,23 +176,24 @@ export default function TradeManagement() {
                 <TableBody>
                   {isLoading ? (
                     <TableRow>
-                      <TableCell colSpan={9} className="text-center py-8 text-gray-500">
+                      <TableCell colSpan={10} className="text-center py-8 text-gray-500">
                         로딩 중...
                       </TableCell>
                     </TableRow>
                   ) : filteredTrades.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={9} className="text-center py-12 text-gray-500">
+                      <TableCell colSpan={10} className="text-center py-12 text-gray-500">
                         <div className="text-4xl mb-4">📊</div>
-                        <p>해당 조건의 체결 거래가 없습니다</p>
+                        <p>해당 조건의 거래가 없습니다</p>
                       </TableCell>
                     </TableRow>
                   ) : (
-                    filteredTrades.map((trade: QuoteRequest) => {
+                    filteredTrades.map((trade: Trade) => {
                       const statusConfig = getStatusConfig(trade.status);
-                      const tradeTime = format(parseISO(trade.createdAt), "HH:mm:ss");
-                      const tradeDate = format(parseISO(trade.createdAt), "yyyy-MM-dd");
-                      const tenor = trade.tenor || "-";
+                      const createdAtStr = String(trade.createdAt);
+                      const tradeTime = createdAtStr ? format(parseISO(createdAtStr), "HH:mm:ss") : "-";
+                      const tradeDate = createdAtStr ? format(parseISO(createdAtStr), "yyyy-MM-dd") : "-";
+                      const orderTypeDisplay = trade.orderType === "LIMIT" ? "지정가" : "시장가";
                       
                       return (
                         <TableRow 
@@ -216,7 +213,7 @@ export default function TradeManagement() {
                             </Badge>
                           </TableCell>
                           <TableCell className="text-center font-medium text-sm">
-                            {getCurrencyPairDisplay(trade.currencyPairId)}
+                            {getCurrencyPairDisplay(trade.currencyPairId || "")}
                           </TableCell>
                           <TableCell className="text-center">
                             <Badge className={cn(
@@ -229,13 +226,13 @@ export default function TradeManagement() {
                             </Badge>
                           </TableCell>
                           <TableCell className="text-center font-medium text-sm">
-                            {formatAmount(trade.amount)}
+                            {formatAmount(trade.amount || "0")}
                           </TableCell>
                           <TableCell className="text-center font-mono text-sm font-medium">
-                            {trade.quotedRate ? parseFloat(trade.quotedRate).toFixed(4) : "-"}
+                            {trade.rate ? Number(trade.rate).toFixed(4) : "-"}
                           </TableCell>
                           <TableCell className="text-center text-sm">
-                            {tenor}
+                            {orderTypeDisplay}
                           </TableCell>
                           <TableCell className="text-center">
                             <Badge className={cn("border text-xs", statusConfig.color)}>
@@ -268,16 +265,17 @@ export default function TradeManagement() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
           {[
             { 
-              label: "전체 체결", 
+              label: "전체 거래", 
               count: allTrades.length, 
               color: "bg-blue-500",
               icon: "📊"
             },
             { 
-              label: "오늘 체결", 
-              count: allTrades.filter((t: QuoteRequest) => {
+              label: "오늘 거래", 
+              count: allTrades.filter((t: Trade) => {
+                if (!t.createdAt) return false;
                 const today = format(new Date(), "yyyy-MM-dd");
-                const tradeDate = format(parseISO(t.createdAt), "yyyy-MM-dd");
+                const tradeDate = format(parseISO(String(t.createdAt)), "yyyy-MM-dd");
                 return tradeDate === today;
               }).length, 
               color: "bg-green-500",
@@ -302,14 +300,14 @@ export default function TradeManagement() {
         </div>
 
         {/* Dealer Confirmation Modal */}
-        <DealerConfirmationModal
-          isOpen={showModal}
-          onClose={handleCloseModal}
-          trade={selectedTrade}
-          currencyPairDisplay={
-            selectedTrade ? getCurrencyPairDisplay(selectedTrade.currencyPairId) : ""
-          }
-        />
+        {selectedTrade && (
+          <DealerConfirmationModal
+            isOpen={showModal}
+            onClose={handleCloseModal}
+            trade={selectedTrade}
+            currencyPairDisplay={getCurrencyPairDisplay(selectedTrade.currencyPairId || "")}
+          />
+        )}
       </div>
     </div>
   );
