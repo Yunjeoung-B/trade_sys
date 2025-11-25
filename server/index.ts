@@ -76,8 +76,9 @@ app.use((req, res, next) => {
     // ✅ 타임존 확인
     verifyTimezone();
     
-    infomaxPoller.start();
-    log('Infomax poller started');
+    // ❌ Infomax 폴러 자동 시작 비활성화 (수동으로만 호출)
+    // infomaxPoller.start();
+    // log('Infomax poller started');
   });
 
   process.on('SIGTERM', () => {
