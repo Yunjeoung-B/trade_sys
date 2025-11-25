@@ -319,15 +319,13 @@ export default function ForwardRateCalculator() {
 
   const { data: onTnRates = [] } = useQuery<OnTnRate[]>({
     queryKey: ["/api/on-tn-rates", selectedPairId],
+    queryFn: async () => {
+      const res = await fetch(`/api/on-tn-rates?currencyPairId=${selectedPairId}`);
+      if (!res.ok) throw new Error("Failed to fetch ON/TN rates");
+      return res.json();
+    },
     enabled: !!selectedPairId,
   });
-
-  // DEBUG: ON/TN rates 로드 모니터링
-  useEffect(() => {
-    console.log("[ON/TN Rates] selectedPairId:", selectedPairId);
-    console.log("[ON/TN Rates] data:", onTnRates);
-    console.log("[ON/TN Rates] length:", onTnRates.length);
-  }, [onTnRates, selectedPairId]);
 
   const saveMutation = useMutation({
     mutationFn: async (row: TenorRow) => {
