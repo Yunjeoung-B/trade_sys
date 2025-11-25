@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { formatCurrencyAmount, formatInputValue, removeThousandSeparator } from "@/lib/currencyUtils";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { getTodayLocal } from "@/lib/dateUtils";
+import { getTodayLocal, getSpotDate } from "@/lib/dateUtils";
 import type { CurrencyPair, QuoteRequest } from "@shared/schema";
 
 export default function ForwardTradingCustomer() {
@@ -256,12 +256,29 @@ export default function ForwardTradingCustomer() {
     submitQuoteRequest();
   };
 
+  // Convert valueDate to tenor for spread lookup (SPOT-based calculation)
+  const getTenorFromDate = (date: Date): string | undefined => {
+    const refSpotDate = spotDate || getSpotDate(getTodayLocal());
+    const daysFromSpot = Math.ceil((date.getTime() - refSpotDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    // 0 days from SPOT = 0d (same as SPOT)
+    if (daysFromSpot <= 0) return "0d";
+    if (daysFromSpot <= 10) return "1W";
+    if (daysFromSpot <= 45) return "1M";
+    if (daysFromSpot <= 75) return "2M";
+    if (daysFromSpot <= 105) return "3M";
+    if (daysFromSpot <= 270) return "6M";
+    if (daysFromSpot <= 315) return "9M";
+    return "12M";
+  };
+
   const submitQuoteRequest = () => {
     if (!selectedPairData) return;
 
     // Use spotDate if available, otherwise use current date + 2 business days
-    const referenceSpotDate = spotDate || new Date();
-    const tenorDays = Math.ceil((valueDate.getTime() - referenceSpotDate.getTime()) / (1000 * 60 * 60 * 24));
+    const refSpotDate = spotDate || getSpotDate(getTodayLocal());
+    const tenorDays = Math.ceil((valueDate.getTime() - refSpotDate.getTime()) / (1000 * 60 * 60 * 24));
+    const tenorLabel = getTenorFromDate(valueDate);
 
     // Convert valueDate to UTC midnight (00:00:00.000Z) to preserve date without timezone conversion
     const year = valueDate.getFullYear();
@@ -280,7 +297,7 @@ export default function ForwardTradingCustomer() {
       validityType: orderType === "LIMIT" ? validityType : null,
       validUntilTime: orderType === "LIMIT" && validityType === "TIME" ? validUntilTime : null,
       nearDate: utcMidnightDate,
-      tenor: `${tenorDays}D`,
+      tenor: tenorLabel || `${tenorDays}D`,
     });
   };
 

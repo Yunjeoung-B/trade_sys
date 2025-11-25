@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrencyAmount, formatInputValue, removeThousandSeparator } from "@/lib/currencyUtils";
-import { getTodayLocal, addDays } from "@/lib/dateUtils";
+import { getTodayLocal, addDays, getSpotDate } from "@/lib/dateUtils";
 import type { CurrencyPair } from "@shared/schema";
 import { useCustomerRate } from "@/hooks/useCustomerRate";
 
@@ -52,17 +52,19 @@ export default function ForwardTrading() {
 
   const selectedPairData = currencyPairs.find(p => p.symbol === selectedPair);
   
-  // Convert valueDate to tenor for spread lookup
+  // Convert valueDate to tenor for spread lookup (SPOT-based calculation)
   const getTenorFromDate = (date: Date): string | undefined => {
-    const today = getTodayLocal();
-    const daysToMaturity = Math.ceil((date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    const spotDate = getSpotDate(getTodayLocal());
+    const daysFromSpot = Math.ceil((date.getTime() - spotDate.getTime()) / (1000 * 60 * 60 * 24));
     
-    if (daysToMaturity <= 10) return "1W";
-    if (daysToMaturity <= 45) return "1M";
-    if (daysToMaturity <= 75) return "2M";
-    if (daysToMaturity <= 105) return "3M";
-    if (daysToMaturity <= 270) return "6M";
-    if (daysToMaturity <= 315) return "9M";
+    // 0 days from SPOT = 0d (same as SPOT)
+    if (daysFromSpot <= 0) return "0d";
+    if (daysFromSpot <= 10) return "1W";
+    if (daysFromSpot <= 45) return "1M";
+    if (daysFromSpot <= 75) return "2M";
+    if (daysFromSpot <= 105) return "3M";
+    if (daysFromSpot <= 270) return "6M";
+    if (daysFromSpot <= 315) return "9M";
     return "12M";
   };
   
