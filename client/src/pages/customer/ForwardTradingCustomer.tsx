@@ -762,6 +762,11 @@ export default function ForwardTradingCustomer() {
                                   <div className="text-xs text-gray-600">
                                     {displayCurrency} {formatCurrencyAmount(parseFloat(quote.amount), displayCurrency)}
                                   </div>
+                                  {quote.nearDate && (
+                                    <div className="text-xs text-gray-700 font-medium mt-1">
+                                      결제일: {format(new Date(quote.nearDate), "yyyy-MM-dd")}
+                                    </div>
+                                  )}
                                 </div>
                                 <Button
                                   size="sm"
@@ -808,6 +813,11 @@ export default function ForwardTradingCustomer() {
                                   <div className="text-xs text-gray-600">
                                     {displayCurrency} {formatCurrencyAmount(parseFloat(quote.amount), displayCurrency)}
                                   </div>
+                                  {quote.nearDate && (
+                                    <div className="text-xs text-gray-700 font-medium mt-1">
+                                      결제일: {format(new Date(quote.nearDate), "yyyy-MM-dd")}
+                                    </div>
+                                  )}
                                   {quote.quotedRate && (
                                     <div className="text-sm font-bold text-green-600 mt-1">
                                       체결가: {parseFloat(quote.quotedRate).toFixed(2)}
@@ -860,6 +870,11 @@ export default function ForwardTradingCustomer() {
                                   <div className="text-xs text-gray-600">
                                     {displayCurrency} {formatCurrencyAmount(parseFloat(quote.amount), displayCurrency)}
                                   </div>
+                                  {quote.nearDate && (
+                                    <div className="text-xs text-gray-700 font-medium mt-1">
+                                      결제일: {format(new Date(quote.nearDate), "yyyy-MM-dd")}
+                                    </div>
+                                  )}
                                   {quote.quotedRate && (
                                     <div className="text-sm font-bold text-blue-600 mt-1">
                                       체결가: {parseFloat(quote.quotedRate).toFixed(2)}
