@@ -168,6 +168,13 @@ function formatDateForInput(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
+function getEndOfMonth(date: Date): Date {
+  // 다음 달의 첫날에서 1일 빼서 현재 달의 마지막날 구하기
+  const result = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+  result.setHours(0, 0, 0, 0);
+  return result;
+}
+
 function calculateSettlementDate(spotDate: Date, tenor: string): Date {
   const tenorUpper = tenor.toUpperCase();
   
@@ -178,21 +185,24 @@ function calculateSettlementDate(spotDate: Date, tenor: string): Date {
   const monthMatch = tenorUpper.match(/^(\d+)M$/);
   if (monthMatch) {
     const months = parseInt(monthMatch[1]);
-    const result = new Date(spotDate);
-    result.setMonth(result.getMonth() + months);
     
-    // ✅ 주말 건너뛰기
+    // ✅ EOM으로 settlement date 계산
+    const baseDate = new Date(spotDate);
+    baseDate.setMonth(baseDate.getMonth() + months);
+    let result = getEndOfMonth(baseDate);
+    
+    // ✅ 주말이면 이전 금요일로
     while (result.getDay() === 0 || result.getDay() === 6) {
-      result.setDate(result.getDate() + 1);
+      result.setDate(result.getDate() - 1);
     }
     
-    // ✅ Seoul & NY 휴일 체크 → 익영업일로 밀어주기
+    // ✅ Seoul & NY 휴일 체크 → 그 이전 영업일로
     let dateStr = formatDateString(result);
     while (isKRHoliday(dateStr) || isUSHoliday(dateStr)) {
-      result.setDate(result.getDate() + 1);
+      result.setDate(result.getDate() - 1);
       // 다시 주말이면 건너뛰기
       while (result.getDay() === 0 || result.getDay() === 6) {
-        result.setDate(result.getDate() + 1);
+        result.setDate(result.getDate() - 1);
       }
       dateStr = formatDateString(result);
     }
