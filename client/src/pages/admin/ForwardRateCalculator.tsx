@@ -382,7 +382,7 @@ export default function ForwardRateCalculator() {
   });
 
   useEffect(() => {
-    const newSpotDate = getSpotDate();
+    const newSpotDate = getSpotDate(getTodayLocal());
     setSpotDate(newSpotDate);
     
     // Try to restore from localStorage first
@@ -397,14 +397,26 @@ export default function ForwardRateCalculator() {
         // Merge with standardTenors to ensure ON/TN are included
         initialRows = standardTenors.map(tenor => {
           const existing = parsed.find((r: TenorRow) => r.tenor === tenor);
-          if (existing) {
-            return existing;
-          }
-          // Add missing tenor
+          
+          // Always recalculate startDate/settlementDate based on new spotDate
           const settlementDate = calculateSettlementDate(newSpotDate, tenor);
           const startDate = calculateStartDate(newSpotDate, tenor);
           const daysFromSpot = calculateDaysFromSpot(newSpotDate, tenor);
           
+          if (existing) {
+            // Keep existing swap point data but update dates
+            return {
+              tenor,
+              startDate: formatDateForInput(startDate),
+              settlementDate: tenor === "Spot" ? formatDateForInput(newSpotDate) : formatDateForInput(settlementDate),
+              daysFromSpot,
+              swapPoint: existing.swapPoint || "0",
+              bidPrice: existing.bidPrice || "",
+              askPrice: existing.askPrice || "",
+            };
+          }
+          
+          // Add missing tenor with new dates
           return {
             tenor,
             startDate: formatDateForInput(startDate),
