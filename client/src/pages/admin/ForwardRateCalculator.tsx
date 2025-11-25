@@ -322,6 +322,13 @@ export default function ForwardRateCalculator() {
     enabled: !!selectedPairId,
   });
 
+  // DEBUG: ON/TN rates 로드 모니터링
+  useEffect(() => {
+    console.log("[ON/TN Rates] selectedPairId:", selectedPairId);
+    console.log("[ON/TN Rates] data:", onTnRates);
+    console.log("[ON/TN Rates] length:", onTnRates.length);
+  }, [onTnRates, selectedPairId]);
+
   const saveMutation = useMutation({
     mutationFn: async (row: TenorRow) => {
       if (!row.swapPoint || isNaN(parseFloat(row.swapPoint))) {
