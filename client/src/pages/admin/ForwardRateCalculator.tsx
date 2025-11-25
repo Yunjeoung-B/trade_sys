@@ -756,7 +756,7 @@ export default function ForwardRateCalculator() {
     const calcDate = new Date(spotRateCalcDate);
     const spot = new Date(spotDate);
 
-    // 범위 체크: Today ~ Spot Date만 허용
+    // 범위 체크: Today ~ Spot Date 허용 (Spot date는 포함)
     if (calcDate < today || calcDate > spot) {
       toast({
         title: "범위 오류",
