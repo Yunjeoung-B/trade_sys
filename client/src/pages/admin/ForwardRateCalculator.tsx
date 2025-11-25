@@ -743,10 +743,6 @@ export default function ForwardRateCalculator() {
 
   // 현물환율 계산 함수
   const calculateSpotRateSwapPoint = () => {
-    // DEBUG
-    console.log("[현물환율 계산] onTnRates:", onTnRates);
-    console.log("[현물환율 계산] selectedPairId:", selectedPairId);
-    
     if (!spotRateCalcDate) {
       toast({
         title: "날짜 입력 필요",
@@ -774,10 +770,6 @@ export default function ForwardRateCalculator() {
     const onRate = onTnRates.find(r => r.tenor === "ON");
     const tnRate = onTnRates.find(r => r.tenor === "TN");
 
-    // DEBUG
-    console.log("[현물환율 계산] onRate:", onRate);
-    console.log("[현물환율 계산] tnRate:", tnRate);
-
     if (!onRate || !tnRate) {
       toast({
         title: "데이터 부족",
@@ -795,23 +787,25 @@ export default function ForwardRateCalculator() {
     const daysFromToday = getDaysBetween(today, calcDate);
 
     // Calculate swap point using linear interpolation
-    // Today = -(ON + TN) at days=(ON+TN)days
-    // Spot = 0 at days=0
+    // Today (T+0) = -(ON + TN) 
+    // ON Date (T+1) = -TN
+    // TN/Spot Date (T+2) = 0
+    // Interpolation for intermediate dates
     let swapPoint: number;
     let calculation: string;
 
     if (daysFromToday === 0) {
-      // Today
+      // Today (T+0)
       swapPoint = -(onSwapPoint + tnSwapPoint);
-      calculation = `Today: -(ON + TN) = -(${onSwapPoint} + ${tnSwapPoint}) = ${swapPoint}`;
-    } else if (daysFromToday === tnDays) {
-      // TN date (Spot - 1 business day)
+      calculation = `Today (T+0): -(ON + TN) = -(${onSwapPoint} + ${tnSwapPoint}) = ${swapPoint}`;
+    } else if (daysFromToday === onDays) {
+      // ON settlement date (T+1)
       swapPoint = -tnSwapPoint;
-      calculation = `TN Date: -TN = -${tnSwapPoint} = ${swapPoint}`;
+      calculation = `ON Date (T+1): -TN = -${tnSwapPoint} = ${swapPoint}`;
     } else if (daysFromToday === onDays + tnDays) {
-      // Spot date
+      // Spot date (TN settlement)
       swapPoint = 0;
-      calculation = `Spot Date: 0`;
+      calculation = `Spot Date (T+2): 0`;
     } else {
       // Interpolation between Today and Spot
       const totalDays = onDays + tnDays;
