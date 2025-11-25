@@ -717,9 +717,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const nearDateObj = typeof request.nearDate === 'string' ? new Date(request.nearDate) : request.nearDate;
         const farDateObj = typeof request.farDate === 'string' ? new Date(request.farDate) : request.farDate;
         
+        // Helper function to get date as YYYY-MM-DD string in local timezone (KST)
+        const getLocalDateStr = (date: Date) => {
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
+        };
+        
+        const spotDateStr = getLocalDateStr(spotDate);
+        
         // Check if nearDate is SPOT date itself (same date as spotDate)
-        const nearDateStr = nearDateObj.toISOString().split('T')[0];
-        const spotDateStr = spotDate.toISOString().split('T')[0];
+        const nearDateStr = getLocalDateStr(nearDateObj);
         
         if (nearDateStr === spotDateStr) {
           // SPOT date has 0 swap points
@@ -735,7 +744,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         // Check if farDate is SPOT date itself (rare but possible)
-        const farDateStr = farDateObj.toISOString().split('T')[0];
+        const farDateStr = getLocalDateStr(farDateObj);
         
         if (farDateStr === spotDateStr) {
           // SPOT date has 0 swap points
@@ -757,9 +766,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // For Forward: calculate swap point for settlement date
         const nearDateObj = typeof request.nearDate === 'string' ? new Date(request.nearDate) : request.nearDate;
         
+        // Helper function to get date as YYYY-MM-DD string in local timezone (KST)
+        const getLocalDateStr = (date: Date) => {
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
+        };
+        
         // Check if nearDate is SPOT date itself (same date as spotDate)
-        const nearDateStr = nearDateObj.toISOString().split('T')[0];
-        const spotDateStr = spotDate.toISOString().split('T')[0];
+        const nearDateStr = getLocalDateStr(nearDateObj);
+        const spotDateStr = getLocalDateStr(spotDate);
         
         if (nearDateStr === spotDateStr) {
           // SPOT date has 0 swap points
