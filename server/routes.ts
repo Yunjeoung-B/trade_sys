@@ -845,9 +845,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const allSwapPoints = await storage.getSwapPointsByCurrencyPair(request.currencyPairId);
       const onTnRates = await storage.getOnTnRates(request.currencyPairId);
 
-      // Get market rate (baseRate) for this currency pair
-      const allMarketRates = await storage.getLatestMarketRates();
-      const marketRate = allMarketRates.find(rate => rate.currencyPairId === request.currencyPairId);
+      // Get latest market rate (baseRate) for this currency pair
+      const marketRate = await storage.getLatestMarketRateForCurrencyPair(request.currencyPairId);
       
       // Determine base rate based on direction
       const baseRate = marketRate 

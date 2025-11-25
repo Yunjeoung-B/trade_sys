@@ -57,6 +57,7 @@ export interface IStorage {
 
   // Market rates
   getLatestMarketRates(): Promise<MarketRate[]>;
+  getLatestMarketRateForCurrencyPair(currencyPairId: string): Promise<MarketRate | undefined>;
   createMarketRate(rate: InsertMarketRate): Promise<MarketRate>;
   updateMarketRate(rate: InsertMarketRate): Promise<MarketRate>;
   getMarketRateHistory(currencyPairId: string, hours: number): Promise<MarketRate[]>;
@@ -190,6 +191,16 @@ export class DatabaseStorage implements IStorage {
       .from(marketRates)
       .orderBy(desc(marketRates.timestamp))
       .limit(10);
+  }
+
+  async getLatestMarketRateForCurrencyPair(currencyPairId: string): Promise<MarketRate | undefined> {
+    const [rate] = await db
+      .select()
+      .from(marketRates)
+      .where(eq(marketRates.currencyPairId, currencyPairId))
+      .orderBy(desc(marketRates.timestamp))
+      .limit(1);
+    return rate;
   }
 
   async createMarketRate(rateData: InsertMarketRate): Promise<MarketRate> {
