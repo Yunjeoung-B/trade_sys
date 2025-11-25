@@ -754,7 +754,15 @@ export default function ForwardRateCalculator() {
 
     const today = getTodayLocal();
     const calcDate = new Date(spotRateCalcDate);
+    calcDate.setHours(0, 0, 0, 0); // 정규화
     const spot = new Date(spotDate);
+
+    // DEBUG
+    console.log("[범위 체크] today:", formatDateForInput(today), today);
+    console.log("[범위 체크] calcDate:", spotRateCalcDate, calcDate, formatDateForInput(calcDate));
+    console.log("[범위 체크] spot:", formatDateForInput(spot), spot);
+    console.log("[범위 체크] calcDate < today?", calcDate < today);
+    console.log("[범위 체크] calcDate > spot?", calcDate > spot);
 
     // 범위 체크: Today ~ Spot Date 허용 (Spot date는 포함)
     if (calcDate < today || calcDate > spot) {
