@@ -181,8 +181,20 @@ function calculateSettlementDate(spotDate: Date, tenor: string): Date {
     const result = new Date(spotDate);
     result.setMonth(result.getMonth() + months);
     
+    // ✅ 주말 건너뛰기
     while (result.getDay() === 0 || result.getDay() === 6) {
       result.setDate(result.getDate() + 1);
+    }
+    
+    // ✅ Seoul & NY 휴일 체크 → 익영업일로 밀어주기
+    let dateStr = formatDateString(result);
+    while (isKRHoliday(dateStr) || isUSHoliday(dateStr)) {
+      result.setDate(result.getDate() + 1);
+      // 다시 주말이면 건너뛰기
+      while (result.getDay() === 0 || result.getDay() === 6) {
+        result.setDate(result.getDate() + 1);
+      }
+      dateStr = formatDateString(result);
     }
     
     return result;
