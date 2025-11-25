@@ -28,6 +28,7 @@ interface QuoteRequestItem {
   status: "REQUESTED" | "QUOTE_READY" | "CONFIRMED" | "EXPIRED";
   remainingTime?: string;
   quotedRate?: number;
+  expiresAt?: Date;
   direction: "BUY" | "SELL";
 }
 
@@ -67,6 +68,7 @@ const mockQuoteRequests: QuoteRequestItem[] = [
     status: "QUOTE_READY",
     remainingTime: "02:32",
     quotedRate: 1385.75,
+    expiresAt: new Date("2025-08-02T12:54:03"),
     direction: "SELL"
   },
   {
@@ -78,6 +80,7 @@ const mockQuoteRequests: QuoteRequestItem[] = [
     maturityDate: new Date("2025-08-12"),
     status: "CONFIRMED",
     quotedRate: 1386.20,
+    expiresAt: new Date("2025-08-02T13:21:01"),
     direction: "BUY"
   },
   {
@@ -88,6 +91,7 @@ const mockQuoteRequests: QuoteRequestItem[] = [
     amount: 750000,
     maturityDate: new Date("2025-09-15"),
     status: "EXPIRED",
+    expiresAt: new Date("2025-08-02T10:45:30"),
     direction: "SELL"
   },
   {
@@ -100,6 +104,7 @@ const mockQuoteRequests: QuoteRequestItem[] = [
     status: "QUOTE_READY",
     remainingTime: "04:12",
     quotedRate: 9.24,
+    expiresAt: new Date("2025-08-02T13:27:22"),
     direction: "BUY"
   }
 ];
@@ -426,6 +431,7 @@ export default function TradeStatus() {
                               <TableHead className="text-center font-semibold text-white">통화</TableHead>
                               <TableHead className="text-center font-semibold text-white">거래금액</TableHead>
                               <TableHead className="text-center font-semibold text-white">만기일</TableHead>
+                              <TableHead className="text-center font-semibold text-white">가격만기</TableHead>
                               <TableHead className="text-center font-semibold text-white">상태</TableHead>
                               <TableHead className="text-center font-semibold text-white">남은시간</TableHead>
                               <TableHead className="text-center font-semibold text-white">작업</TableHead>
@@ -464,6 +470,18 @@ export default function TradeStatus() {
                                   </TableCell>
                                   <TableCell className="text-center">
                                     {format(item.maturityDate, "yyyy-MM-dd", { locale: ko })}
+                                  </TableCell>
+                                  <TableCell className="text-center">
+                                    {item.expiresAt ? (
+                                      <div className="flex items-center justify-center gap-1">
+                                        <Clock className="w-4 h-4 text-purple-500" />
+                                        <span className="text-sm font-semibold text-purple-400">
+                                          {format(item.expiresAt, "HH:mm", { locale: ko })}
+                                        </span>
+                                      </div>
+                                    ) : (
+                                      <span className="text-gray-400">-</span>
+                                    )}
                                   </TableCell>
                                   <TableCell className="text-center">
                                     <Badge className={cn("border", statusConfig.color)}>
