@@ -714,6 +714,9 @@ export default function ForwardRateCalculator() {
       const startDate = calculateStartDate(newSpotDate, row.tenor);
       const daysFromSpot = calculateDaysFromSpot(newSpotDate, row.tenor);
       
+      // DEBUG: 각 만기별 settlement date 확인
+      console.log(`[${row.tenor}] Settlement: ${formatDateForInput(settlementDate)}, Days: ${daysFromSpot}`);
+      
       return {
         ...row,
         startDate: formatDateForInput(startDate),
