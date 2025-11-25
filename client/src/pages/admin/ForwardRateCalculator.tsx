@@ -753,26 +753,24 @@ export default function ForwardRateCalculator() {
     }
 
     const today = getTodayLocal();
-    const calcDate = new Date(spotRateCalcDate);
-    calcDate.setHours(0, 0, 0, 0); // 정규화
     const spot = new Date(spotDate);
 
-    // DEBUG
-    console.log("[범위 체크] today:", formatDateForInput(today), today);
-    console.log("[범위 체크] calcDate:", spotRateCalcDate, calcDate, formatDateForInput(calcDate));
-    console.log("[범위 체크] spot:", formatDateForInput(spot), spot);
-    console.log("[범위 체크] calcDate < today?", calcDate < today);
-    console.log("[범위 체크] calcDate > spot?", calcDate > spot);
-
-    // 범위 체크: Today ~ Spot Date 허용 (Spot date는 포함)
-    if (calcDate < today || calcDate > spot) {
+    // 문자열 기반 범위 체크 (timezone 문제 회피)
+    const todayStr = formatDateForInput(today);
+    const spotStr = formatDateForInput(spot);
+    
+    if (spotRateCalcDate < todayStr || spotRateCalcDate > spotStr) {
       toast({
         title: "범위 오류",
-        description: `날짜는 ${formatDateForInput(today)} ~ ${formatDateForInput(spot)} 사이여야 합니다.`,
+        description: `날짜는 ${todayStr} ~ ${spotStr} 사이여야 합니다.`,
         variant: "destructive",
       });
       return;
     }
+
+    // 이후 계산에 사용할 calcDate
+    const calcDate = new Date(spotRateCalcDate);
+    calcDate.setHours(0, 0, 0, 0);
 
     // ON/TN rates 찾기
     const onRate = onTnRates.find(r => r.tenor === "ON");
