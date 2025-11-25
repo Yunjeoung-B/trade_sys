@@ -19,9 +19,7 @@ import SpreadSettings from "@/pages/admin/SpreadSettings";
 import QuoteApprovals from "@/pages/admin/QuoteApprovals";
 import UserManagement from "@/pages/admin/UserManagement";
 import TradeManagement from "@/pages/admin/TradeManagement";
-import BloombergAPI from "@/pages/admin/BloombergAPINew";
 import InfomaxAPI from "@/pages/admin/InfomaxAPI";
-import ExcelMonitoring from "@/pages/admin/ExcelMonitoring";
 import FXSpotMonitoring from "@/pages/admin/FXSpotMonitoring";
 import FXSwapMonitoring from "@/pages/admin/FXSwapMonitoring";
 import ForwardRateCalculator from "@/pages/admin/ForwardRateCalculator";
@@ -98,14 +96,8 @@ function Router() {
           <Route path="/admin/trades">
             {user?.role === "admin" ? <TradeManagement /> : <NotFound />}
           </Route>
-          <Route path="/admin/bloomberg">
-            {user?.role === "admin" ? <BloombergAPI /> : <NotFound />}
-          </Route>
           <Route path="/admin/infomax">
             {user?.role === "admin" ? <InfomaxAPI /> : <NotFound />}
-          </Route>
-          <Route path="/admin/excel">
-            {user?.role === "admin" ? <ExcelMonitoring /> : <NotFound />}
           </Route>
           <Route path="/admin/swap-points-history">
             {user?.role === "admin" ? <SwapPointsHistoryPage /> : <NotFound />}
