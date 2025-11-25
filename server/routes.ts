@@ -717,20 +717,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const nearDateObj = typeof request.nearDate === 'string' ? new Date(request.nearDate) : request.nearDate;
         const farDateObj = typeof request.farDate === 'string' ? new Date(request.farDate) : request.farDate;
         
-        nearSwapPoint = await getSwapPointForDate(
-          request.currencyPairId,
-          nearDateObj,
-          storage,
-          request.tenor ?? undefined,
-          spotDate
-        );
-        farSwapPoint = await getSwapPointForDate(
-          request.currencyPairId,
-          farDateObj,
-          storage,
-          request.tenor ?? undefined,
-          spotDate
-        );
+        // Check if nearDate is SPOT date itself (same date as spotDate)
+        const nearDateStr = nearDateObj.toISOString().split('T')[0];
+        const spotDateStr = spotDate.toISOString().split('T')[0];
+        
+        if (nearDateStr === spotDateStr) {
+          // SPOT date has 0 swap points
+          nearSwapPoint = 0;
+        } else {
+          nearSwapPoint = await getSwapPointForDate(
+            request.currencyPairId,
+            nearDateObj,
+            storage,
+            request.tenor ?? undefined,
+            spotDate
+          );
+        }
+        
+        // Check if farDate is SPOT date itself (rare but possible)
+        const farDateStr = farDateObj.toISOString().split('T')[0];
+        
+        if (farDateStr === spotDateStr) {
+          // SPOT date has 0 swap points
+          farSwapPoint = 0;
+        } else {
+          farSwapPoint = await getSwapPointForDate(
+            request.currencyPairId,
+            farDateObj,
+            storage,
+            request.tenor ?? undefined,
+            spotDate
+          );
+        }
         
         if (nearSwapPoint !== null && farSwapPoint !== null) {
           swapPointDifference = farSwapPoint - nearSwapPoint;
@@ -738,13 +756,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else if (request.productType === "Forward" && request.nearDate) {
         // For Forward: calculate swap point for settlement date
         const nearDateObj = typeof request.nearDate === 'string' ? new Date(request.nearDate) : request.nearDate;
-        nearSwapPoint = await getSwapPointForDate(
-          request.currencyPairId,
-          nearDateObj,
-          storage,
-          request.tenor ?? undefined,
-          spotDate
-        );
+        
+        // Check if nearDate is SPOT date itself (same date as spotDate)
+        const nearDateStr = nearDateObj.toISOString().split('T')[0];
+        const spotDateStr = spotDate.toISOString().split('T')[0];
+        
+        if (nearDateStr === spotDateStr) {
+          // SPOT date has 0 swap points
+          nearSwapPoint = 0;
+        } else {
+          nearSwapPoint = await getSwapPointForDate(
+            request.currencyPairId,
+            nearDateObj,
+            storage,
+            request.tenor ?? undefined,
+            spotDate
+          );
+        }
       }
 
       // Calculate spread for the far date (maturity)
