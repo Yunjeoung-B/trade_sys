@@ -76,6 +76,13 @@ function formatDateString(date: Date): string {
   return date.toISOString().split('T')[0];
 }
 
+// Get today as local midnight (fixes timezone issue)
+function getTodayLocal(): Date {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return today;
+}
+
 // Helper functions for date calculations
 function addBusinessDays(date: Date, days: number): Date {
   const result = new Date(date);
@@ -157,7 +164,7 @@ function calculateSettlementDate(spotDate: Date, tenor: string): Date {
   const tenorUpper = tenor.toUpperCase();
   
   if (tenorUpper === "SPOT") return new Date(spotDate);
-  if (tenorUpper === "ON") return addBusinessDays(new Date(), 1); // T+1
+  if (tenorUpper === "ON") return addBusinessDays(getTodayLocal(), 1); // T+1
   if (tenorUpper === "TN") return new Date(spotDate); // SPOT date
   
   const monthMatch = tenorUpper.match(/^(\d+)M$/);
@@ -180,8 +187,8 @@ function calculateSettlementDate(spotDate: Date, tenor: string): Date {
 function calculateStartDate(spotDate: Date, tenor: string): Date {
   const tenorUpper = tenor.toUpperCase();
   
-  if (tenorUpper === "ON") return new Date(); // Today
-  if (tenorUpper === "TN") return addBusinessDays(new Date(), 1); // T+1
+  if (tenorUpper === "ON") return getTodayLocal(); // Today
+  if (tenorUpper === "TN") return addBusinessDays(getTodayLocal(), 1); // T+1
   
   // For all others (Spot, 1M~12M): start date is SPOT date
   return new Date(spotDate);
@@ -194,13 +201,13 @@ function calculateDaysFromSpot(spotDate: Date, tenor: string): number {
   
   // ON: 오늘과 익영업일의 실제 calendar days 차이
   if (tenorUpper === "ON") {
-    const onDate = addBusinessDays(new Date(), 1);
-    return getDaysBetween(new Date(), onDate);
+    const onDate = addBusinessDays(getTodayLocal(), 1);
+    return getDaysBetween(getTodayLocal(), onDate);
   }
   
   // TN: ON의 만기일과 Spot의 실제 calendar days 차이
   if (tenorUpper === "TN") {
-    const onDate = addBusinessDays(new Date(), 1);
+    const onDate = addBusinessDays(getTodayLocal(), 1);
     return getDaysBetween(onDate, spotDate);
   }
   
@@ -222,7 +229,7 @@ export default function ForwardRateCalculator() {
   const [spotRate, setSpotRate] = useState<string>("1350.00");
   const [lastSavedSpotRate, setLastSavedSpotRate] = useState<string>("");
   const [spotDate, setSpotDate] = useState<Date>(() => {
-    const calculatedSpotDate = getSpotDate();
+    const calculatedSpotDate = getSpotDate(getTodayLocal());
     // Store spot date in localStorage for use in QuoteApprovals
     localStorage.setItem('forwardCalc_spotDate', calculatedSpotDate.toISOString());
     return calculatedSpotDate;
@@ -661,7 +668,7 @@ export default function ForwardRateCalculator() {
   };
 
   const handleRefreshSpotDate = () => {
-    const newSpotDate = getSpotDate();
+    const newSpotDate = getSpotDate(getTodayLocal());
     setSpotDate(newSpotDate);
     
     const updatedRows = tenorRows.map(row => {
@@ -696,7 +703,7 @@ export default function ForwardRateCalculator() {
       return;
     }
 
-    const today = new Date();
+    const today = getTodayLocal();
     const calcDate = new Date(spotRateCalcDate);
     const spot = new Date(spotDate);
 
