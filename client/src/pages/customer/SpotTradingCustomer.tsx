@@ -12,6 +12,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { formatCurrencyAmount, calculateCurrencyAmount, formatInputValue, removeThousandSeparator } from "@/lib/currencyUtils";
+import { getTodayLocal } from "@/lib/dateUtils";
 import type { CurrencyPair, Trade } from "@shared/schema";
 import { useCustomerRate } from "@/hooks/useCustomerRate";
 
@@ -24,7 +25,7 @@ export default function SpotTradingCustomer() {
   const [limitRate, setLimitRate] = useState("");
   const [validityType, setValidityType] = useState<"DAY" | "TIME">("DAY");
   const [validUntilTime, setValidUntilTime] = useState("15:30");
-  const [valueDate, setValueDate] = useState<Date>(new Date());
+  const [valueDate, setValueDate] = useState<Date>(getTodayLocal());
   const { toast } = useToast();
   const queryClient = useQueryClient();
 

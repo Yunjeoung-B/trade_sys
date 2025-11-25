@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { formatCurrencyAmount, formatInputValue, removeThousandSeparator } from "@/lib/currencyUtils";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { getTodayLocal } from "@/lib/dateUtils";
 import type { CurrencyPair, QuoteRequest } from "@shared/schema";
 
 export default function ForwardTradingCustomer() {
@@ -37,7 +38,7 @@ export default function ForwardTradingCustomer() {
   const [validityType, setValidityType] = useState<"DAY" | "TIME">("DAY");
   const [validUntilTime, setValidUntilTime] = useState("15:30");
   const [spotDate, setSpotDate] = useState<Date | null>(null);
-  const [valueDate, setValueDate] = useState<Date>(addDays(new Date(), 7));
+  const [valueDate, setValueDate] = useState<Date>(addDays(getTodayLocal(), 7));
   const [selectedQuoteId, setSelectedQuoteId] = useState<string | null>(null);
   const [quoteStatusOpen, setQuoteStatusOpen] = useState(true);
   const [limitOrderOpen, setLimitOrderOpen] = useState(true);
@@ -63,7 +64,7 @@ export default function ForwardTradingCustomer() {
     
     // SPOT is always T+2 (2 business days from today)
     // For simplicity, calculate as today + 2 calendar days
-    const today = new Date();
+    const today = getTodayLocal();
     const spotDateObj = addDays(today, 2); // T+2 = SPOT
     console.log("[Forward] SPOT date (T+2):", spotDateObj, "From today:", today);
     setSpotDate(spotDateObj);

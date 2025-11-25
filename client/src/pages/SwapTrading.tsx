@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrencyAmount, formatInputValue, removeThousandSeparator } from "@/lib/currencyUtils";
+import { getTodayLocal } from "@/lib/dateUtils";
 import type { CurrencyPair } from "@shared/schema";
 import { useCustomerRate } from "@/hooks/useCustomerRate";
 
@@ -20,8 +21,8 @@ export default function SwapTrading() {
   const [selectedPair, setSelectedPair] = useState("USD/KRW");
   const [direction, setDirection] = useState<"BUY_SELL_USD" | "SELL_BUY_USD">("BUY_SELL_USD");
   const [swapBaseCurrency, setSwapBaseCurrency] = useState<"USD" | "KRW">("USD");
-  const [nearDate, setNearDate] = useState<Date>(new Date());
-  const [farDate, setFarDate] = useState<Date>(new Date());
+  const [nearDate, setNearDate] = useState<Date>(getTodayLocal());
+  const [farDate, setFarDate] = useState<Date>(getTodayLocal());
   const [nearAmount, setNearAmount] = useState("");
   const [farAmount, setFarAmount] = useState("");
   const [nearAmountCurrency, setNearAmountCurrency] = useState<"USD" | "KRW">("USD");
@@ -48,7 +49,7 @@ export default function SwapTrading() {
   
   // Convert farDate (main maturity) to tenor for spread lookup
   const getTenorFromDate = (date: Date): string | undefined => {
-    const today = new Date();
+    const today = getTodayLocal();
     const daysToMaturity = Math.ceil((date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
     
     if (daysToMaturity <= 10) return "1W";

@@ -8,6 +8,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { formatCurrencyAmount, formatInputValue, removeThousandSeparator } from "@/lib/currencyUtils";
+import { getTodayLocal } from "@/lib/dateUtils";
 import { useCustomerRate } from "@/hooks/useCustomerRate";
 import type { CurrencyPair } from "@shared/schema";
 

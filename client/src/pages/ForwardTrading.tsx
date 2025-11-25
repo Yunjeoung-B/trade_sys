@@ -8,11 +8,12 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CalendarIcon } from "lucide-react";
-import { format, addDays } from "date-fns";
+import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrencyAmount, formatInputValue, removeThousandSeparator } from "@/lib/currencyUtils";
+import { getTodayLocal, addDays } from "@/lib/dateUtils";
 import type { CurrencyPair } from "@shared/schema";
 import { useCustomerRate } from "@/hooks/useCustomerRate";
 
@@ -27,12 +28,12 @@ export default function ForwardTrading() {
   const [limitRate, setLimitRate] = useState("");
   const [validityType, setValidityType] = useState<"DAY" | "TIME">("DAY");
   const [validUntilTime, setValidUntilTime] = useState("15:30");
-  const [valueDate, setValueDate] = useState<Date>(addDays(new Date(), 7)); // 1주일 후로 기본 설정
+  const [valueDate, setValueDate] = useState<Date>(addDays(getTodayLocal(), 7)); // 1주일 후로 기본 설정
   
   // Admin price simulation states
   const [adminPriceProvided, setAdminPriceProvided] = useState(false);
   const [fixedAmount, setFixedAmount] = useState("10,000");
-  const [fixedValueDate, setFixedValueDate] = useState<Date>(addDays(new Date(), 7));
+  const [fixedValueDate, setFixedValueDate] = useState<Date>(addDays(getTodayLocal(), 7));
   const [approvedRate, setApprovedRate] = useState<number>(1385.75);
   
   const { toast } = useToast();
@@ -53,7 +54,7 @@ export default function ForwardTrading() {
   
   // Convert valueDate to tenor for spread lookup
   const getTenorFromDate = (date: Date): string | undefined => {
-    const today = new Date();
+    const today = getTodayLocal();
     const daysToMaturity = Math.ceil((date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
     
     if (daysToMaturity <= 10) return "1W";

@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrencyAmount, calculateCurrencyAmount, formatInputValue, removeThousandSeparator } from "@/lib/currencyUtils";
+import { getTodayLocal } from "@/lib/dateUtils";
 import type { CurrencyPair } from "@shared/schema";
 import { useCustomerRate } from "@/hooks/useCustomerRate";
 
@@ -26,7 +27,7 @@ export default function SpotTrading() {
   const [limitRate, setLimitRate] = useState("");
   const [validityType, setValidityType] = useState<"DAY" | "TIME">("DAY");
   const [validUntilTime, setValidUntilTime] = useState("15:30");
-  const [valueDate, setValueDate] = useState<Date>(new Date());
+  const [valueDate, setValueDate] = useState<Date>(getTodayLocal());
   const { toast } = useToast();
 
   // Extract base and quote currencies from selected pair
@@ -122,7 +123,7 @@ export default function SpotTrading() {
     // Calculate valid until datetime for LIMIT orders
     let validUntilDateTime = undefined;
     if (orderType === "LIMIT") {
-      const today = new Date();
+      const today = getTodayLocal();
       if (validityType === "TIME") {
         const [hours, minutes] = validUntilTime.split(':').map(Number);
         validUntilDateTime = new Date(today);

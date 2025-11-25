@@ -9,7 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { CheckCircle, XCircle, Clock, AlertCircle } from "lucide-react";
-import { calculateForwardRate, getDaysBetween, getSpotDate, formatDateForInput, type TenorData } from "@/lib/forwardRateUtils";
+import { calculateForwardRate, getDaysBetween, type TenorData } from "@/lib/forwardRateUtils";
+import { getTodayLocal, formatDateForInput, getSpotDate } from "@/lib/dateUtils";
 import type { SwapPoint } from "@shared/schema";
 
 interface QuoteRequest {
@@ -86,8 +87,8 @@ export default function QuoteApprovals() {
   const [filterDateFrom, setFilterDateFrom] = useState<string>("");
   const [filterDateTo, setFilterDateTo] = useState<string>("");
   
-  // Forward rate calculation state
-  const [spotDate, setSpotDate] = useState<Date>(getSpotDate());
+  // Forward rate calculation state (KST timezone aware)
+  const [spotDate, setSpotDate] = useState<Date>(getSpotDate(getTodayLocal()));
   const [swapPointsByCurrency, setSwapPointsByCurrency] = useState<Record<string, SwapPoint[]>>({});
 
   const { toast } = useToast();

@@ -15,13 +15,14 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { formatCurrencyAmount, formatInputValue, removeThousandSeparator } from "@/lib/currencyUtils";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { getTodayLocal } from "@/lib/dateUtils";
 import type { CurrencyPair, QuoteRequest } from "@shared/schema";
 
 export default function SwapTradingCustomer() {
   const [selectedPair, setSelectedPair] = useState("USD/KRW");
   const [direction, setDirection] = useState<"BUY_SELL_USD" | "SELL_BUY_USD">("BUY_SELL_USD");
-  const [nearDate, setNearDate] = useState<Date>(addDays(new Date(), 1));
-  const [farDate, setFarDate] = useState<Date>(addDays(new Date(), 30));
+  const [nearDate, setNearDate] = useState<Date>(addDays(getTodayLocal(), 1));
+  const [farDate, setFarDate] = useState<Date>(addDays(getTodayLocal(), 30));
   const [nearAmount, setNearAmount] = useState("");
   const [nearAmountCurrency, setNearAmountCurrency] = useState<"USD" | "KRW">("USD");
   const [separateAmounts, setSeparateAmounts] = useState(false);
