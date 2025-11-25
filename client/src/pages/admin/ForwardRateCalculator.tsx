@@ -738,6 +738,10 @@ export default function ForwardRateCalculator() {
 
   // 현물환율 계산 함수
   const calculateSpotRateSwapPoint = () => {
+    // DEBUG
+    console.log("[현물환율 계산] onTnRates:", onTnRates);
+    console.log("[현물환율 계산] selectedPairId:", selectedPairId);
+    
     if (!spotRateCalcDate) {
       toast({
         title: "날짜 입력 필요",
@@ -764,6 +768,10 @@ export default function ForwardRateCalculator() {
     // ON/TN rates 찾기
     const onRate = onTnRates.find(r => r.tenor === "ON");
     const tnRate = onTnRates.find(r => r.tenor === "TN");
+
+    // DEBUG
+    console.log("[현물환율 계산] onRate:", onRate);
+    console.log("[현물환율 계산] tnRate:", tnRate);
 
     if (!onRate || !tnRate) {
       toast({
