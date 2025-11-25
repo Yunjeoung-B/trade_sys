@@ -676,6 +676,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      console.log("[Customer Rates Debug] Response being sent:", JSON.stringify(Object.entries(customerRates).slice(0, 2)));
       res.json(customerRates);
     } catch (error) {
       console.error("Customer rates calculation error:", error);

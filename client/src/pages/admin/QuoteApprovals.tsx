@@ -96,6 +96,11 @@ export default function QuoteApprovals() {
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Force invalidate customer rates on component mount
+  useEffect(() => {
+    queryClient.invalidateQueries({ queryKey: ["/api/quote-requests/customer-rates"] });
+  }, [queryClient]);
 
   const { data: quoteRequests } = useQuery<QuoteRequest[]>({
     queryKey: ["/api/quote-requests"],
