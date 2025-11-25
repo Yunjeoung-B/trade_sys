@@ -73,7 +73,11 @@ function isUSHoliday(dateStr: string): boolean {
 }
 
 function formatDateString(date: Date): string {
-  return date.toISOString().split('T')[0];
+  // ✅ 로컬 기반 (UTC 변환 금지!)
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 // Get today as local midnight (fixes timezone issue)
