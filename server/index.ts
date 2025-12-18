@@ -1,9 +1,18 @@
 import "dotenv/config";
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
-import { infomaxPoller } from "./services/infomaxPoller";
 import { verifyTimezone } from "./utils/dateUtils";
+
+// Simple log function for Vercel (avoid vite dependency)
+function log(message: string, source = "express") {
+  const formattedTime = new Date().toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+  });
+  console.log(`${formattedTime} [${source}] ${message}`);
+}
 
 // ✅ 전체 시스템을 KST (UTC+9)로 설정
 process.env.TZ = "Asia/Seoul";
@@ -61,17 +70,20 @@ export async function initializeApp() {
       throw err;
     });
 
-    // importantly only setup vite in development and after
-    // setting up all the other routes so the catch-all route
-    // doesn't interfere with the other routes
-    if (app.get("env") === "development") {
-      await setupVite(app, server);
-    } else {
-      try {
-        serveStatic(app);
-      } catch (staticError: any) {
-        console.error('Error serving static files:', staticError.message);
-        // Continue even if static files fail (for API-only routes)
+    // Setup vite in development, static serving in production (non-Vercel)
+    // Vercel handles static files via outputDirectory config
+    if (process.env.VERCEL !== "1") {
+      if (app.get("env") === "development") {
+        // Dynamic import to avoid bundling vite in production
+        const { setupVite } = await import("./vite");
+        await setupVite(app, server);
+      } else {
+        try {
+          const { serveStatic } = await import("./vite");
+          serveStatic(app);
+        } catch (staticError: any) {
+          console.error('Error serving static files:', staticError.message);
+        }
       }
     }
 
@@ -91,14 +103,16 @@ export async function initializeApp() {
         // log('Infomax poller started');
       });
 
-      process.on('SIGTERM', () => {
+      process.on('SIGTERM', async () => {
         log('SIGTERM received, stopping Infomax poller');
+        const { infomaxPoller } = await import('./services/infomaxPoller');
         infomaxPoller.stop();
         process.exit(0);
       });
 
-      process.on('SIGINT', () => {
+      process.on('SIGINT', async () => {
         log('SIGINT received, stopping Infomax poller');
+        const { infomaxPoller } = await import('./services/infomaxPoller');
         infomaxPoller.stop();
         process.exit(0);
       });
