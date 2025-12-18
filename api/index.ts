@@ -42,10 +42,8 @@ async function getApp() {
     process.env.VERCEL = "1";
     process.env.NODE_ENV = process.env.NODE_ENV || "production";
     
-    // Get initializeApp function and initialize app
-    initPromise = getInitializeApp().then((initializeAppFn: any) => {
-      return initializeAppFn();
-    }).then((app: any) => {
+    // Initialize app using the bundled initializeApp function
+    initPromise = initializeApp().then((app: any) => {
       appInstance = app;
       initError = null;
       return app;
