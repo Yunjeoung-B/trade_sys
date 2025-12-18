@@ -76,15 +76,11 @@ async function initializeApp() {
     }
 
     isInitialized = true;
-  } catch (error) {
-    console.error('Error initializing app:', error);
-    throw error;
-  }
 
-  // Only start server if not in Vercel (Vercel handles the server)
-  if (process.env.VERCEL !== "1") {
-    const port = parseInt(process.env.PORT || '5000', 10);
-    server.listen(port, () => {
+    // Only start server if not in Vercel (Vercel handles the server)
+    if (process.env.VERCEL !== "1") {
+      const port = parseInt(process.env.PORT || '5000', 10);
+      server.listen(port, () => {
       log(`serving on port ${port}`);
       
       // ✅ 타임존 확인
