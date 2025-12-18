@@ -42,7 +42,13 @@ app.use((req, res, next) => {
   next();
 });
 
-(async () => {
+// Initialize app for Vercel or standalone server
+let initializedApp: express.Express | null = null;
+let serverInstance: any = null;
+
+async function initializeApp() {
+  if (initializedApp) return initializedApp;
+
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -62,31 +68,46 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on the port specified in the environment variable PORT
-  // Other ports are firewalled. Default to 5000 if not specified.
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = parseInt(process.env.PORT || '5000', 10);
-  server.listen(port, () => {
-    log(`serving on port ${port}`);
-    
-    // ✅ 타임존 확인
-    verifyTimezone();
-    
-    // ❌ Infomax 폴러 자동 시작 비활성화 (수동으로만 호출)
-    // infomaxPoller.start();
-    // log('Infomax poller started');
-  });
+  initializedApp = app;
+  serverInstance = server;
 
-  process.on('SIGTERM', () => {
-    log('SIGTERM received, stopping Infomax poller');
-    infomaxPoller.stop();
-    process.exit(0);
-  });
+  // Only start server if not in Vercel (Vercel handles the server)
+  if (process.env.VERCEL !== "1") {
+    const port = parseInt(process.env.PORT || '5000', 10);
+    server.listen(port, () => {
+      log(`serving on port ${port}`);
+      
+      // ✅ 타임존 확인
+      verifyTimezone();
+      
+      // ❌ Infomax 폴러 자동 시작 비활성화 (수동으로만 호출)
+      // infomaxPoller.start();
+      // log('Infomax poller started');
+    });
 
-  process.on('SIGINT', () => {
-    log('SIGINT received, stopping Infomax poller');
-    infomaxPoller.stop();
-    process.exit(0);
-  });
-})();
+    process.on('SIGTERM', () => {
+      log('SIGTERM received, stopping Infomax poller');
+      infomaxPoller.stop();
+      process.exit(0);
+    });
+
+    process.on('SIGINT', () => {
+      log('SIGINT received, stopping Infomax poller');
+      infomaxPoller.stop();
+      process.exit(0);
+    });
+  }
+
+  return app;
+}
+
+// Auto-initialize for non-Vercel environments
+if (process.env.VERCEL !== "1") {
+  initializeApp();
+}
+
+// Export for Vercel serverless functions
+export default async function handler(req: Request, res: Response) {
+  const appInstance = await initializeApp();
+  return appInstance(req, res);
+}
