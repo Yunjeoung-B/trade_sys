@@ -4,10 +4,15 @@ import { initializeApp } from '../server/index';
 // Initialize app on module load (singleton pattern)
 let appInstance: any = null;
 let initPromise: Promise<any> | null = null;
+let initError: any = null;
 
 async function getApp() {
   if (appInstance) {
     return appInstance;
+  }
+  
+  if (initError) {
+    throw initError;
   }
   
   if (!initPromise) {
@@ -15,9 +20,12 @@ async function getApp() {
     process.env.NODE_ENV = "production";
     initPromise = initializeApp().then((app: any) => {
       appInstance = app;
+      initError = null;
       return app;
     }).catch((error: any) => {
       console.error('Failed to initialize app:', error);
+      console.error('Error stack:', error?.stack);
+      initError = error;
       initPromise = null; // Reset on error
       throw error;
     });
@@ -33,10 +41,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     app(req as any, res as any);
   } catch (error: any) {
     console.error('Error in Vercel handler:', error);
+    console.error('Error details:', {
+      message: error?.message,
+      stack: error?.stack,
+      name: error?.name,
+      code: error?.code
+    });
     if (!res.headersSent) {
       res.status(500).json({ 
         error: 'Internal server error',
-        message: error?.message || 'Unknown error'
+        message: error?.message || 'Unknown error',
+        details: process.env.NODE_ENV === 'development' ? error?.stack : undefined
       });
     }
   }
