@@ -1,9 +1,24 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import handler from '../server/index';
+import { initializeApp } from '../server/index';
 
-export default async function (req: VercelRequest, res: VercelResponse) {
-  // Set Vercel environment flag
-  process.env.VERCEL = "1";
-  return handler(req as any, res as any);
+// Initialize app on module load
+let appPromise: Promise<any> | null = null;
+
+async function getApp() {
+  if (!appPromise) {
+    process.env.VERCEL = "1";
+    appPromise = initializeApp();
+  }
+  return appPromise;
+}
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  try {
+    const app = await getApp();
+    return app(req, res);
+  } catch (error) {
+    console.error('Error in Vercel handler:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 }
 

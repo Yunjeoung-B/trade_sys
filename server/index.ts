@@ -42,12 +42,11 @@ app.use((req, res, next) => {
   next();
 });
 
-// Initialize app for Vercel or standalone server
-let initializedApp: express.Express | null = null;
-let serverInstance: any = null;
+// Initialize app
+let isInitialized = false;
 
 async function initializeApp() {
-  if (initializedApp) return initializedApp;
+  if (isInitialized) return app;
 
   const server = await registerRoutes(app);
 
@@ -68,8 +67,7 @@ async function initializeApp() {
     serveStatic(app);
   }
 
-  initializedApp = app;
-  serverInstance = server;
+  isInitialized = true;
 
   // Only start server if not in Vercel (Vercel handles the server)
   if (process.env.VERCEL !== "1") {
@@ -106,8 +104,6 @@ if (process.env.VERCEL !== "1") {
   initializeApp();
 }
 
-// Export for Vercel serverless functions
-export default async function handler(req: Request, res: Response) {
-  const appInstance = await initializeApp();
-  return appInstance(req, res);
-}
+// Export app and handler for Vercel
+export { app };
+export default app;
