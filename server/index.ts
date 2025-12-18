@@ -45,7 +45,7 @@ app.use((req, res, next) => {
 // Initialize app
 let isInitialized = false;
 
-async function initializeApp() {
+export async function initializeApp() {
   if (isInitialized) return app;
 
   try {
