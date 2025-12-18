@@ -13,10 +13,10 @@ async function getApp() {
   if (!initPromise) {
     process.env.VERCEL = "1";
     process.env.NODE_ENV = "production";
-    initPromise = initializeApp().then(app => {
+    initPromise = initializeApp().then((app: any) => {
       appInstance = app;
       return app;
-    }).catch(error => {
+    }).catch((error: any) => {
       console.error('Failed to initialize app:', error);
       initPromise = null; // Reset on error
       throw error;
