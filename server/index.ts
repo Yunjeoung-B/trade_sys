@@ -48,26 +48,38 @@ let isInitialized = false;
 async function initializeApp() {
   if (isInitialized) return app;
 
-  const server = await registerRoutes(app);
+  try {
+    const server = await registerRoutes(app);
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+      const status = err.status || err.statusCode || 500;
+      const message = err.message || "Internal Server Error";
 
-    res.status(status).json({ message });
-    throw err;
-  });
+      if (!res.headersSent) {
+        res.status(status).json({ message });
+      }
+      throw err;
+    });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
+    // importantly only setup vite in development and after
+    // setting up all the other routes so the catch-all route
+    // doesn't interfere with the other routes
+    if (app.get("env") === "development") {
+      await setupVite(app, server);
+    } else {
+      try {
+        serveStatic(app);
+      } catch (staticError: any) {
+        console.error('Error serving static files:', staticError.message);
+        // Continue even if static files fail (for API-only routes)
+      }
+    }
+
+    isInitialized = true;
+  } catch (error) {
+    console.error('Error initializing app:', error);
+    throw error;
   }
-
-  isInitialized = true;
 
   // Only start server if not in Vercel (Vercel handles the server)
   if (process.env.VERCEL !== "1") {
