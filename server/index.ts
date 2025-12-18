@@ -81,30 +81,34 @@ export async function initializeApp() {
     if (process.env.VERCEL !== "1") {
       const port = parseInt(process.env.PORT || '5000', 10);
       server.listen(port, () => {
-      log(`serving on port ${port}`);
-      
-      // ✅ 타임존 확인
-      verifyTimezone();
-      
-      // ❌ Infomax 폴러 자동 시작 비활성화 (수동으로만 호출)
-      // infomaxPoller.start();
-      // log('Infomax poller started');
-    });
+        log(`serving on port ${port}`);
+        
+        // ✅ 타임존 확인
+        verifyTimezone();
+        
+        // ❌ Infomax 폴러 자동 시작 비활성화 (수동으로만 호출)
+        // infomaxPoller.start();
+        // log('Infomax poller started');
+      });
 
-    process.on('SIGTERM', () => {
-      log('SIGTERM received, stopping Infomax poller');
-      infomaxPoller.stop();
-      process.exit(0);
-    });
+      process.on('SIGTERM', () => {
+        log('SIGTERM received, stopping Infomax poller');
+        infomaxPoller.stop();
+        process.exit(0);
+      });
 
-    process.on('SIGINT', () => {
-      log('SIGINT received, stopping Infomax poller');
-      infomaxPoller.stop();
-      process.exit(0);
-    });
+      process.on('SIGINT', () => {
+        log('SIGINT received, stopping Infomax poller');
+        infomaxPoller.stop();
+        process.exit(0);
+      });
+    }
+
+    return app;
+  } catch (error) {
+    console.error('Error initializing app:', error);
+    throw error;
   }
-
-  return app;
 }
 
 // Auto-initialize for non-Vercel environments
@@ -112,6 +116,5 @@ if (process.env.VERCEL !== "1") {
   initializeApp();
 }
 
-// Export app and handler for Vercel
+// Export app for Vercel
 export { app };
-export default app;
