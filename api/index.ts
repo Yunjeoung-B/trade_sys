@@ -1,6 +1,22 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-// Import server code - Vercel will compile TypeScript files
-import { initializeApp } from '../server/index';
+
+// Get initializeApp function - try built file first, fallback to source
+async function getInitializeApp() {
+  try {
+    // Try to import from built file first (for Vercel production)
+    const builtModule = await import('../dist/index.js');
+    if (builtModule.initializeApp) {
+      return builtModule.initializeApp;
+    }
+  } catch (e) {
+    // Built file doesn't exist or doesn't export initializeApp
+    console.log('Built file not available, using source');
+  }
+  
+  // Fallback to source (for local development or if built file fails)
+  const sourceModule = await import('../server/index.js');
+  return sourceModule.initializeApp;
+}
 
 // Initialize app on module load (singleton pattern)
 let appInstance: any = null;
@@ -21,8 +37,10 @@ async function getApp() {
     process.env.VERCEL = "1";
     process.env.NODE_ENV = process.env.NODE_ENV || "production";
     
-    // Initialize app
-    initPromise = initializeApp().then((app: any) => {
+    // Get initializeApp function and initialize app
+    initPromise = getInitializeApp().then((initializeAppFn: any) => {
+      return initializeAppFn();
+    }).then((app: any) => {
       appInstance = app;
       initError = null;
       return app;

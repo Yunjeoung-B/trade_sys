@@ -12,15 +12,6 @@
       "src": "/(.*)",
       "dest": "/api"
     }
-  ],
-  "functions": {
-    "api/index.ts": {
-      "includeFiles": [
-        "server/**",
-        "shared/**",
-        "dist/**"
-      ]
-    }
-  }
+  ]
 }
 
