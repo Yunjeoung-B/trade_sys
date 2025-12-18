@@ -1,4 +1,6 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
+// Import with .ts extension - Vercel will compile it
+import { initializeApp } from '../server/index.ts';
 
 // Initialize app on module load (singleton pattern)
 let appInstance: any = null;
@@ -19,10 +21,8 @@ async function getApp() {
     process.env.VERCEL = "1";
     process.env.NODE_ENV = process.env.NODE_ENV || "production";
     
-    // Import initializeApp dynamically
-    initPromise = import('../server/index.js').then((module: any) => {
-      return module.initializeApp();
-    }).then((app: any) => {
+    // Initialize app
+    initPromise = initializeApp().then((app: any) => {
       appInstance = app;
       initError = null;
       return app;
