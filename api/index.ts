@@ -16,8 +16,10 @@ async function getApp() {
   }
   
   if (!initPromise) {
+    // Set Vercel environment before initialization
     process.env.VERCEL = "1";
-    process.env.NODE_ENV = "production";
+    process.env.NODE_ENV = process.env.NODE_ENV || "production";
+    
     initPromise = initializeApp().then((app: any) => {
       appInstance = app;
       initError = null;
@@ -25,6 +27,11 @@ async function getApp() {
     }).catch((error: any) => {
       console.error('Failed to initialize app:', error);
       console.error('Error stack:', error?.stack);
+      console.error('Environment check:', {
+        DATABASE_URL: process.env.DATABASE_URL ? 'SET' : 'NOT SET',
+        NODE_ENV: process.env.NODE_ENV,
+        VERCEL: process.env.VERCEL
+      });
       initError = error;
       initPromise = null; // Reset on error
       throw error;
@@ -37,8 +44,43 @@ async function getApp() {
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const app = await getApp();
-    // Express app handles the request
-    app(req as any, res as any);
+    
+    // Wrap Express app call in a Promise to handle async properly
+    return new Promise<void>((resolve, reject) => {
+      // Set up timeout to prevent hanging
+      const timeout = setTimeout(() => {
+        if (!res.headersSent) {
+          res.status(504).json({ error: 'Request timeout' });
+        }
+        reject(new Error('Request timeout'));
+      }, 30000); // 30 second timeout
+      
+      // Handle response completion
+      res.on('finish', () => {
+        clearTimeout(timeout);
+        resolve();
+      });
+      
+      res.on('close', () => {
+        clearTimeout(timeout);
+        resolve();
+      });
+      
+      // Call Express app
+      try {
+        app(req as any, res as any, (err: any) => {
+          clearTimeout(timeout);
+          if (err) {
+            reject(err);
+          } else {
+            resolve();
+          }
+        });
+      } catch (err) {
+        clearTimeout(timeout);
+        reject(err);
+      }
+    });
   } catch (error: any) {
     console.error('Error in Vercel handler:', error);
     console.error('Error details:', {
