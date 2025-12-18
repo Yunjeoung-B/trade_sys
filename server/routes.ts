@@ -72,14 +72,18 @@ function getSession() {
     tableName: "sessions",
   });
   
+  const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL === '1';
+
   return session({
     secret: process.env.SESSION_SECRET || "dev-secret-key",
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
+    proxy: isProduction, // Trust proxy in production (Vercel)
     cookie: {
       httpOnly: true,
-      secure: false, // Replit 개발 환경에서는 false로 설정
+      secure: isProduction, // HTTPS in production
+      sameSite: isProduction ? 'none' : 'lax', // Allow cross-site cookies in production
       maxAge: sessionTtl,
     },
   });
