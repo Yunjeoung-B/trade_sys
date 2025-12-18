@@ -1583,9 +1583,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create HTTP server
   const httpServer = createServer(app);
 
-  // Setup WebSocket server for real-time updates
-  const wss = new WebSocketServer({ server: httpServer, path: "/ws" });
+  // Setup WebSocket servers with noServer mode for Node.js v24 compatibility
+  const wss = new WebSocketServer({ noServer: true });
+  const excelWss = new WebSocketServer({ noServer: true });
+  const bloombergWss = new WebSocketServer({ noServer: true });
 
+  // Handle HTTP upgrade requests manually
+  httpServer.on('upgrade', (request, socket, head) => {
+    const pathname = request.url;
+
+    if (pathname === '/ws') {
+      wss.handleUpgrade(request, socket, head, (ws) => {
+        wss.emit('connection', ws, request);
+      });
+    } else if (pathname === '/excel-ws') {
+      excelWss.handleUpgrade(request, socket, head, (ws) => {
+        excelWss.emit('connection', ws, request);
+      });
+    } else if (pathname === '/bloomberg-ws') {
+      bloombergWss.handleUpgrade(request, socket, head, (ws) => {
+        bloombergWss.emit('connection', ws, request);
+      });
+    } else {
+      socket.destroy();
+    }
+  });
+
+  // Setup WebSocket server for real-time updates
   wss.on("connection", (ws: WebSocket) => {
     console.log("WebSocket client connected");
 
@@ -1605,8 +1629,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Setup Excel monitoring WebSocket
-  const excelWss = new WebSocketServer({ server: httpServer, path: "/excel-ws" });
-  
   excelWss.on("connection", (ws: WebSocket) => {
     console.log("Excel WebSocket client connected");
     excelMonitor.addClient(ws);
@@ -1624,13 +1646,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Bloomberg WebSocket setup for real-time streaming
-  const bloombergWss = new WebSocketServer({ 
-    server: httpServer, 
-    path: '/bloomberg-ws',
-    perMessageDeflate: false,
-    maxPayload: 1024 * 1024 // 1MB
-  });
-
   bloombergWss.on('connection', (ws, request) => {
     console.log('Bloomberg client connected from:', request.socket.remoteAddress);
     bloombergClients.add(ws);
@@ -1693,14 +1708,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   bloombergWss.on('error', (error) => {
     console.error('Bloomberg WebSocket server error:', error);
-  });
-
-  // HTTP upgrade 처리를 위한 디버깅
-  httpServer.on('upgrade', (request, socket, head) => {
-    console.log('WebSocket upgrade request received for:', request.url);
-    if (request.url === '/bloomberg-ws') {
-      console.log('Handling Bloomberg WebSocket upgrade');
-    }
   });
 
   function startBloombergSimulation(symbols: string[]) {
