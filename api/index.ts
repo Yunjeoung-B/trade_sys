@@ -1,7 +1,7 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-// Import initializeApp dynamically to avoid TypeScript errors during build
-// The buildCommand creates dist/index.js with all dependencies bundled
-let initializeApp: any;
+// Import initializeApp directly from server/index.ts
+// This allows @vercel/node to bundle all dependencies
+import { initializeApp } from '../server/index';
 
 // Initialize app on module load (singleton pattern)
 let appInstance: any = null;
@@ -12,23 +12,17 @@ async function getApp() {
   if (appInstance) {
     return appInstance;
   }
-  
+
   if (initError) {
     throw initError;
   }
-  
+
   if (!initPromise) {
     // Set Vercel environment before initialization
     process.env.VERCEL = "1";
     process.env.NODE_ENV = process.env.NODE_ENV || "production";
-    
-    // Dynamically import initializeApp from dist/index.js
-    initPromise = import('../dist/index.js').then((module: any) => {
-      if (!module.initializeApp) {
-        throw new Error('initializeApp not found in dist/index.js');
-      }
-      return module.initializeApp();
-    }).then((app: any) => {
+
+    initPromise = initializeApp().then((app: any) => {
       appInstance = app;
       initError = null;
       return app;
@@ -45,7 +39,7 @@ async function getApp() {
       throw error;
     });
   }
-  
+
   return initPromise;
 }
 
