@@ -1,6 +1,6 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-// Import with .ts extension - Vercel will compile it
-import { initializeApp } from '../server/index.ts';
+// Import server code - Vercel will compile TypeScript files
+import { initializeApp } from '../server/index';
 
 // Initialize app on module load (singleton pattern)
 let appInstance: any = null;

@@ -4,14 +4,7 @@
   "builds": [
     {
       "src": "api/index.ts",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": [
-          "server/**",
-          "shared/**",
-          "dist/**"
-        ]
-      }
+      "use": "@vercel/node"
     }
   ],
   "routes": [
@@ -19,6 +12,15 @@
       "src": "/(.*)",
       "dest": "/api"
     }
-  ]
+  ],
+  "functions": {
+    "api/index.ts": {
+      "includeFiles": [
+        "server/**",
+        "shared/**",
+        "dist/**"
+      ]
+    }
+  }
 }
 
