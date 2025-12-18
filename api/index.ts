@@ -1,21 +1,26 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 
-// Get initializeApp function - try built file first, fallback to source
+// Get initializeApp function - use built file (bundled with all dependencies)
 async function getInitializeApp() {
+  // In Vercel, use the built file which has all dependencies bundled
+  // The buildCommand creates dist/index.js with everything bundled
   try {
-    // Try to import from built file first (for Vercel production)
     const builtModule = await import('../dist/index.js');
-    if (builtModule.initializeApp) {
+    if (builtModule && builtModule.initializeApp) {
       return builtModule.initializeApp;
     }
-  } catch (e) {
-    // Built file doesn't exist or doesn't export initializeApp
-    console.log('Built file not available, using source');
+    throw new Error('initializeApp not found in built module');
+  } catch (e: any) {
+    console.error('Failed to import from dist/index.js:', e.message);
+    // Fallback: try source (may not work in Vercel due to missing dependencies)
+    try {
+      const sourceModule = await import('../server/index.js');
+      return sourceModule.initializeApp;
+    } catch (sourceError: any) {
+      console.error('Failed to import from server/index.js:', sourceError.message);
+      throw new Error(`Cannot load initializeApp: ${e.message}, ${sourceError.message}`);
+    }
   }
-  
-  // Fallback to source (for local development or if built file fails)
-  const sourceModule = await import('../server/index.js');
-  return sourceModule.initializeApp;
 }
 
 // Initialize app on module load (singleton pattern)

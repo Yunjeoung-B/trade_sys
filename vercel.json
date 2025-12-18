@@ -12,6 +12,7 @@
       "src": "/(.*)",
       "dest": "/api"
     }
-  ]
+  ],
+  "outputDirectory": "dist"
 }
 
