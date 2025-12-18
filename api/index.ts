@@ -1,27 +1,6 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-
-// Get initializeApp function - use built file (bundled with all dependencies)
-async function getInitializeApp() {
-  // In Vercel, use the built file which has all dependencies bundled
-  // The buildCommand creates dist/index.js with everything bundled
-  try {
-    const builtModule = await import('../dist/index.js');
-    if (builtModule && builtModule.initializeApp) {
-      return builtModule.initializeApp;
-    }
-    throw new Error('initializeApp not found in built module');
-  } catch (e: any) {
-    console.error('Failed to import from dist/index.js:', e.message);
-    // Fallback: try source (may not work in Vercel due to missing dependencies)
-    try {
-      const sourceModule = await import('../server/index.js');
-      return sourceModule.initializeApp;
-    } catch (sourceError: any) {
-      console.error('Failed to import from server/index.js:', sourceError.message);
-      throw new Error(`Cannot load initializeApp: ${e.message}, ${sourceError.message}`);
-    }
-  }
-}
+// Import from bundled dist file - all server dependencies are included
+import { initializeApp } from '../dist/index.js';
 
 // Initialize app on module load (singleton pattern)
 let appInstance: any = null;
@@ -42,10 +21,8 @@ async function getApp() {
     process.env.VERCEL = "1";
     process.env.NODE_ENV = process.env.NODE_ENV || "production";
     
-    // Get initializeApp function and initialize app
-    initPromise = getInitializeApp().then((initializeAppFn: any) => {
-      return initializeAppFn();
-    }).then((app: any) => {
+    // Initialize app using the bundled initializeApp function
+    initPromise = initializeApp().then((app: any) => {
       appInstance = app;
       initError = null;
       return app;
