@@ -41,7 +41,7 @@ UI Style: Gradient backgrounds (slate-800 → blue-900 → purple-900), rounded-
 
 ## Database Design
 - **Database**: PostgreSQL with Drizzle ORM for type-safe database operations (MySQL configuration attempted but reverted due to local server unavailability)
-- **Connection**: Neon serverless PostgreSQL for cloud-native deployment
+- **Connection**: Supabase PostgreSQL for cloud-native deployment
 - **Schema Design**: Comprehensive schema covering users with hierarchical groups (majorGroup/midGroup/subGroup), currency pairs, market rates with historical tracking, spread settings with granular controls, quote requests with approval workflows, trades, and auto-approval settings
 - **Data Relationships**: Well-defined foreign key relationships between entities with proper indexing for performance
 - **UUID Generation**: Application-level UUID generation using nanoid() library instead of database auto-generation
@@ -100,7 +100,7 @@ UI Style: Gradient backgrounds (slate-800 → blue-900 → purple-900), rounded-
 # External Dependencies
 
 ## Database Services
-- **Neon Database**: Serverless PostgreSQL hosting with connection pooling and automatic scaling
+- **Supabase**: PostgreSQL hosting with connection pooling, automatic scaling, and built-in authentication features
 - **Drizzle ORM**: Type-safe database toolkit with PostgreSQL dialect support
 
 ## Market Data Services

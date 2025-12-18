@@ -1,9 +1,6 @@
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import ws from "ws";
+import postgres from 'postgres';
+import { drizzle } from 'drizzle-orm/postgres-js';
 import * as schema from "@shared/schema";
-
-neonConfig.webSocketConstructor = ws;
 
 if (!process.env.DATABASE_URL) {
   throw new Error(
@@ -11,5 +8,15 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-export const db = drizzle({ client: pool, schema });
+const client = postgres(process.env.DATABASE_URL);
+export const db = drizzle(client, { schema });
+
+// For session store compatibility (connect-pg-simple requires a Pool-like interface)
+// Supabase uses standard PostgreSQL connection string
+export const pool = {
+  query: async (text: string, params?: unknown[]) => {
+    const result = await client.unsafe(text, params as never[]);
+    return { rows: result };
+  },
+  end: () => client.end(),
+};
