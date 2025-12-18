@@ -1,7 +1,7 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-// Import initializeApp from the bundled api/index.js (built during buildCommand)
-// The bundled file includes all server dependencies
-import { initializeApp } from './index.js';
+// Import initializeApp from the bundled dist/index.js
+// The buildCommand creates dist/index.js with all dependencies bundled
+import { initializeApp } from '../dist/index.js';
 
 // Initialize app on module load (singleton pattern)
 let appInstance: any = null;
