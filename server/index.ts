@@ -4,6 +4,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { infomaxPoller } from "./services/infomaxPoller";
 import { verifyTimezone } from "./utils/dateUtils";
+import { seedDefaultUsers } from "./utils/seed";
 
 // ✅ 전체 시스템을 KST (UTC+9)로 설정
 process.env.TZ = "Asia/Seoul";
@@ -49,6 +50,9 @@ export async function initializeApp() {
   if (isInitialized) return app;
 
   try {
+    // 기본 사용자 생성 (admin / password, client / password)
+    await seedDefaultUsers();
+
     const server = await registerRoutes(app);
 
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
