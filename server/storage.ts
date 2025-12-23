@@ -1,14 +1,4 @@
 import {
-  users,
-  currencyPairs,
-  marketRates,
-  spreadSettings,
-  quoteRequests,
-  trades,
-  autoApprovalSettings,
-  swapPoints,
-  swapPointsHistory,
-  onTnRates,
   type User,
   type InsertUser,
   type CurrencyPair,
@@ -30,15 +20,18 @@ import {
   type OnTnRate,
   type InsertOnTnRate,
 } from "@shared/schema";
+import { userRepository } from "./repositories/user.repository";
+import { currencyPairRepository } from "./repositories/currencyPair.repository";
+import { marketRateRepository } from "./repositories/marketRate.repository";
+import { spreadSettingRepository } from "./repositories/spreadSetting.repository";
+import { quoteRepository } from "./repositories/quote.repository";
+import { tradeRepository } from "./repositories/trade.repository";
+import { autoApprovalRepository } from "./repositories/autoApproval.repository";
+import { swapPointRepository } from "./repositories/swapPoint.repository";
+import { desc } from "drizzle-orm";
+import { marketRates } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, sql } from "drizzle-orm";
-import bcrypt from "bcrypt";
-import { nanoid } from "nanoid";
-
-// UUID generation utility
-function generateId(): string {
-  return nanoid();
-}
+import { eq, and } from "drizzle-orm";
 
 export interface IStorage {
   // User operations
@@ -106,287 +99,113 @@ export interface IStorage {
   getSwapPointsHistory(currencyPairId: string, limit?: number): Promise<SwapPointsHistory[]>;
   createSwapPointsHistory(history: InsertSwapPointsHistory): Promise<SwapPointsHistory>;
 
-  // ON/TN Rates (현물환율 계산용)
+  // ON/TN Rates
   getOnTnRates(currencyPairId: string): Promise<OnTnRate[]>;
   createOnTnRate(rate: InsertOnTnRate): Promise<OnTnRate>;
   deleteOnTnRate(id: string): Promise<void>;
+
+  // Swap point history
+  getSwapPointHistory(currencyPairId: string, hours: number): Promise<SwapPoint[]>;
 }
 
+/**
+ * Storage implementation using repository pattern
+ */
 export class DatabaseStorage implements IStorage {
   // User operations
   async getUser(id: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user;
+    return userRepository.getUser(id);
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
-    return user;
+    return userRepository.getUserByUsername(username);
   }
 
-  async createUser(userData: InsertUser): Promise<User> {
-    const hashedPassword = await bcrypt.hash(userData.password, 10);
-    const [user] = await db
-      .insert(users)
-      .values({
-        id: generateId(),
-        ...userData,
-        password: hashedPassword,
-      })
-      .returning();
-    return user;
+  async createUser(user: InsertUser): Promise<User> {
+    return userRepository.createUser(user);
   }
 
   async updateUser(id: string, updates: Partial<InsertUser>): Promise<User | undefined> {
-    if (updates.password) {
-      updates.password = await bcrypt.hash(updates.password, 10);
-    }
-    const [user] = await db
-      .update(users)
-      .set({ ...updates, updatedAt: new Date() })
-      .where(eq(users.id, id))
-      .returning();
-    return user;
+    return userRepository.updateUser(id, updates);
   }
 
   async getAllUsers(): Promise<User[]> {
-    return await db.select().from(users).orderBy(users.username);
+    return userRepository.getAllUsers();
   }
 
   async validateUserPassword(username: string, password: string): Promise<User | null> {
-    const user = await this.getUserByUsername(username);
-    if (!user) return null;
-
-    const isValid = await bcrypt.compare(password, user.password);
-    return isValid ? user : null;
+    return userRepository.validateUserPassword(username, password);
   }
 
   // Currency pairs
   async getCurrencyPairs(): Promise<CurrencyPair[]> {
-    return await db.select().from(currencyPairs).where(eq(currencyPairs.isActive, true));
+    return currencyPairRepository.getCurrencyPairs();
   }
 
   async getCurrencyPair(id: string): Promise<CurrencyPair | undefined> {
-    const [pair] = await db.select().from(currencyPairs).where(eq(currencyPairs.id, id));
-    return pair;
+    return currencyPairRepository.getCurrencyPair(id);
   }
 
   async getCurrencyPairBySymbol(symbol: string): Promise<CurrencyPair | undefined> {
-    const [pair] = await db.select().from(currencyPairs).where(eq(currencyPairs.symbol, symbol));
-    return pair;
+    return currencyPairRepository.getCurrencyPairBySymbol(symbol);
   }
 
-  async createCurrencyPair(pairData: InsertCurrencyPair): Promise<CurrencyPair> {
-    const [pair] = await db.insert(currencyPairs).values({
-      id: generateId(),
-      ...pairData,
-    }).returning();
-    return pair;
+  async createCurrencyPair(pair: InsertCurrencyPair): Promise<CurrencyPair> {
+    return currencyPairRepository.createCurrencyPair(pair);
   }
 
   // Market rates
   async getLatestMarketRates(): Promise<MarketRate[]> {
-    return await db
-      .select()
-      .from(marketRates)
-      .orderBy(desc(marketRates.timestamp))
-      .limit(10);
+    return marketRateRepository.getLatestMarketRates();
   }
 
   async getLatestMarketRateForCurrencyPair(currencyPairId: string): Promise<MarketRate | undefined> {
-    const [rate] = await db
-      .select()
-      .from(marketRates)
-      .where(eq(marketRates.currencyPairId, currencyPairId))
-      .orderBy(desc(marketRates.timestamp))
-      .limit(1);
-    return rate;
+    return marketRateRepository.getLatestMarketRateForCurrencyPair(currencyPairId);
   }
 
-  async createMarketRate(rateData: InsertMarketRate): Promise<MarketRate> {
-    const [rate] = await db.insert(marketRates).values({
-      id: generateId(),
-      ...rateData,
-    }).returning();
-    return rate;
+  async createMarketRate(rate: InsertMarketRate): Promise<MarketRate> {
+    return marketRateRepository.createMarketRate(rate);
   }
 
-  async updateMarketRate(rateData: InsertMarketRate): Promise<MarketRate> {
-    const [rate] = await db.insert(marketRates).values({
-      id: generateId(),
-      ...rateData,
-    }).returning();
-    return rate;
-  }
-
-  async upsertLatestMarketRate(
-    currencyPairId: string,
-    buyRate: string,
-    sellRate: string,
-    source: string
-  ): Promise<MarketRate> {
-    const existing = await db
-      .select()
-      .from(marketRates)
-      .where(
-        and(
-          eq(marketRates.currencyPairId, currencyPairId),
-          eq(marketRates.source, source)
-        )
-      )
-      .orderBy(desc(marketRates.timestamp))
-      .limit(1);
-
-    if (existing.length > 0) {
-      const [rate] = await db
-        .update(marketRates)
-        .set({
-          buyRate,
-          sellRate,
-          updatedAt: new Date(),
-        })
-        .where(eq(marketRates.id, existing[0].id))
-        .returning();
-      return rate;
-    } else {
-      return this.createMarketRate({
-        currencyPairId,
-        buyRate,
-        sellRate,
-        source,
-      });
-    }
+  async updateMarketRate(rate: InsertMarketRate): Promise<MarketRate> {
+    return marketRateRepository.updateMarketRate(rate);
   }
 
   async getMarketRateHistory(currencyPairId: string, hours: number): Promise<MarketRate[]> {
-    const hoursAgo = new Date();
-    hoursAgo.setHours(hoursAgo.getHours() - hours);
-
-    return await db
-      .select()
-      .from(marketRates)
-      .where(
-        and(
-          eq(marketRates.currencyPairId, currencyPairId),
-          sql`${marketRates.timestamp} >= ${hoursAgo}`
-        )
-      )
-      .orderBy(marketRates.timestamp);
+    return marketRateRepository.getMarketRateHistory(currencyPairId, hours);
   }
 
-  async getSwapPointHistory(currencyPairId: string, hours: number): Promise<SwapPoint[]> {
-    const hoursAgo = new Date();
-    hoursAgo.setHours(hoursAgo.getHours() - hours);
-
-    return await db
-      .select()
-      .from(swapPoints)
-      .where(
-        and(
-          eq(swapPoints.currencyPairId, currencyPairId),
-          sql`${swapPoints.uploadedAt} >= ${hoursAgo}`
-        )
-      )
-      .orderBy(desc(swapPoints.uploadedAt));
+  async upsertLatestMarketRate(currencyPairId: string, buyRate: string, sellRate: string, source: string): Promise<MarketRate> {
+    return marketRateRepository.upsertLatestMarketRate(currencyPairId, buyRate, sellRate, source);
   }
 
   // Spread settings
   async getSpreadSettings(): Promise<SpreadSetting[]> {
-    return await db.select().from(spreadSettings).where(eq(spreadSettings.isActive, true));
+    return spreadSettingRepository.getSpreadSettings();
   }
 
-  async createSpreadSetting(settingData: InsertSpreadSetting): Promise<SpreadSetting> {
-    const [setting] = await db.insert(spreadSettings).values({
-      id: generateId(),
-      ...settingData,
-    }).returning();
-    return setting;
+  async createSpreadSetting(setting: InsertSpreadSetting): Promise<SpreadSetting> {
+    return spreadSettingRepository.createSpreadSetting(setting);
   }
 
   async updateSpreadSetting(id: string, updates: Partial<InsertSpreadSetting>): Promise<SpreadSetting | undefined> {
-    const [setting] = await db
-      .update(spreadSettings)
-      .set({ ...updates, updatedAt: new Date() })
-      .where(eq(spreadSettings.id, id))
-      .returning();
-    return setting;
+    return spreadSettingRepository.updateSpreadSetting(id, updates);
   }
 
   async deleteSpreadSetting(id: string): Promise<void> {
-    await db.delete(spreadSettings).where(eq(spreadSettings.id, id));
+    return spreadSettingRepository.deleteSpreadSetting(id);
   }
 
   async getSpreadForUser(productType: string, currencyPairId: string, user: User, tenor?: string): Promise<number> {
-    // Get all matching spread settings for this product and currency pair
-    const settings = await db
-      .select()
-      .from(spreadSettings)
-      .where(
-        and(
-          eq(spreadSettings.productType, productType),
-          eq(spreadSettings.currencyPairId, currencyPairId),
-          eq(spreadSettings.isActive, true)
-        )
-      );
-
-    // Find best matching spread using explicit priority
-    // Priority: sub (3) > mid (2) > major (1) > default (0)
-    let bestMatch: { priority: number; setting: typeof settings[0] | null } = { priority: -1, setting: null };
-
-    for (const setting of settings) {
-      let priority = 0;
-      let isMatch = false;
-
-      if (!setting.groupType || !setting.groupValue) {
-        // Default spread for everyone
-        priority = 0;
-        isMatch = true;
-      } else if (setting.groupType === "sub" && setting.groupValue === user.subGroup) {
-        priority = 3;
-        isMatch = true;
-      } else if (setting.groupType === "mid" && setting.groupValue === user.midGroup) {
-        priority = 2;
-        isMatch = true;
-      } else if (setting.groupType === "major" && setting.groupValue === user.majorGroup) {
-        priority = 1;
-        isMatch = true;
-      }
-
-      // Update if this match has higher priority
-      if (isMatch && priority > bestMatch.priority) {
-        bestMatch = { priority, setting };
-      }
-    }
-
-    // If no match found, return default spread
-    if (!bestMatch.setting) {
-      return 10.0; // default 10 bps
-    }
-
-    // If tenor is provided and tenorSpreads exists, try to find tenor-specific spread
-    if (tenor && bestMatch.setting.tenorSpreads) {
-      const tenorSpreadsObj = bestMatch.setting.tenorSpreads as Record<string, number>;
-      
-      // Normalize tenor key (e.g., "1w" -> "1W", "spot" -> "SPOT")
-      const normalizedTenor = tenor.toUpperCase();
-      
-      // Check if tenor-specific spread exists
-      if (tenorSpreadsObj[normalizedTenor] !== undefined) {
-        return Number(tenorSpreadsObj[normalizedTenor]);
-      }
-    }
-
-    // Fall back to base spread
-    return Number(bestMatch.setting.baseSpread);
+    return spreadSettingRepository.getSpreadForUser(productType, currencyPairId, user, tenor);
   }
 
   async getCustomerRateForUser(
-    productType: string, 
-    currencyPairId: string, 
+    productType: string,
+    currencyPairId: string,
     user: User,
     tenor?: string
   ): Promise<{ buyRate: number; sellRate: number; spread: number; baseRate: MarketRate | null } | null> {
-    // Get latest market rate from Infomax
     const marketRate = await db
       .select()
       .from(marketRates)
@@ -404,16 +223,8 @@ export class DatabaseStorage implements IStorage {
     }
 
     const baseRate = marketRate[0];
-    
-    // Get spread for user's group (in basis points) with tenor-aware logic
     const spreadBps = await this.getSpreadForUser(productType, currencyPairId, user, tenor);
-    
-    // Convert basis points to actual rate (divide by 100)
     const spreadRate = spreadBps / 100;
-
-    // Calculate customer rates
-    // Customer BUY rate (customer buying foreign currency) = base buy rate + spread
-    // Customer SELL rate (customer selling foreign currency) = base sell rate - spread
     const customerBuyRate = Number(baseRate.buyRate) + spreadRate;
     const customerSellRate = Number(baseRate.sellRate) - spreadRate;
 
@@ -430,13 +241,11 @@ export class DatabaseStorage implements IStorage {
     user: User,
     tenor?: string
   ): Promise<Array<{ currencyPairId: string; currencyPairSymbol: string; buyRate: number; sellRate: number; spread: number; baseRate: MarketRate | null }>> {
-    // Get all active currency pairs
     const pairs = await this.getCurrencyPairs();
-    
-    // Parallelize customer rate fetching for better performance
+
     const ratePromises = pairs.map(async (pair) => {
       const customerRate = await this.getCustomerRateForUser(productType, pair.id, user, tenor);
-      
+
       return {
         currencyPairId: pair.id,
         currencyPairSymbol: pair.symbol,
@@ -446,368 +255,133 @@ export class DatabaseStorage implements IStorage {
         baseRate: customerRate?.baseRate || null,
       };
     });
-    
+
     return Promise.all(ratePromises);
   }
 
   // Quote requests
-  async createQuoteRequest(requestData: InsertQuoteRequest): Promise<QuoteRequest> {
-    const [request] = await db.insert(quoteRequests).values({
-      id: generateId(),
-      ...requestData,
-    }).returning();
-    return request;
+  async createQuoteRequest(request: InsertQuoteRequest): Promise<QuoteRequest> {
+    return quoteRepository.createQuoteRequest(request);
   }
 
   async getAllQuoteRequests(): Promise<QuoteRequest[]> {
-    return await db
-      .select()
-      .from(quoteRequests)
-      .orderBy(desc(quoteRequests.createdAt));
+    return quoteRepository.getAllQuoteRequests();
   }
 
   async getPendingQuoteRequests(): Promise<QuoteRequest[]> {
-    return await db
-      .select()
-      .from(quoteRequests)
-      .where(eq(quoteRequests.status, "REQUESTED"))
-      .orderBy(desc(quoteRequests.createdAt));
+    return quoteRepository.getPendingQuoteRequests();
   }
 
   async getQuoteRequestsByStatus(status: string): Promise<QuoteRequest[]> {
-    return await db
-      .select()
-      .from(quoteRequests)
-      .where(eq(quoteRequests.status, status))
-      .orderBy(desc(quoteRequests.createdAt));
+    return quoteRepository.getQuoteRequestsByStatus(status);
   }
 
   async approveQuoteRequest(id: string, adminId: string, quotedRate: number): Promise<QuoteRequest | undefined> {
-    const expiresAt = new Date();
-    expiresAt.setMinutes(expiresAt.getMinutes() + 30); // 30 minute expiry
-
-    const [request] = await db
-      .update(quoteRequests)
-      .set({
-        status: "QUOTE_READY",
-        approvedBy: adminId,
-        approvedAt: new Date(),
-        quotedRate: quotedRate.toString(),
-        expiresAt,
-        updatedAt: new Date(),
-      })
-      .where(eq(quoteRequests.id, id))
-      .returning();
-    return request;
+    return quoteRepository.approveQuoteRequest(id, adminId, quotedRate);
   }
 
   async rejectQuoteRequest(id: string, adminId: string): Promise<QuoteRequest | undefined> {
-    const [request] = await db
-      .update(quoteRequests)
-      .set({
-        status: "REJECTED",
-        approvedBy: adminId,
-        approvedAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .where(eq(quoteRequests.id, id))
-      .returning();
-    return request;
+    return quoteRepository.rejectQuoteRequest(id, adminId);
   }
 
   async getUserQuoteRequests(userId: string): Promise<QuoteRequest[]> {
-    return await db
-      .select()
-      .from(quoteRequests)
-      .where(eq(quoteRequests.userId, userId))
-      .orderBy(desc(quoteRequests.createdAt));
+    return quoteRepository.getUserQuoteRequests(userId);
   }
 
   async getUserQuoteRequestsByStatus(userId: string, status: string): Promise<QuoteRequest[]> {
-    return await db
-      .select()
-      .from(quoteRequests)
-      .where(and(eq(quoteRequests.userId, userId), eq(quoteRequests.status, status)))
-      .orderBy(desc(quoteRequests.createdAt));
+    return quoteRepository.getUserQuoteRequestsByStatus(userId, status);
   }
 
   async confirmQuoteRequest(id: string): Promise<QuoteRequest | undefined> {
-    // First, get the quote to check if it's still valid
-    const [existingQuote] = await db
-      .select()
-      .from(quoteRequests)
-      .where(eq(quoteRequests.id, id));
-
-    if (!existingQuote) {
-      return undefined;
-    }
-
-    // Check if quote is in QUOTE_READY status
-    if (existingQuote.status !== "QUOTE_READY") {
-      throw new Error("Quote is not in QUOTE_READY status");
-    }
-
-    // Check if quote has expired
-    if (existingQuote.expiresAt && new Date(existingQuote.expiresAt) <= new Date()) {
-      // Mark as EXPIRED instead of confirming
-      const [expiredRequest] = await db
-        .update(quoteRequests)
-        .set({
-          status: "EXPIRED",
-          updatedAt: new Date(),
-        })
-        .where(eq(quoteRequests.id, id))
-        .returning();
-      throw new Error("Quote has expired");
-    }
-
-    // All checks passed, confirm the quote
-    const [request] = await db
-      .update(quoteRequests)
-      .set({
-        status: "CONFIRMED",
-        updatedAt: new Date(),
-      })
-      .where(eq(quoteRequests.id, id))
-      .returning();
-    return request;
+    return quoteRepository.confirmQuoteRequest(id);
   }
 
   async cancelQuoteRequest(id: string, userId: string): Promise<QuoteRequest | undefined> {
-    // Verify ownership before canceling
-    const [existingQuote] = await db
-      .select()
-      .from(quoteRequests)
-      .where(and(eq(quoteRequests.id, id), eq(quoteRequests.userId, userId)));
-
-    if (!existingQuote) {
-      return undefined;
-    }
-
-    // Only allow canceling REQUESTED status quotes
-    if (existingQuote.status !== "REQUESTED") {
-      throw new Error("Only pending quote requests can be cancelled");
-    }
-
-    const [request] = await db
-      .update(quoteRequests)
-      .set({
-        status: "CANCELLED",
-        updatedAt: new Date(),
-      })
-      .where(eq(quoteRequests.id, id))
-      .returning();
-    return request;
+    return quoteRepository.cancelQuoteRequest(id, userId);
   }
 
   // Trades
-  async createTrade(tradeData: InsertTrade): Promise<Trade> {
-    // Generate trade number
-    const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-    const count = await db.select({ count: sql`count(*)` }).from(trades);
-    const tradeNumber = `FX${timestamp}${String(Number(count[0].count) + 1).padStart(4, "0")}`;
-
-    // Determine status based on orderType - force correct status regardless of client input
-    let status: string;
-    if (tradeData.orderType === "LIMIT") {
-      status = "pending";
-    } else if (tradeData.orderType === "MARKET" || !tradeData.orderType) {
-      status = "active";
-    } else {
-      throw new Error(`Invalid orderType: ${tradeData.orderType}`);
-    }
-
-    const [trade] = await db
-      .insert(trades)
-      .values({
-        id: generateId(),
-        ...tradeData,
-        tradeNumber,
-        status,
-      })
-      .returning();
-    return trade;
+  async createTrade(trade: InsertTrade): Promise<Trade> {
+    return tradeRepository.createTrade(trade);
   }
 
   async getUserActiveTrades(userId: string): Promise<Trade[]> {
-    return await db
-      .select()
-      .from(trades)
-      .where(and(eq(trades.userId, userId), eq(trades.status, "active")))
-      .orderBy(desc(trades.createdAt));
+    return tradeRepository.getUserActiveTrades(userId);
   }
 
   async getUserPendingTrades(userId: string): Promise<Trade[]> {
-    return await db
-      .select()
-      .from(trades)
-      .where(and(eq(trades.userId, userId), eq(trades.status, "pending")))
-      .orderBy(desc(trades.createdAt));
+    return tradeRepository.getUserPendingTrades(userId);
   }
 
   async getAllActiveTrades(): Promise<Trade[]> {
-    return await db
-      .select()
-      .from(trades)
-      .where(eq(trades.status, "active"))
-      .orderBy(desc(trades.createdAt));
+    return tradeRepository.getAllActiveTrades();
   }
 
   async updateTradeStatus(id: string, status: string): Promise<Trade | undefined> {
-    const [trade] = await db
-      .update(trades)
-      .set({ status, updatedAt: new Date() })
-      .where(eq(trades.id, id))
-      .returning();
-    return trade;
+    return tradeRepository.updateTradeStatus(id, status);
   }
 
   async cancelTrade(id: string, userId: string): Promise<Trade | undefined> {
-    // Verify ownership before canceling
-    const [existingTrade] = await db
-      .select()
-      .from(trades)
-      .where(and(eq(trades.id, id), eq(trades.userId, userId)));
-
-    if (!existingTrade) {
-      return undefined;
-    }
-
-    // Only allow canceling pending status trades
-    if (existingTrade.status !== "pending") {
-      throw new Error("Only pending trades can be cancelled");
-    }
-
-    const [trade] = await db
-      .update(trades)
-      .set({
-        status: "cancelled",
-        updatedAt: new Date(),
-      })
-      .where(eq(trades.id, id))
-      .returning();
-    return trade;
+    return tradeRepository.cancelTrade(id, userId);
   }
 
   // Auto approval settings
   async getAutoApprovalSetting(userId: string): Promise<AutoApprovalSetting | undefined> {
-    const [setting] = await db
-      .select()
-      .from(autoApprovalSettings)
-      .where(eq(autoApprovalSettings.userId, userId));
-    return setting;
+    return autoApprovalRepository.getAutoApprovalSetting(userId);
   }
 
-  async upsertAutoApprovalSetting(settingData: InsertAutoApprovalSetting): Promise<AutoApprovalSetting> {
-    const [setting] = await db
-      .insert(autoApprovalSettings)
-      .values({
-        id: generateId(),
-        ...settingData,
-      })
-      .onConflictDoUpdate({
-        target: autoApprovalSettings.userId,
-        set: {
-          ...settingData,
-          updatedAt: new Date(),
-        },
-      })
-      .returning();
-    return setting;
+  async upsertAutoApprovalSetting(setting: InsertAutoApprovalSetting): Promise<AutoApprovalSetting> {
+    return autoApprovalRepository.upsertAutoApprovalSetting(setting);
   }
 
   // Swap points
   async getSwapPoints(currencyPairId?: string): Promise<SwapPoint[]> {
-    if (currencyPairId) {
-      return await db
-        .select()
-        .from(swapPoints)
-        .where(eq(swapPoints.currencyPairId, currencyPairId))
-        .orderBy(desc(swapPoints.days));
-    }
-    return await db.select().from(swapPoints).orderBy(desc(swapPoints.days));
+    return swapPointRepository.getSwapPoints(currencyPairId);
   }
 
-  async createSwapPoint(swapPointData: InsertSwapPoint): Promise<SwapPoint> {
-    const [swapPoint] = await db
-      .insert(swapPoints)
-      .values({
-        id: generateId(),
-        ...swapPointData,
-      })
-      .returning();
-    return swapPoint;
+  async createSwapPoint(swapPoint: InsertSwapPoint): Promise<SwapPoint> {
+    return swapPointRepository.createSwapPoint(swapPoint);
   }
 
   async deleteSwapPoint(id: string): Promise<void> {
-    await db.delete(swapPoints).where(eq(swapPoints.id, id));
+    return swapPointRepository.deleteSwapPoint(id);
   }
 
   async getSwapPointByTenor(currencyPairId: string, tenor: string): Promise<SwapPoint | undefined> {
-    const [swapPoint] = await db
-      .select()
-      .from(swapPoints)
-      .where(and(eq(swapPoints.currencyPairId, currencyPairId), eq(swapPoints.tenor, tenor)));
-    return swapPoint;
+    return swapPointRepository.getSwapPointByTenor(currencyPairId, tenor);
   }
 
   async getSwapPointByDays(currencyPairId: string, days: number): Promise<SwapPoint | undefined> {
-    const [swapPoint] = await db
-      .select()
-      .from(swapPoints)
-      .where(and(eq(swapPoints.currencyPairId, currencyPairId), eq(swapPoints.days, days)));
-    return swapPoint;
+    return swapPointRepository.getSwapPointByDays(currencyPairId, days);
   }
 
   async getSwapPointsByCurrencyPair(currencyPairId: string): Promise<SwapPoint[]> {
-    return await db
-      .select()
-      .from(swapPoints)
-      .where(eq(swapPoints.currencyPairId, currencyPairId))
-      .orderBy(swapPoints.days);
+    return swapPointRepository.getSwapPointsByCurrencyPair(currencyPairId);
   }
 
   async getSwapPointsHistory(currencyPairId: string, limit: number = 100): Promise<SwapPointsHistory[]> {
-    return await db
-      .select()
-      .from(swapPointsHistory)
-      .where(eq(swapPointsHistory.currencyPairId, currencyPairId))
-      .orderBy(desc(swapPointsHistory.changedAt))
-      .limit(limit);
+    return swapPointRepository.getSwapPointsHistory(currencyPairId, limit);
   }
 
   async createSwapPointsHistory(history: InsertSwapPointsHistory): Promise<SwapPointsHistory> {
-    const [record] = await db
-      .insert(swapPointsHistory)
-      .values({
-        id: generateId(),
-        ...history,
-      })
-      .returning();
-    return record;
+    return swapPointRepository.createSwapPointsHistory(history);
   }
 
-  // ON/TN Rates implementation
+  async getSwapPointHistory(currencyPairId: string, hours: number): Promise<SwapPoint[]> {
+    return swapPointRepository.getSwapPointHistory(currencyPairId, hours);
+  }
+
+  // ON/TN Rates
   async getOnTnRates(currencyPairId: string): Promise<OnTnRate[]> {
-    return await db
-      .select()
-      .from(onTnRates)
-      .where(eq(onTnRates.currencyPairId, currencyPairId));
+    return swapPointRepository.getOnTnRates(currencyPairId);
   }
 
   async createOnTnRate(rate: InsertOnTnRate): Promise<OnTnRate> {
-    const [record] = await db
-      .insert(onTnRates)
-      .values({
-        id: generateId(),
-        ...rate,
-      })
-      .returning();
-    return record;
+    return swapPointRepository.createOnTnRate(rate);
   }
 
   async deleteOnTnRate(id: string): Promise<void> {
-    await db.delete(onTnRates).where(eq(onTnRates.id, id));
+    return swapPointRepository.deleteOnTnRate(id);
   }
 }
 
