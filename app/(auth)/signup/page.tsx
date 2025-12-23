@@ -10,44 +10,69 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { useToast } from '@/hooks/use-toast'
 import { createClient } from '@/lib/supabase/client'
 
-export default function LoginPage() {
+export default function SignupPage() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (password !== confirmPassword) {
+      toast({
+        title: '비밀번호 불일치',
+        description: '비밀번호가 일치하지 않습니다.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    if (password.length < 6) {
+      toast({
+        title: '비밀번호 오류',
+        description: '비밀번호는 최소 6자 이상이어야 합니다.',
+        variant: 'destructive',
+      })
+      return
+    }
+
     setIsLoading(true)
 
     try {
       const supabase = createClient()
 
-      // Sign in with Supabase Auth
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: `${username}@choicefx.local`, // Convert username to email format
+      // Sign up with Supabase Auth
+      const { data, error } = await supabase.auth.signUp({
+        email: `${username}@choicefx.local`,
         password,
+        options: {
+          data: {
+            username: username,
+            role: 'client', // Default role
+          },
+        },
       })
 
       if (error) {
         toast({
-          title: '로그인 실패',
-          description: '사용자 ID 또는 비밀번호를 확인해주세요.',
+          title: '회원가입 실패',
+          description: error.message,
           variant: 'destructive',
         })
       } else {
         toast({
-          title: '로그인 성공',
-          description: '환영합니다!',
+          title: '회원가입 성공',
+          description: '계정이 생성되었습니다. 로그인해주세요.',
         })
-        router.push('/customer/spot')
-        router.refresh()
+        router.push('/login')
       }
     } catch (error) {
       toast({
-        title: '로그인 오류',
-        description: '로그인 중 오류가 발생했습니다.',
+        title: '회원가입 오류',
+        description: '회원가입 중 오류가 발생했습니다.',
         variant: 'destructive',
       })
     } finally {
@@ -92,9 +117,26 @@ export default function LoginPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="비밀번호를 입력하세요"
+                placeholder="비밀번호를 입력하세요 (최소 6자)"
                 className="bg-slate-700/80 border-teal-500/30 text-white placeholder-slate-400 focus:border-teal-400 focus:ring-teal-400/20"
                 required
+                minLength={6}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="confirmPassword" className="text-teal-300">
+                비밀번호 확인
+              </Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="비밀번호를 다시 입력하세요"
+                className="bg-slate-700/80 border-teal-500/30 text-white placeholder-slate-400 focus:border-teal-400 focus:ring-teal-400/20"
+                required
+                minLength={6}
               />
             </div>
 
@@ -103,24 +145,18 @@ export default function LoginPage() {
               className="w-full bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white font-medium"
               disabled={isLoading}
             >
-              {isLoading ? '로그인 중...' : '로그인'}
+              {isLoading ? '가입 중...' : '회원가입'}
             </Button>
           </form>
 
-          <div className="mt-6 text-center text-xs text-slate-400 space-y-1">
-            <div className="text-teal-300">데모 계정:</div>
-            <div>admin / password (관리자)</div>
-            <div>client / password (고객)</div>
-          </div>
-
           <div className="mt-6 text-center">
             <p className="text-slate-400 text-sm">
-              계정이 없으신가요?{' '}
+              이미 계정이 있으신가요?{' '}
               <Link
-                href="/signup"
+                href="/login"
                 className="text-teal-400 hover:text-teal-300 font-medium"
               >
-                회원가입
+                로그인
               </Link>
             </p>
           </div>
