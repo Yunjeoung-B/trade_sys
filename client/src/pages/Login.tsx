@@ -88,12 +88,6 @@ export default function Login() {
               {loginMutation.isPending ? "로그인 중..." : "로그인"}
             </Button>
           </form>
-          
-          <div className="mt-6 text-center text-xs text-slate-400 space-y-1">
-            <div className="text-teal-300">데모 계정:</div>
-            <div>admin / password (관리자)</div>
-            <div>client / password (고객)</div>
-          </div>
         </CardContent>
       </Card>
     </div>
