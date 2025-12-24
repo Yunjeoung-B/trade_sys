@@ -4,6 +4,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { infomaxPoller } from "./services/infomaxPoller";
 import { verifyTimezone } from "./utils/dateUtils";
+import { initializeAdminAccount } from "./initAdmin";
 
 // ✅ 전체 시스템을 KST (UTC+9)로 설정
 process.env.TZ = "Asia/Seoul";
@@ -80,12 +81,15 @@ export async function initializeApp() {
     // Only start server if not in Vercel (Vercel handles the server)
     if (process.env.VERCEL !== "1") {
       const port = parseInt(process.env.PORT || '5000', 10);
-      server.listen(port, () => {
+      server.listen(port, async () => {
         log(`serving on port ${port}`);
-        
+
         // ✅ 타임존 확인
         verifyTimezone();
-        
+
+        // ✅ 초기 관리자 계정 확인 및 생성
+        await initializeAdminAccount();
+
         // ❌ Infomax 폴러 자동 시작 비활성화 (수동으로만 호출)
         // infomaxPoller.start();
         // log('Infomax poller started');
