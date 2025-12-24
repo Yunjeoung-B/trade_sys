@@ -6,7 +6,6 @@
     "client/src/**/*",
     "shared/**/*",
     "server/**/*",
-    "api/**/*",
     "next-env.d.ts",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
@@ -16,7 +15,8 @@
     "build",
     "dist",
     "**/*.test.ts",
-    ".next"
+    ".next",
+    "api-legacy"
   ],
   "compilerOptions": {
     "target": "ES2017",
