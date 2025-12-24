@@ -3,8 +3,16 @@ import { Button } from "@/components/ui/button";
 import { apiRequest } from "@/lib/queryClient";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { Clock, LogOut } from "lucide-react";
+import { Clock, LogOut, User, ChevronDown } from "lucide-react";
 import { useState, useEffect } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function Header() {
   const { user } = useAuth();
@@ -55,22 +63,39 @@ export default function Header() {
                 {currentTime.toLocaleString('ko-KR')}
               </span>
             </div>
-            <div className="text-sm">
-              <span className="text-slate-400">접속자:</span>
-              <span className="font-medium text-teal-300 ml-1">{user?.username}</span>
-              <span className="text-xs text-slate-400 ml-2">
-                ({user?.role === 'admin' ? '관리자' : '고객'})
-              </span>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleLogout}
-              disabled={logoutMutation.isPending}
-              className="text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200"
-            >
-              <LogOut className="w-4 h-4" />
-            </Button>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200"
+                >
+                  <User className="w-4 h-4 mr-2" />
+                  <span className="font-medium text-teal-300">{user?.username}</span>
+                  <span className="text-xs text-slate-400 ml-2">
+                    ({user?.role === 'admin' ? '관리자' : '고객'})
+                  </span>
+                  <ChevronDown className="w-4 h-4 ml-2" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuLabel>내 계정</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setLocation("/profile")}>
+                  <User className="w-4 h-4 mr-2" />
+                  프로필
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  disabled={logoutMutation.isPending}
+                  className="text-red-600 focus:text-red-600"
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  {logoutMutation.isPending ? "로그아웃 중..." : "로그아웃"}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>

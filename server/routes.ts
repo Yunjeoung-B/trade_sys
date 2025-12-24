@@ -182,6 +182,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // Change password (authenticated users can change their own password)
+  app.post("/api/auth/change-password", isAuthenticated, async (req: any, res) => {
+    try {
+      const { currentPassword, newPassword } = req.body;
+      const userId = req.user.id;
+
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({
+          message: "현재 비밀번호와 새 비밀번호는 필수입니다."
+        });
+      }
+
+      if (newPassword.length < 6) {
+        return res.status(400).json({
+          message: "새 비밀번호는 최소 6자 이상이어야 합니다."
+        });
+      }
+
+      // Verify current password
+      const user = await storage.validateUserPassword(req.user.username, currentPassword);
+      if (!user) {
+        return res.status(401).json({
+          message: "현재 비밀번호가 일치하지 않습니다."
+        });
+      }
+
+      // Update password
+      await storage.updateUser(userId, { password: newPassword });
+
+      res.json({
+        message: "비밀번호가 성공적으로 변경되었습니다."
+      });
+    } catch (error: any) {
+      console.error("Change password error:", error);
+      res.status(500).json({
+        message: error.message || "비밀번호 변경 중 오류가 발생했습니다."
+      });
+    }
+  });
+
   // Currency pairs
   app.get("/api/currency-pairs", isAuthenticated, async (req, res) => {
     try {

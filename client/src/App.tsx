@@ -9,6 +9,7 @@ import NotFound from "@/pages/not-found";
 import Landing from "@/pages/Landing";
 import Login from "@/pages/Login";
 import Signup from "@/pages/Signup";
+import Profile from "@/pages/Profile";
 import TradeStatus from "@/pages/TradeStatus";
 import SpotTradingCustomer from "@/pages/customer/SpotTradingCustomer";
 import ForwardTradingCustomer from "@/pages/customer/ForwardTradingCustomer";
@@ -48,14 +49,17 @@ function Router() {
       ) : (
         <Layout>
           <Route path="/" component={SpotTradingCustomer} />
-          
+
+          {/* 공통 페이지 */}
+          <Route path="/profile" component={Profile} />
+
           {/* 고객용 거래 화면 */}
           <Route path="/customer/spot" component={SpotTradingCustomer} />
           <Route path="/customer/forward" component={ForwardTradingCustomer} />
           <Route path="/customer/swap" component={SwapTradingCustomer} />
           <Route path="/customer/mar" component={MARTradingCustomer} />
           <Route path="/trades" component={TradeStatus} />
-          
+
           {/* Admin routes - 관리자 권한 확인 */}
           <Route path="/admin">
             {user?.role === "admin" ? <AdminDashboard /> : <NotFound />}
