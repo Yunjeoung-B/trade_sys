@@ -114,10 +114,13 @@ export default function SignupPage() {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="사용자 ID를 입력하세요"
+                placeholder="예: admin, client1, user123"
                 className="bg-slate-700/80 border-teal-500/30 text-white placeholder-slate-400 focus:border-teal-400 focus:ring-teal-400/20"
                 required
               />
+              <p className="text-xs text-slate-400 mt-1">
+                이메일이 아닌 ID만 입력하세요 (자동으로 @choicefx.com이 추가됩니다)
+              </p>
             </div>
 
             <div>
