@@ -1,7 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
-import { db } from '@/server/db'
-import { currencyPairs } from '@shared/schema'
 
 export async function GET() {
   try {
@@ -16,8 +14,15 @@ export async function GET() {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
     }
 
-    // Fetch currency pairs from database using Drizzle
-    const pairs = await db.select().from(currencyPairs)
+    // Return hardcoded currency pairs for now
+    // TODO: Migrate to Supabase database
+    const pairs = [
+      { code: 'USD/KRW', name: 'US Dollar / Korean Won' },
+      { code: 'EUR/KRW', name: 'Euro / Korean Won' },
+      { code: 'JPY/KRW', name: 'Japanese Yen / Korean Won' },
+      { code: 'GBP/KRW', name: 'British Pound / Korean Won' },
+      { code: 'CNY/KRW', name: 'Chinese Yuan / Korean Won' },
+    ]
 
     return NextResponse.json(pairs)
   } catch (error) {
