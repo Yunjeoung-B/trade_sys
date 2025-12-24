@@ -46,7 +46,7 @@ export default function SignupPage() {
 
       // Sign up with Supabase Auth
       const { data, error } = await supabase.auth.signUp({
-        email: `${username}@choicefx.local`,
+        email: `${username}@choicefx.com`,
         password,
         options: {
           data: {

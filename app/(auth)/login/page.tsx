@@ -26,7 +26,7 @@ export default function LoginPage() {
 
       // Sign in with Supabase Auth
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: `${username}@choicefx.local`, // Convert username to email format
+        email: `${username}@choicefx.com`, // Convert username to email format
         password,
       })
 
