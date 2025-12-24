@@ -2,10 +2,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Landing() {
+  const [, setLocation] = useLocation();
   const [showPassword, setShowPassword] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -107,6 +109,17 @@ export default function Landing() {
               >
                 {isLoading ? "로그인 중..." : "LOG IN"}
               </Button>
+
+              <div className="text-center text-sm text-slate-400">
+                계정이 없으신가요?{" "}
+                <button
+                  type="button"
+                  onClick={() => setLocation("/signup")}
+                  className="text-teal-300 hover:text-teal-200 font-medium"
+                >
+                  회원가입
+                </button>
+              </div>
             </div>
           </form>
         </div>

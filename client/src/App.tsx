@@ -8,6 +8,7 @@ import Layout from "@/components/Layout";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/Landing";
 import Login from "@/pages/Login";
+import Signup from "@/pages/Signup";
 import TradeStatus from "@/pages/TradeStatus";
 import SpotTradingCustomer from "@/pages/customer/SpotTradingCustomer";
 import ForwardTradingCustomer from "@/pages/customer/ForwardTradingCustomer";
@@ -17,6 +18,7 @@ import AdminDashboard from "@/pages/admin/AdminDashboard";
 import SpreadSettings from "@/pages/admin/SpreadSettings";
 import QuoteApprovals from "@/pages/admin/QuoteApprovals";
 import UserManagement from "@/pages/admin/UserManagement";
+import OTPManagement from "@/pages/admin/OTPManagement";
 import TradeManagement from "@/pages/admin/TradeManagement";
 import InfomaxAPI from "@/pages/admin/InfomaxAPI";
 import FXSpotMonitoring from "@/pages/admin/FXSpotMonitoring";
@@ -41,6 +43,7 @@ function Router() {
         <>
           <Route path="/" component={Landing} />
           <Route path="/login" component={Login} />
+          <Route path="/signup" component={Signup} />
         </>
       ) : (
         <Layout>
@@ -74,6 +77,9 @@ function Router() {
           </Route>
           <Route path="/admin/users">
             {user?.role === "admin" ? <UserManagement /> : <NotFound />}
+          </Route>
+          <Route path="/admin/otp">
+            {user?.role === "admin" ? <OTPManagement /> : <NotFound />}
           </Route>
           <Route path="/admin/trades">
             {user?.role === "admin" ? <TradeManagement /> : <NotFound />}

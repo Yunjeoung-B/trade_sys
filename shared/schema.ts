@@ -40,6 +40,18 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// OTP codes for registration
+export const otpCodes = pgTable("otp_codes", {
+  id: varchar("id").primaryKey(),
+  code: varchar("code").notNull().unique(),
+  isUsed: boolean("is_used").default(false),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdBy: varchar("created_by").references(() => users.id).notNull(),
+  usedBy: varchar("used_by").references(() => users.id),
+  usedAt: timestamp("used_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Currency pairs
 export const currencyPairs = pgTable("currency_pairs", {
   id: varchar("id").primaryKey(),
@@ -198,6 +210,14 @@ export const insertUserSchema = createInsertSchema(users).omit({
   updatedAt: true,
 });
 
+export const insertOtpCodeSchema = createInsertSchema(otpCodes).omit({
+  id: true,
+  isUsed: true,
+  usedBy: true,
+  usedAt: true,
+  createdAt: true,
+});
+
 export const insertCurrencyPairSchema = createInsertSchema(currencyPairs).omit({
   id: true,
 });
@@ -327,6 +347,9 @@ export const insertOnTnRateSchema = createInsertSchema(onTnRates).omit({
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
+
+export type OtpCode = typeof otpCodes.$inferSelect;
+export type InsertOtpCode = z.infer<typeof insertOtpCodeSchema>;
 
 export type CurrencyPair = typeof currencyPairs.$inferSelect;
 export type InsertCurrencyPair = z.infer<typeof insertCurrencyPairSchema>;

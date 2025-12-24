@@ -11,6 +11,7 @@ import multer from "multer";
 import { parseSwapPointsExcel, validateSwapPoints } from "./utils/excelParser";
 import {
   insertUserSchema,
+  insertOtpCodeSchema,
   insertCurrencyPairSchema,
   insertMarketRateSchema,
   insertSpreadSettingSchema,
@@ -1013,6 +1014,112 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(safeUser);
     } catch (error) {
       res.status(400).json({ message: "Invalid user data" });
+    }
+  });
+
+  // OTP Codes (Admin only)
+  app.get("/api/otp-codes", isAdmin, async (req, res) => {
+    try {
+      const otpCodes = await storage.getAllOtpCodes();
+      res.json(otpCodes);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch OTP codes" });
+    }
+  });
+
+  app.post("/api/otp-codes", isAdmin, async (req, res) => {
+    try {
+      const userId = (req.user as any)?.id;
+
+      // Generate random 8-character code
+      const code = Math.random().toString(36).substring(2, 10).toUpperCase();
+
+      // Set expiration to 30 days from now
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 30);
+
+      const otpData = insertOtpCodeSchema.parse({
+        code,
+        expiresAt,
+        createdBy: userId,
+      });
+
+      const otpCode = await storage.createOtpCode(otpData);
+      res.json(otpCode);
+    } catch (error) {
+      console.error("OTP code creation error:", error);
+      res.status(400).json({ message: "Failed to create OTP code" });
+    }
+  });
+
+  app.delete("/api/otp-codes/:id", isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteOtpCode(id);
+      res.json({ message: "OTP code deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete OTP code" });
+    }
+  });
+
+  // Public registration endpoint
+  app.post("/api/auth/register", async (req, res) => {
+    try {
+      const { username, password, otpCode, firstName, lastName, email } = req.body;
+
+      if (!username || !password || !otpCode) {
+        return res.status(400).json({
+          message: "사용자 ID, 비밀번호, OTP 코드는 필수입니다."
+        });
+      }
+
+      // Validate OTP code (without marking as used yet)
+      const otp = await storage.getOtpCode(otpCode);
+
+      if (!otp) {
+        return res.status(400).json({ message: "유효하지 않은 OTP 코드입니다." });
+      }
+
+      if (otp.isUsed) {
+        return res.status(400).json({ message: "이미 사용된 OTP 코드입니다." });
+      }
+
+      if (new Date() > new Date(otp.expiresAt)) {
+        return res.status(400).json({ message: "만료된 OTP 코드입니다." });
+      }
+
+      // Check if username already exists
+      const existingUsers = await storage.getAllUsers();
+      if (existingUsers.some(u => u.username === username)) {
+        return res.status(400).json({ message: "이미 사용 중인 사용자 ID입니다." });
+      }
+
+      // Create user with client role
+      const userData = insertUserSchema.parse({
+        username,
+        password,
+        firstName: firstName || null,
+        lastName: lastName || null,
+        email: email || null,
+        role: "client", // Always client for registration
+        isActive: true,
+      });
+
+      const user = await storage.createUser(userData);
+
+      // Mark OTP as used
+      await storage.validateAndUseOtp(otpCode, user.id);
+
+      const { password: _, ...safeUser } = user;
+      res.json({
+        message: "회원가입이 완료되었습니다.",
+        user: safeUser,
+      });
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      res.status(400).json({
+        message: error.message || "회원가입 중 오류가 발생했습니다."
+      });
     }
   });
 

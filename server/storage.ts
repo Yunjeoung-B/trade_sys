@@ -1,5 +1,6 @@
 import {
   users,
+  otpCodes,
   currencyPairs,
   marketRates,
   spreadSettings,
@@ -11,6 +12,8 @@ import {
   onTnRates,
   type User,
   type InsertUser,
+  type OtpCode,
+  type InsertOtpCode,
   type CurrencyPair,
   type InsertCurrencyPair,
   type MarketRate,
@@ -808,6 +811,57 @@ export class DatabaseStorage implements IStorage {
 
   async deleteOnTnRate(id: string): Promise<void> {
     await db.delete(onTnRates).where(eq(onTnRates.id, id));
+  }
+
+  // OTP Codes implementation
+  async createOtpCode(otpData: InsertOtpCode): Promise<OtpCode> {
+    const [code] = await db
+      .insert(otpCodes)
+      .values({
+        id: generateId(),
+        ...otpData,
+      })
+      .returning();
+    return code;
+  }
+
+  async getOtpCode(code: string): Promise<OtpCode | undefined> {
+    const [otpCode] = await db
+      .select()
+      .from(otpCodes)
+      .where(eq(otpCodes.code, code));
+    return otpCode;
+  }
+
+  async getAllOtpCodes(): Promise<OtpCode[]> {
+    return await db
+      .select()
+      .from(otpCodes)
+      .orderBy(desc(otpCodes.createdAt));
+  }
+
+  async validateAndUseOtp(code: string, userId: string): Promise<boolean> {
+    const otpCode = await this.getOtpCode(code);
+
+    if (!otpCode) return false;
+    if (otpCode.isUsed) return false;
+    if (new Date() > new Date(otpCode.expiresAt)) return false;
+
+    // Mark as used
+    await db
+      .update(otpCodes)
+      .set({
+        isUsed: true,
+        usedBy: userId,
+        usedAt: new Date(),
+      })
+      .where(eq(otpCodes.code, code));
+
+    return true;
+  }
+
+  async deleteOtpCode(id: string): Promise<void> {
+    await db.delete(otpCodes).where(eq(otpCodes.id, id));
   }
 }
 
