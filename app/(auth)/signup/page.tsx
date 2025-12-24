@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast'
 import { createClient } from '@/lib/supabase/client'
 
 export default function SignupPage() {
-  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -46,12 +46,12 @@ export default function SignupPage() {
 
       // Sign up with Supabase Auth
       const { data, error } = await supabase.auth.signUp({
-        email: `${username}@choicefx.com`,
+        email: email,
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/dashboard/customer/spot`,
           data: {
-            username: username,
+            username: email.split('@')[0], // Extract username from email
             role: 'client', // Default role
           },
         },
@@ -106,21 +106,18 @@ export default function SignupPage() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <Label htmlFor="username" className="text-teal-300">
-                사용자 ID
+              <Label htmlFor="email" className="text-teal-300">
+                이메일
               </Label>
               <Input
-                id="username"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="예: admin, client1, user123"
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="예: admin@choicefx.com"
                 className="bg-slate-700/80 border-teal-500/30 text-white placeholder-slate-400 focus:border-teal-400 focus:ring-teal-400/20"
                 required
               />
-              <p className="text-xs text-slate-400 mt-1">
-                이메일이 아닌 ID만 입력하세요 (자동으로 @choicefx.com이 추가됩니다)
-              </p>
             </div>
 
             <div>

@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast'
 import { createClient } from '@/lib/supabase/client'
 
 export default function LoginPage() {
-  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
@@ -26,7 +26,7 @@ export default function LoginPage() {
 
       // Sign in with Supabase Auth
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: `${username}@choicefx.com`, // Convert username to email format
+        email: email,
         password,
       })
 
@@ -69,21 +69,18 @@ export default function LoginPage() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <Label htmlFor="username" className="text-teal-300">
-                사용자 ID
+              <Label htmlFor="email" className="text-teal-300">
+                이메일
               </Label>
               <Input
-                id="username"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="예: admin, client"
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="예: admin@choicefx.com"
                 className="bg-slate-700/80 border-teal-500/30 text-white placeholder-slate-400 focus:border-teal-400 focus:ring-teal-400/20"
                 required
               />
-              <p className="text-xs text-slate-400 mt-1">
-                이메일이 아닌 ID만 입력하세요
-              </p>
             </div>
 
             <div>
@@ -112,8 +109,8 @@ export default function LoginPage() {
 
           <div className="mt-6 text-center text-xs text-slate-400 space-y-1">
             <div className="text-teal-300">데모 계정:</div>
-            <div>admin / password (관리자)</div>
-            <div>client / password (고객)</div>
+            <div>admin@choicefx.com / password (관리자)</div>
+            <div>client@choicefx.com / password (고객)</div>
           </div>
 
           <div className="mt-6 text-center">
