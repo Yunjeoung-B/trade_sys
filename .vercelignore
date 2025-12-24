@@ -1,0 +1,5 @@
+api-legacy
+server
+dist
+*.log
+.env.local
