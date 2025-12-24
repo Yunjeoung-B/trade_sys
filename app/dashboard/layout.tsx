@@ -52,7 +52,7 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-700 via-slate-800 to-blue-800 font-['Nanum_Gothic']">
+    <div className="min-h-screen bg-gradient-to-br from-slate-700 via-slate-800 to-blue-800">
       {/* Header */}
       <header className="bg-slate-900/50 border-b border-teal-500/30 backdrop-blur-sm">
         <div className="flex items-center justify-between px-6 py-4">

@@ -41,7 +41,7 @@ export default function LoginPage() {
           title: '로그인 성공',
           description: '환영합니다!',
         })
-        router.push('/customer/spot')
+        router.push('/dashboard/customer/spot')
         router.refresh()
       }
     } catch (error) {
