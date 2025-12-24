@@ -49,6 +49,7 @@ export default function SignupPage() {
         email: `${username}@choicefx.com`,
         password,
         options: {
+          emailRedirectTo: `${window.location.origin}/dashboard/customer/spot`,
           data: {
             username: username,
             role: 'client', // Default role
@@ -63,11 +64,22 @@ export default function SignupPage() {
           variant: 'destructive',
         })
       } else {
-        toast({
-          title: '회원가입 성공',
-          description: '계정이 생성되었습니다. 로그인해주세요.',
-        })
-        router.push('/login')
+        // Check if email confirmation is required
+        if (data.user && !data.session) {
+          toast({
+            title: '이메일 확인 필요',
+            description: 'Supabase 설정에서 이메일 확인이 비활성화되지 않았습니다.',
+            variant: 'destructive',
+          })
+        } else {
+          toast({
+            title: '회원가입 성공',
+            description: '자동으로 로그인됩니다.',
+          })
+          // Auto-login successful, redirect to dashboard
+          router.push('/dashboard/customer/spot')
+          router.refresh()
+        }
       }
     } catch (error) {
       toast({
