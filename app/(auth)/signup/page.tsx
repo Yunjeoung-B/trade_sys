@@ -67,10 +67,13 @@ export default function SignupPage() {
         // Check if email confirmation is required
         if (data.user && !data.session) {
           toast({
-            title: '이메일 확인 필요',
-            description: 'Supabase 설정에서 이메일 확인이 비활성화되지 않았습니다.',
-            variant: 'destructive',
+            title: '회원가입 성공!',
+            description: `${email}로 확인 이메일이 발송되었습니다. 이메일을 확인하여 계정을 활성화해주세요.`,
           })
+          // Redirect to login page after showing message
+          setTimeout(() => {
+            router.push('/login')
+          }, 3000)
         } else {
           toast({
             title: '회원가입 성공',
