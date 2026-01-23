@@ -26,6 +26,9 @@ interface BloombergApiStatus {
   lastUpdate: string;
   apiVersion: string;
   rateLimitRemaining: number;
+  pythonAvailable?: boolean;
+  blpapiInstalled?: boolean;
+  statusMessage?: string;
 }
 
 export default function BloombergAPI() {
@@ -262,12 +265,35 @@ export default function BloombergAPI() {
             <div className="flex items-center justify-between">
               <span className="text-slate-400">연결 상태:</span>
               <Badge variant={apiStatus?.connected ? "default" : "destructive"}>
-                {statusLoading ? "확인 중..." : apiStatus?.connected ? "연결됨" : "연결 안됨"}
+                {statusLoading ? "확인 중..." : apiStatus?.connected ? "연결됨" : "시뮬레이션 모드"}
               </Badge>
             </div>
-            
+
             {apiStatus && (
               <>
+                {/* 상태 메시지 표시 */}
+                {apiStatus.statusMessage && (
+                  <div className={`p-3 rounded-md text-sm ${
+                    apiStatus.connected
+                      ? 'bg-green-900/30 text-green-300 border border-green-700'
+                      : 'bg-yellow-900/30 text-yellow-300 border border-yellow-700'
+                  }`}>
+                    {apiStatus.statusMessage}
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-400">Python 상태:</span>
+                  <Badge variant={apiStatus.pythonAvailable ? "default" : "destructive"}>
+                    {apiStatus.pythonAvailable ? "설치됨" : "미설치"}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-400">blpapi 상태:</span>
+                  <Badge variant={apiStatus.blpapiInstalled ? "default" : "destructive"}>
+                    {apiStatus.blpapiInstalled ? "설치됨" : "미설치"}
+                  </Badge>
+                </div>
                 <div className="flex items-center justify-between">
                   <span className="text-slate-400">마지막 업데이트:</span>
                   <span className="text-slate-200 text-sm">

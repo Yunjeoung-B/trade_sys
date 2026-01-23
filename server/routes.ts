@@ -1040,12 +1040,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Bloomberg API routes (Admin only)
   app.get("/api/admin/bloomberg/status", isAdmin, async (req, res) => {
     try {
-      // Bloomberg API 상태 확인
+      // 실제 Python 및 blpapi 상태 확인
+      let pythonAvailable = false;
+      let blpapiInstalled = false;
+      let statusMessage = "";
+
+      try {
+        // Python 설치 확인
+        await execAsync("python3 --version");
+        pythonAvailable = true;
+
+        // blpapi 설치 확인
+        const { stdout } = await execAsync("python3 -c \"import blpapi; print('installed')\"");
+        if (stdout.includes('installed')) {
+          blpapiInstalled = true;
+        }
+      } catch (pythonError: any) {
+        if (!pythonAvailable) {
+          statusMessage = "Python not available - using simulation mode";
+        } else if (!blpapiInstalled) {
+          statusMessage = "Python available but blpapi not installed - using simulation mode";
+        }
+      }
+
+      const connected = pythonAvailable && blpapiInstalled;
+
       const status = {
-        connected: true, // 실제 Bloomberg API 연결 상태로 교체 필요
+        connected,
         lastUpdate: new Date().toISOString(),
-        apiVersion: "3.18.4.1",
-        rateLimitRemaining: 1000
+        apiVersion: blpapiInstalled ? "3.18.4.1" : "N/A",
+        rateLimitRemaining: connected ? 1000 : 0,
+        pythonAvailable,
+        blpapiInstalled,
+        statusMessage: statusMessage || (connected ? "Bloomberg API ready" : "Simulation mode active")
       };
       res.json(status);
     } catch (error) {

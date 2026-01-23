@@ -30,6 +30,9 @@ interface BloombergApiStatus {
   lastUpdate: string;
   apiVersion: string;
   rateLimitRemaining: number;
+  pythonAvailable?: boolean;
+  blpapiInstalled?: boolean;
+  statusMessage?: string;
 }
 
 export default function BloombergAPI() {
@@ -353,26 +356,46 @@ export default function BloombergAPI() {
               <Loader2 className="w-6 h-6 animate-spin text-blue-400" />
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div>
-                <Label className="text-slate-300">연결 상태</Label>
-                <div className="mt-1">
-                  <Badge variant={apiStatus?.connected ? "default" : "destructive"}>
-                    {apiStatus?.connected ? "연결됨" : "연결 안됨"}
-                  </Badge>
+            <div className="space-y-4">
+              {/* 상태 메시지 표시 */}
+              {apiStatus?.statusMessage && (
+                <div className={`p-3 rounded-md text-sm ${
+                  apiStatus.connected
+                    ? 'bg-green-900/30 text-green-300 border border-green-700'
+                    : 'bg-yellow-900/30 text-yellow-300 border border-yellow-700'
+                }`}>
+                  {apiStatus.statusMessage}
                 </div>
-              </div>
-              <div>
-                <Label className="text-slate-300">API 버전</Label>
-                <p className="text-white mt-1">{apiStatus?.apiVersion || "N/A"}</p>
-              </div>
-              <div>
-                <Label className="text-slate-300">마지막 업데이트</Label>
-                <p className="text-white mt-1">{apiStatus?.lastUpdate || "N/A"}</p>
-              </div>
-              <div>
-                <Label className="text-slate-300">API 호출 한도</Label>
-                <p className="text-white mt-1">{apiStatus?.rateLimitRemaining || "N/A"}</p>
+              )}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                  <Label className="text-slate-300">연결 상태</Label>
+                  <div className="mt-1">
+                    <Badge variant={apiStatus?.connected ? "default" : "destructive"}>
+                      {apiStatus?.connected ? "연결됨" : "시뮬레이션 모드"}
+                    </Badge>
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-slate-300">Python</Label>
+                  <div className="mt-1">
+                    <Badge variant={apiStatus?.pythonAvailable ? "default" : "destructive"}>
+                      {apiStatus?.pythonAvailable ? "설치됨" : "미설치"}
+                    </Badge>
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-slate-300">blpapi</Label>
+                  <div className="mt-1">
+                    <Badge variant={apiStatus?.blpapiInstalled ? "default" : "destructive"}>
+                      {apiStatus?.blpapiInstalled ? "설치됨" : "미설치"}
+                    </Badge>
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-slate-300">API 버전</Label>
+                  <p className="text-white mt-1">{apiStatus?.apiVersion || "N/A"}</p>
+                </div>
               </div>
             </div>
           )}
